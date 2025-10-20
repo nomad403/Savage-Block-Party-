@@ -1,0 +1,52 @@
+[
+  {
+    "id": "shotgun-2025-10-18-savage-club-party-hax-darlean",
+    "source": "shotgun",
+    "title": "Savage Club Party: Hax · Darlean & Friends",
+    "description": "DOCK B 1 place de la pointe, Pantin — 23H-6H, 2 salles, showcases and DJs listed on the Shotgun page.",
+    "url": "https://shotgun.live/en/venues/savage-block-partys",
+    "image": null,
+    "startsAt": "2025-10-18T21:00:00Z",
+    "endsAt": "2025-10-19T04:00:00Z"
+  },
+  {
+    "id": "shotgun-2025-06-21-savage-block-party-le-trabendo",
+    "source": "shotgun",
+    "title": "Savage Block Party — Le Trabendo",
+    "description": "",
+    "url": "https://shotgun.live/en/venues/savage-block-partys",
+    "image": null,
+    "startsAt": "2025-06-21T00:00:00Z",
+    "endsAt": null
+  },
+  {
+    "id": "shotgun-2025-04-27-savage-block-partys-le-juiice",
+    "source": "shotgun",
+    "title": "Savage Block Partys : Le Juiice (Live), Kailys, Niel & More — Paris",
+    "description": "",
+    "url": "https://shotgun.live/en/venues/savage-block-partys",
+    "image": null,
+    "startsAt": "2025-04-27T00:00:00Z",
+    "endsAt": null
+  },
+  {
+    "id": "shotgun-2025-02-22-savage-climbers-antrebloc",
+    "source": "shotgun",
+    "title": "Savage Climbers — Antrebloc",
+    "description": "",
+    "url": "https://shotgun.live/en/venues/savage-block-partys",
+    "image": null,
+    "startsAt": "2025-02-22T00:00:00Z",
+    "endsAt": null
+  },
+  {
+    "id": "dice-2025-02-22-savage-climbers",
+    "source": "dice",
+    "title": "Savage Climbers",
+    "description": "",
+    "url": "https://dice.fm/promoters/savage-block-partys-5kd8",
+    "image": null,
+    "startsAt": "2025-02-22T00:00:00Z",
+    "endsAt": null
+  }
+]
