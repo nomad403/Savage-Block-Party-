@@ -240,10 +240,28 @@ export default function AgendaGrid({
             {/* Bloc fusionné 3x6 gauche */}
             <div className="row-[2/8] col-[1/4] relative overflow-hidden">
                 <div className="absolute bg-yellow-400" style={{ left: 1, right: 1, top: 1, bottom: 1, pointerEvents: 'none', zIndex: 0 }} aria-hidden />
-                <img
-                    src={featuredImage || '/agenda/photo/vignette.jpeg'}
-                    alt={featuredTitle || 'Savage Block Party'}
-                    className="absolute inset-1 object-cover w-[calc(100%-2px)] h-[calc(100%-2px)]"
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '-1px',
+                        left: '-1px',
+                        right: '-1px',
+                        bottom: '-1px',
+                        width: 'calc(100% + 2px)',
+                        height: 'calc(100% + 2px)',
+                        backgroundImage: `url(${featuredImage || '/agenda/photo/vignette.jpeg'})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        margin: 0,
+                        padding: 0,
+                        border: 'none',
+                        outline: 'none',
+                        display: 'block',
+                        fontSize: 0,
+                        lineHeight: 0
+                    }}
+                    aria-hidden
                 />
             </div>
 
@@ -307,12 +325,7 @@ export default function AgendaGrid({
                                             className="relative overflow-hidden calendar-case"
                                             style={{
                                                 width: "100%",
-                                                height: "100%",
-                                                margin: 0,
-                                                padding: 0,
-                                                border: 'none',
-                                                outline: 'none',
-                                                boxSizing: 'border-box'
+                                                height: "100%"
                                             }}
                                         >
                                             {inMonth && (
@@ -322,12 +335,12 @@ export default function AgendaGrid({
                                                         <div
                                                             style={{
                                                                 position: 'absolute',
-                                                                top: 0,
-                                                                left: 0,
-                                                                right: 0,
-                                                                bottom: 0,
-                                                                width: '100%',
-                                                                height: '100%',
+                                                                top: '-1px',
+                                                                left: '-1px',
+                                                                right: '-1px',
+                                                                bottom: '-1px',
+                                                                width: 'calc(100% + 2px)',
+                                                                height: 'calc(100% + 2px)',
                                                                 backgroundImage: `url(${imgSrc})`,
                                                                 backgroundSize: 'cover',
                                                                 backgroundPosition: 'center',
@@ -336,7 +349,9 @@ export default function AgendaGrid({
                                                                 padding: 0,
                                                                 border: 'none',
                                                                 outline: 'none',
-                                                                display: 'block'
+                                                                display: 'block',
+                                                                fontSize: 0,
+                                                                lineHeight: 0
                                                             }}
                                                             aria-hidden
                                                         />

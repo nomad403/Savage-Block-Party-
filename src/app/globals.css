@@ -194,21 +194,21 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 }
 
 /* Normalise la box-sizing pour éviter tout décalage dû aux bordures */
-.calendar-case, .calendar-case * { 
+.calendar-case { 
     box-sizing: border-box; 
-    margin: 0;
-    padding: 0;
-    border: none;
-    outline: none;
 }
 
-/* Reset spécifique pour les images dans les cases */
-.calendar-case img {
-    display: block;
+/* Reset spécifique uniquement pour les divs d'images dans les cases */
+.calendar-case div[aria-hidden="true"] {
     margin: 0;
     padding: 0;
     border: none;
     outline: none;
+    font-size: 0;
+    line-height: 0;
+    display: block;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Masquer la scrollbar (cross-browser) */
