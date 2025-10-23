@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAllEvents, pickUpcoming, eventsByDate, type EventItem } from "@/lib/events";
 import AgendaGrid from "@/components/agenda-grid";
+import GalleryFlash from "@/components/gallery-flash";
 
 export const metadata: Metadata = {
   title: "Agenda — Savage Block Party",
@@ -24,8 +25,8 @@ export default async function AgendaPage() {
   const monthOffsets = [-1, 0, 1];
 
   return (
-    <main className="min-h-screen bg-yellow-400 text-black">
-      <div className="container-px pt-16 pb-8">
+    <main className="bg-yellow-400 text-black">
+      <div className="container-px pt-16">
         <div className="relative w-full min-h-[70vh]">
           <div className="absolute inset-0 grid-lines-13x7 pointer-events-none" aria-hidden />
           <AgendaGrid
@@ -37,11 +38,10 @@ export default async function AgendaPage() {
             featuredDesc={featuredDesc}
           />
         </div>
-        {/* Debug extraction (temporaire) */}
-        <div className="mt-4 text-xs text-black/70 font-text">
-          <span>Événements: {Object.values(byDate).reduce((n, a) => n + a.length, 0)}</span>
-        </div>
       </div>
+      
+      {/* Galerie flash avec vidéo dancer.webm - collée au calendrier */}
+      <GalleryFlash />
     </main>
   );
 }

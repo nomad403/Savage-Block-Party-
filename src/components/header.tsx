@@ -20,6 +20,12 @@ export default function Header() {
         setOpen(false);
     }, [pathname]);
 
+    // Notifier le player de l'état du menu
+    useEffect(() => {
+        const event = new CustomEvent('menuToggle', { detail: { isOpen: open } });
+        window.dispatchEvent(event);
+    }, [open]);
+
     // Nom de la page affiché à gauche (non-home)
     const pageLabel = (() => {
         if (isHome) return "";
@@ -31,7 +37,7 @@ export default function Header() {
 
 	return (
 		<>
-            <header className={`container-px h-20 flex items-center justify-between z-20 relative ${headerBg} pt-8`}>
+            <header className={`container-px h-20 flex items-center justify-between z-[60] relative ${headerBg} pt-8`}>
                 <div className="min-w-10">
                     {!isHome && (
                         <span className={`font-title uppercase tracking-wide text-sm ${isAgenda ? "text-black" : "text-black"}`}>
@@ -42,12 +48,31 @@ export default function Header() {
                 <div className="flex-1 flex justify-center">
                     <Image className={logoClass} src="/home/images/logo_orange.png" alt="Savage Block Party" width={240} height={60} priority />
                 </div>
-                <button aria-label="Menu" className="flex items-center gap-2" onClick={() => setOpen(true)}>
-					<span className="sr-only">Menu</span>
-                    <div className="flex flex-col gap-1.5">
-                        <span className={`block w-7 h-[2px] ${barColor}`} />
-                        <span className={`block w-7 h-[2px] ${barColor}`} />
-                        <span className={`block w-7 h-[2px] ${barColor}`} />
+                <button 
+					aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} 
+					className="flex items-center gap-2" 
+					onClick={() => setOpen(!open)}
+				>
+					<span className="sr-only">{open ? "Fermer le menu" : "Ouvrir le menu"}</span>
+                    <div className="relative w-7 h-7">
+						{/* Barre du haut */}
+						<span 
+							className={`absolute left-0 right-0 top-1 block h-[2px] ${barColor} transition-all duration-300 ease-in-out ${
+								open ? 'rotate-45 translate-y-[10px]' : 'rotate-0 translate-y-0'
+							}`} 
+						/>
+						{/* Barre du milieu */}
+						<span 
+							className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] ${barColor} transition-all duration-300 ease-in-out ${
+								open ? 'opacity-0' : 'opacity-100'
+							}`} 
+						/>
+						{/* Barre du bas */}
+						<span 
+							className={`absolute left-0 right-0 bottom-1 block h-[2px] ${barColor} transition-all duration-300 ease-in-out ${
+								open ? '-rotate-45 -translate-y-[10px]' : 'rotate-0 translate-y-0'
+							}`} 
+						/>
 					</div>
 				</button>
 			</header>
@@ -56,21 +81,13 @@ export default function Header() {
 				{open && (
 					<motion.div
 						key="menu"
-						initial={{ x: "-100%" }}
+						initial={{ x: "100%" }}
 						animate={{ x: 0 }}
-						exit={{ x: "-100%" }}
+						exit={{ x: "100%" }}
 						transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
-						className="fixed inset-0 z-50 bg-yellow-400 text-black"
+						className="fixed inset-0 z-50 bg-transparent text-yellow-400"
 					>
 						<div className="h-full w-full flex">
-							<button aria-label="Fermer" onClick={() => setOpen(false)} className="absolute left-4 top-6 p-3">
-								<span className="sr-only">Fermer</span>
-								<div className="relative w-6 h-6">
-									<span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] bg-black rotate-45" />
-									<span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] bg-black -rotate-45" />
-								</div>
-							</button>
-
                             <nav className="ml-auto h-full w-full flex flex-col justify-center items-end gap-0 pr-10 sm:pr-14">
 								{[
 									{ href: "/", label: "home" },
@@ -83,15 +100,13 @@ export default function Header() {
                                     <Link
 										key={item.href}
 										href={item.href}
-                                        className="menu-link w-full font-title uppercase text-4xl sm:text-5xl md:text-6xl leading-none"
+                                        className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl md:text-6xl leading-none ${isAgenda ? 'menu-link-agenda' : ''}`}
 										onClick={() => setOpen(false)}
 									>
 										<span>{item.label}</span>
 									</Link>
 								))}
 							</nav>
-
-
 						</div>
 					</motion.div>
 				)}

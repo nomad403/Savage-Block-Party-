@@ -8,6 +8,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import BgVideoHome from "@/components/bg-video-home";
 import SoundCloudPlayer from "@/components/soundcloud-player-simple";
+import CustomScrollbar from "@/components/custom-scrollbar";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -55,8 +56,9 @@ export default function RootLayout({
 					<Header />
 					{children}
 					<SoundCloudPlayer />
-					<Footer />
+					<CustomScrollbar />
 				</LenisProvider>
+				<Footer />
 				<Analytics />
 				<SpeedInsights />
 			</body>

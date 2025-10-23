@@ -39,6 +39,7 @@ export default function AgendaGrid({
     const userInteractedRef = useRef(false);
     const [openKey, setOpenKey] = useState<string | null>(null);
     const [openEvents, setOpenEvents] = useState<EventItem[]>([]);
+    const [hoveredCell, setHoveredCell] = useState<string | null>(null);
 
     const makeThumb = (title: string) => {
         const text = (title || 'Event').slice(0, 14);
@@ -285,7 +286,9 @@ export default function AgendaGrid({
                         scrollSnapType: "y proximity",
                         scrollBehavior: 'smooth',
                         WebkitOverflowScrolling: 'touch' as any,
-                        overscrollBehavior: 'contain' as any
+                        overscrollBehavior: 'auto' as any,
+                        display: "block",
+                        verticalAlign: "top"
                     }}
                     data-lenis-prevent data-lenis-prevent-wheel data-lenis-prevent-touch
                 >
@@ -299,7 +302,7 @@ export default function AgendaGrid({
                         return (
                             <div
                                 key={monthKeyLocal}
-                                className="grid grid-cols-7 grid-rows-6 w-full"
+                                className="grid grid-cols-7 w-full"
                                 style={{
                                     height: "100%",
                                     minHeight: "100%",
@@ -307,7 +310,10 @@ export default function AgendaGrid({
                                     borderCollapse: "collapse",
                                     gap: 0,
                                     margin: 0,
-                                    padding: 0
+                                    padding: 0,
+                                    gridTemplateRows: "repeat(6, 1fr)",
+                                    alignContent: "stretch",
+                                    alignItems: "stretch"
                                 }}
                             >
                                 {Array.from({ length: 7 * 6 }).map((_, idx) => {
@@ -325,9 +331,33 @@ export default function AgendaGrid({
                                             className="relative overflow-hidden calendar-case"
                                             style={{
                                                 width: "100%",
-                                                height: "100%"
+                                                height: "100%",
+                                                display: "block",
+                                                boxSizing: "border-box",
+                                                verticalAlign: "top"
                                             }}
                                         >
+                                            {/* Fond bleu pour le jour en cours */}
+                                            {isToday && (
+                                                <div
+                                                    style={{
+                                                        position: 'absolute',
+                                                        inset: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        backgroundColor: '#079fce',
+                                                        margin: 0,
+                                                        padding: 0,
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        display: 'block',
+                                                        fontSize: 0,
+                                                        lineHeight: 0,
+                                                        zIndex: 1
+                                                    }}
+                                                    aria-hidden
+                                                />
+                                            )}
                                             {inMonth && (
                                                 <>
                                                     {/* Image d'arrière-plan */}
@@ -335,12 +365,9 @@ export default function AgendaGrid({
                                                         <div
                                                             style={{
                                                                 position: 'absolute',
-                                                                top: '-1px',
-                                                                left: '-1px',
-                                                                right: '-1px',
-                                                                bottom: '-1px',
-                                                                width: 'calc(100% + 2px)',
-                                                                height: 'calc(100% + 2px)',
+                                                                inset: 0,
+                                                                width: '100%',
+                                                                height: '100%',
                                                                 backgroundImage: `url(${imgSrc})`,
                                                                 backgroundSize: 'cover',
                                                                 backgroundPosition: 'center',
@@ -356,12 +383,75 @@ export default function AgendaGrid({
                                                             aria-hidden
                                                         />
                                                     )}
+                                                    {/* Animation dancer.webm pour cases vides au hover */}
+                                                    {dayEvents.length === 0 && hoveredCell === key && (
+                                                        <div
+                                                            style={{
+                                                                position: 'absolute',
+                                                                inset: 0,
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                backgroundColor: '#079fce',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                zIndex: 5
+                                                            }}
+                                                        >
+                                                            <video
+                                                                src="/general/dancer.webm"
+                                                                autoPlay
+                                                                loop
+                                                                muted
+                                                                playsInline
+                                                                style={{
+                                                                    width: '120%',
+                                                                    height: '120%',
+                                                                    objectFit: 'cover'
+                                                                }}
+                                                            />
+                                                            {/* Titre "join the family" avec flèche */}
+                                                            <div
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    left: '8px',
+                                                                    top: '50%',
+                                                                    transform: 'translateY(-50%)',
+                                                                    color: '#FACC15',
+                                                                    fontSize: '8px',
+                                                                    fontWeight: 'bold',
+                                                                    fontFamily: 'sans-serif',
+                                                                    textTransform: 'uppercase',
+                                                                    letterSpacing: '0.5px',
+                                                                    zIndex: 10,
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'flex-start',
+                                                                    gap: '2px'
+                                                                }}
+                                                            >
+                                                                <span>join the</span>
+                                                                <span>family</span>
+                                                                <div
+                                                                    style={{
+                                                                        width: '0',
+                                                                        height: '0',
+                                                                        borderLeft: '3px solid transparent',
+                                                                        borderRight: '3px solid transparent',
+                                                                        borderTop: '4px solid #FACC15',
+                                                                        marginTop: '2px'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     {/* Numéro du jour en surimpression */}
-                                                    <span className={`absolute top-1 left-1 text-[10px] font-text z-10 pointer-events-none ${
-                                                        dayEvents.length > 0 ? 'text-yellow-400' : 'text-black'
+                                                    <span className={`absolute top-1 left-1 text-[10px] font-text z-20 pointer-events-none ${
+                                                        isToday ? 'text-yellow-400' : (dayEvents.length > 0 ? 'text-yellow-400' : 'text-black')
                                                     }`}>{dayNum}</span>
                                                     {dayEvents.length > 1 && (
-                                                        <span className="absolute bottom-1 right-1 text-[9px] bg-black text-yellow-400 px-1 rounded-sm z-10 pointer-events-none">
+                                                        <span className="absolute bottom-1 right-1 text-[9px] bg-black text-yellow-400 px-1 rounded-sm z-20 pointer-events-none">
                                                             +{dayEvents.length - 1}
                                                         </span>
                                                     )}
@@ -369,7 +459,9 @@ export default function AgendaGrid({
                                                         type="button"
                                                         aria-label={dayEvents.length > 0 ? `Voir ${dayEvents.length} événement(s) le ${key}` : `Jour ${dayNum}`}
                                                         onClick={() => { if (dayEvents.length > 0) { setOpenKey(key); setOpenEvents(dayEvents); } }}
-                                                        className="absolute inset-0"
+                                                        onMouseEnter={() => setHoveredCell(key)}
+                                                        onMouseLeave={() => setHoveredCell(null)}
+                                                        className="absolute inset-0 z-30"
                                                     />
                                                 </>
                                             )}

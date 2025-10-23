@@ -6,8 +6,7 @@
 	font-style: normal;
 	font-weight: 700;
 	font-display: swap;
-	src: url('/fonts/hanson/Hanson-Bold.woff2') format('woff2'),
-		 url('/fonts/hanson/Hanson-Bold.ttf') format('truetype'),
+	src: url('/fonts/hanson/Hanson-Bold.ttf') format('truetype'),
 		 url('/fonts/hanson/Hanson-Bold.otf') format('opentype');
 }
 
@@ -114,7 +113,7 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	align-items: center; /* centrage vertical du texte */
 	justify-content: flex-end; /* aligné à droite */
 	padding: 0.5rem 0.75rem; /* un tout petit padding pour coller visuellement */
-	color: #000;
+	color: #FACC15;
 	overflow: hidden;
 	transition: color 0.35s ease;
 }
@@ -122,8 +121,8 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	content: '';
 	position: absolute;
 	top: 0; left: 0; right: 0; bottom: 0; /* couvre toute la hauteur */
-	background: #000;
-	transform: translateX(-100%);
+	background: #079fce;
+	transform: translateX(100%);
 	transition: transform 0.35s ease;
 	pointer-events: none;
 	will-change: transform;
@@ -135,12 +134,54 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 }
 .menu-link > span { position: relative; z-index: 1; display: inline-block; }
 .menu-link:hover > span,
-.menu-link:focus-visible > span { color: #FACC15; }
+.menu-link:focus-visible > span { color: #000000; }
 
-/* Teintes du logo via filtres (jaune sur home, noir sur agenda) */
-.logo-tint-yellow {
-	filter: invert(84%) sepia(16%) saturate(5803%) hue-rotate(351deg) brightness(103%) contrast(103%);
+/* Menu sur page agenda - couleurs inversées */
+.menu-link-agenda {
+	color: #000000; /* Noir par défaut sur agenda */
 }
+
+.menu-link-agenda:hover > span,
+.menu-link-agenda:focus-visible > span { 
+	color: #FACC15; /* Jaune au hover sur agenda */
+}
+
+/* Animation IN/OUT pour le player compact sur agenda */
+.player-compact-agenda {
+	position: relative;
+	overflow: hidden;
+	padding: 0.5rem;
+	border-radius: 0.5rem;
+	width: fit-content;
+}
+
+.player-compact-agenda::before {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: #079fce; /* Cyan menu */
+	transform: translateX(-100%);
+	transition: transform 0.35s ease;
+	pointer-events: none;
+	will-change: transform;
+	z-index: 1;
+	border-radius: 0.5rem;
+}
+
+.player-compact-agenda.animate-in::before {
+	transform: translateX(0);
+}
+
+.player-compact-agenda.animate-out::before {
+	transform: translateX(100%);
+}
+
+.player-compact-agenda > * {
+	position: relative;
+	z-index: 2;
+}
+
+
 .logo-tint-black {
 	filter: brightness(0) saturate(100%);
 }
@@ -174,13 +215,13 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 
 /* Agenda 13x7 overlay */
 .grid-lines-13x7 {
-    /* Lignes uniformes: 1px, quel que soit le redimensionnement */
+    border: 1px solid #000;
+    border-bottom: none;
     background-image:
-        repeating-linear-gradient(to right, #000, #000 1px, transparent 1px, transparent calc(100% / 13)),
-        repeating-linear-gradient(to bottom, #000, #000 1px, transparent 1px, transparent calc(100% / 7));
+        repeating-linear-gradient(to right, transparent, transparent calc(100% / 13 - 1px), #000 calc(100% / 13 - 1px), #000 calc(100% / 13)),
+        repeating-linear-gradient(to bottom, transparent, transparent calc(100% / 7 - 1px), #000 calc(100% / 7 - 1px), #000 calc(100% / 7));
     background-position: 0 0;
     background-size: auto;
-    box-shadow: inset 0 0 0 1px #000; /* contour externe */
 }
 
 /* Centre scroll: 7x6 grid overlay */
@@ -214,6 +255,81 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 /* Masquer la scrollbar (cross-browser) */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Scrollbar custom transparente avec couleur header */
+body.scrollable-page {
+	/* Masquer la scrollbar native */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE/Edge */
+}
+
+body.scrollable-page::-webkit-scrollbar {
+	display: none; /* Chrome/Safari */
+}
+
+/* Scrollbar custom pour pages scrollables */
+.custom-scrollbar {
+	position: fixed;
+	top: 0;
+	right: 0;
+	width: 8px;
+	height: 100vh;
+	z-index: 9999;
+	pointer-events: none;
+}
+
+.custom-scrollbar-track {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+}
+
+.custom-scrollbar-thumb {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	background: #000000; /* Noir comme les éléments du header */
+	border-radius: 4px;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transform-origin: center;
+	will-change: transform, border-radius;
+}
+
+/* Effet gooey vertical au scroll */
+.custom-scrollbar-thumb.scrolling {
+	transform: scaleY(1.5);
+	border-radius: 50% 50% 20% 20%;
+}
+
+.custom-scrollbar-thumb.scrolling-fast {
+	transform: scaleY(2.2);
+	border-radius: 60% 60% 10% 10%;
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.custom-scrollbar-thumb:hover {
+	background: #333333; /* Gris foncé au hover */
+}
+
+/* Couleurs spécifiques selon la page */
+body.scrollable-page.home .custom-scrollbar-thumb {
+	background: #FACC15; /* Jaune sur home */
+}
+
+body.scrollable-page.home .custom-scrollbar-thumb:hover {
+	background: #EAB308; /* Jaune plus foncé au hover */
+}
+
+body.scrollable-page.agenda .custom-scrollbar-thumb {
+	background: #000000; /* Noir sur agenda */
+}
+
+body.scrollable-page.agenda .custom-scrollbar-thumb:hover {
+	background: #333333; /* Gris foncé au hover */
+}
 
 iframe[src*="youtube.com"]::-webkit-media-controls-panel {
 	display: none !important;
