@@ -14,8 +14,12 @@ export default function BgVideoHome() {
 	const pathname = usePathname();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const iframeRef = useRef<HTMLIFrameElement>(null);
+	const playerRef = useRef<any>(null);
 	const [shouldLoad, setShouldLoad] = useState(false);
 	const [isPlayerReady, setIsPlayerReady] = useState(false);
+	const [isApiLoaded, setIsApiLoaded] = useState(false);
+	const [retryCount, setRetryCount] = useState(0);
+	const maxRetries = 3;
 
 	const VIDEO_ID = "e-1_tkJCuUs";
 
@@ -63,31 +67,90 @@ export default function BgVideoHome() {
 		return () => io.disconnect();
 	}, [pathname]);
 
-	// Charger l'API YouTube
+	// Charger l'API YouTube avec gestion d'erreur robuste
 	useEffect(() => {
-		if (!shouldLoad) return;
+		if (!shouldLoad || isApiLoaded) return;
 
-		// Charger l'API YouTube si pas déjà chargée
-		if (!window.YT) {
-			const script = document.createElement('script');
-			script.src = 'https://www.youtube.com/iframe_api';
-			document.head.appendChild(script);
-		}
-
-		// Fonction globale pour l'API YouTube
-		window.onYouTubeIframeAPIReady = () => {
-			if (iframeRef.current) {
-				const player = new window.YT.Player(iframeRef.current, {
-					events: {
-						onReady: (event: any) => {
-							// Fade-in après initialisation complète
+		const loadYouTubeAPI = async () => {
+			try {
+				console.log('🔄 Chargement de l\'API YouTube...');
+				
+				// Charger l'API YouTube si pas déjà chargée
+				if (!window.YT) {
+					const script = document.createElement('script');
+					script.src = 'https://www.youtube.com/iframe_api';
+					script.onload = () => {
+						console.log('✅ API YouTube chargée');
+						setIsApiLoaded(true);
+					};
+					script.onerror = () => {
+						console.error('❌ Erreur chargement API YouTube');
+						if (retryCount < maxRetries) {
 							setTimeout(() => {
-								setIsPlayerReady(true);
-								event.target.playVideo();
-							}, 500);
+								setRetryCount(prev => prev + 1);
+								loadYouTubeAPI();
+							}, 2000 * (retryCount + 1));
+						}
+					};
+					document.head.appendChild(script);
+				} else {
+					setIsApiLoaded(true);
+				}
+			} catch (error) {
+				console.error('❌ Erreur lors du chargement de l\'API YouTube:', error);
+			}
+		};
+
+		loadYouTubeAPI();
+	}, [shouldLoad, isApiLoaded, retryCount, maxRetries]);
+
+	// Initialiser le player YouTube
+	useEffect(() => {
+		if (!isApiLoaded || !iframeRef.current) return;
+
+		console.log('🎬 Initialisation du player YouTube...');
+
+		// Fonction globale pour l'API YouTube (version robuste)
+		window.onYouTubeIframeAPIReady = () => {
+			try {
+				if (iframeRef.current && window.YT && window.YT.Player) {
+					// Nettoyer l'ancien player s'il existe
+					if (playerRef.current) {
+						playerRef.current.destroy();
+						playerRef.current = null;
+					}
+
+					const player = new window.YT.Player(iframeRef.current, {
+						events: {
+							onReady: (event: any) => {
+								console.log('✅ Player YouTube prêt');
+								playerRef.current = event.target;
+								
+								// Fade-in après initialisation complète
+								setTimeout(() => {
+									setIsPlayerReady(true);
+									try {
+										event.target.playVideo();
+									} catch (error) {
+										console.warn('⚠️ Erreur playVideo:', error);
+									}
+								}, 500);
+							},
+							onError: (event: any) => {
+								console.error('❌ Erreur player YouTube:', event.data);
+								// Tentative de récupération
+								if (retryCount < maxRetries) {
+									setTimeout(() => {
+										setRetryCount(prev => prev + 1);
+										setIsPlayerReady(false);
+									}, 3000);
+								}
+							},
 						},
-					},
-				});
+					});
+				}
+			} catch (error) {
+				console.error('❌ Erreur initialisation player YouTube:', error);
 			}
 		};
 
@@ -95,12 +158,38 @@ export default function BgVideoHome() {
 		if (window.YT && window.YT.Player) {
 			window.onYouTubeIframeAPIReady();
 		}
-	}, [shouldLoad]);
+	}, [isApiLoaded, retryCount, maxRetries]);
+
+	// Cleanup au démontage
+	useEffect(() => {
+		return () => {
+			if (playerRef.current) {
+				try {
+					playerRef.current.destroy();
+					playerRef.current = null;
+				} catch (error) {
+					console.warn('⚠️ Erreur lors du nettoyage du player YouTube:', error);
+				}
+			}
+		};
+	}, []);
 
 	if (pathname !== "/") return null;
 
 	const thumb = `https://i.ytimg.com/vi/${VIDEO_ID}/hqdefault.jpg`;
-	const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&fs=0&cc_load_policy=0&disablekb=1&enablejsapi=1&start=0.1&vq=hd2160`;
+	
+	// Générer l'URL YouTube de manière SSR-safe
+	const getYouTubeSrc = () => {
+		const baseParams = `autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&fs=0&cc_load_policy=0&disablekb=1&enablejsapi=1&start=0.1&vq=hd2160`;
+		
+		if (typeof window !== 'undefined') {
+			return `https://www.youtube.com/embed/${VIDEO_ID}?${baseParams}&origin=${window.location.origin}&widget_referrer=${window.location.href}`;
+		}
+		
+		return `https://www.youtube.com/embed/${VIDEO_ID}?${baseParams}`;
+	};
+	
+	const src = getYouTubeSrc();
 
 	return (
 		<div ref={containerRef} className="fixed inset-0 z-0 pointer-events-none">

@@ -8,8 +8,8 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
 	const pathname = usePathname();
 
 	useEffect(() => {
-		// Ne pas initialiser Lenis sur la home (vidéo fullscreen) et agenda (scroll natif)
-		if (pathname === "/" || pathname?.startsWith("/agenda")) return;
+		// Ne pas initialiser Lenis sur la home (vidéo fullscreen), agenda (scroll natif) et story (sections fullscreen)
+		if (pathname === "/" || pathname?.startsWith("/agenda") || pathname?.startsWith("/story")) return;
 
 		const lenis = new Lenis({
 			smoothWheel: true,

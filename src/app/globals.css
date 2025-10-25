@@ -17,6 +17,19 @@
 	--muted: #9a9a9a;
 	--font-title: 'Hanson', system-ui, sans-serif;
 	--font-text: 'Satoshi', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	
+	/* Variables pour couleurs dynamiques */
+	--dynamic-primary: #FACC15;
+	--dynamic-primary-hover: #EAB308;
+	--dynamic-primary-faded: rgba(250,204,21,0.3);
+	--dynamic-menu-color: #FACC15;
+	--dynamic-menu-hover-bg: #079fce;
+	--dynamic-menu-hover-text: #000000;
+	--dynamic-logo-color: #ff6a00;
+	--dynamic-scrollbar-color: #FACC15;
+	--dynamic-scrollbar-hover: #EAB308;
+	--dynamic-noise-overlay: rgba(255,255,255,.035);
+	--dynamic-grid-lines: rgba(255,255,255,.05);
 }
 
 @media (prefers-color-scheme: light) {
@@ -106,14 +119,14 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	display: none !important;
 }
 
-/* Menu link hover effect */
+/* Menu link hover effect avec couleurs dynamiques */
 .menu-link {
 	position: relative;
 	display: flex; /* permet le centrage vertical */
 	align-items: center; /* centrage vertical du texte */
 	justify-content: flex-end; /* aligné à droite */
 	padding: 0.5rem 0.75rem; /* un tout petit padding pour coller visuellement */
-	color: #FACC15;
+	color: var(--dynamic-menu-color);
 	overflow: hidden;
 	transition: color 0.35s ease;
 }
@@ -121,7 +134,7 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	content: '';
 	position: absolute;
 	top: 0; left: 0; right: 0; bottom: 0; /* couvre toute la hauteur */
-	background: #079fce;
+	background: var(--dynamic-menu-hover-bg);
 	transform: translateX(100%);
 	transition: transform 0.35s ease;
 	pointer-events: none;
@@ -134,7 +147,7 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 }
 .menu-link > span { position: relative; z-index: 1; display: inline-block; }
 .menu-link:hover > span,
-.menu-link:focus-visible > span { color: #000000; }
+.menu-link:focus-visible > span { color: var(--dynamic-menu-hover-text); }
 
 /* Menu sur page agenda - couleurs inversées */
 .menu-link-agenda {
@@ -144,6 +157,11 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 .menu-link-agenda:hover > span,
 .menu-link-agenda:focus-visible > span { 
 	color: #FACC15; /* Jaune au hover sur agenda */
+}
+
+/* Menu sur page story - fond jaune */
+.menu-link-story::before {
+	background: #FACC15 !important; /* Fond jaune pour story */
 }
 
 /* Animation IN/OUT pour le player compact sur agenda */
@@ -184,6 +202,33 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 
 .logo-tint-black {
 	filter: brightness(0) saturate(100%);
+}
+
+.logo-tint-cyan {
+	filter: brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(2000%) hue-rotate(180deg) brightness(1.2);
+}
+
+/* Animation de révélation de texte ligne par ligne */
+.text-reveal-line {
+	position: absolute;
+	overflow: hidden;
+	z-index: -1;
+	padding: 0 10px 0 8px;
+}
+
+.text-reveal-line::before {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: #22D3EE;
+	transform: translateX(-100%);
+	transition: transform 0.6s ease;
+	pointer-events: none;
+	will-change: transform;
+}
+
+.text-reveal-line.animate-in::before {
+	transform: translateX(0);
 }
 
 /* Calendar grid lines - black */
@@ -314,13 +359,13 @@ body.scrollable-page::-webkit-scrollbar {
 	background: #333333; /* Gris foncé au hover */
 }
 
-/* Couleurs spécifiques selon la page */
+/* Couleurs spécifiques selon la page avec variables dynamiques */
 body.scrollable-page.home .custom-scrollbar-thumb {
-	background: #FACC15; /* Jaune sur home */
+	background: var(--dynamic-scrollbar-color) !important; /* Couleur dynamique sur home */
 }
 
 body.scrollable-page.home .custom-scrollbar-thumb:hover {
-	background: #EAB308; /* Jaune plus foncé au hover */
+	background: var(--dynamic-scrollbar-hover) !important; /* Couleur dynamique au hover */
 }
 
 body.scrollable-page.agenda .custom-scrollbar-thumb {

@@ -9,6 +9,7 @@ import Footer from "@/components/footer";
 import BgVideoHome from "@/components/bg-video-home";
 import SoundCloudPlayer from "@/components/soundcloud-player-simple";
 import CustomScrollbar from "@/components/custom-scrollbar";
+import DynamicColorProvider from "@/components/dynamic-color-provider";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
 	return (
 		<html lang="fr">
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+				<DynamicColorProvider />
 				<div className="noise-overlay" aria-hidden />
 				<BgVideoHome />
 				<LenisProvider>

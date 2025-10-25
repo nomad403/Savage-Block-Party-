@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { useGlobalDynamicColors } from "../hooks/useGlobalDynamicColors";
 
 export default function CustomScrollbar() {
   const pathname = usePathname();
@@ -12,6 +13,9 @@ export default function CustomScrollbar() {
   const [scrollVelocity, setScrollVelocity] = useState(0);
   const [lastScrollTime, setLastScrollTime] = useState(0);
   const [lastScrollTop, setLastScrollTop] = useState(0);
+  
+  // Utiliser les couleurs dynamiques globales
+  const { colors } = useGlobalDynamicColors();
 
   // Déterminer si la page est scrollable
   useEffect(() => {
@@ -122,6 +126,7 @@ export default function CustomScrollbar() {
           style={{
             top: `${thumbTop}px`,
             height: `${thumbHeight}px`,
+            backgroundColor: colors.scrollbarColor,
           }}
         />
       </div>

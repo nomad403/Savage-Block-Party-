@@ -1,6 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion";
+
+// Composant LineByLineText pour l'effet de révélation de texte
+function LineByLineText({ text, className }: { text: string; className: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [lineData, setLineData] = useState<Array<{width: number, top: number, height: number}>>([]);
+  const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    
+    // Créer un élément temporaire pour mesurer
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.whiteSpace = 'nowrap';
+    tempDiv.className = className;
+    document.body.appendChild(tempDiv);
+
+    words.forEach((word, index) => {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      tempDiv.textContent = testLine;
+      
+      if (tempDiv.scrollWidth > container.offsetWidth && currentLine) {
+        // La ligne précédente était complète
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+      
+      if (index === words.length - 1) {
+        // Dernière ligne
+        lines.push(currentLine);
+      }
+    });
+
+    // Calculer les dimensions de chaque ligne
+    const lineHeight = parseFloat(getComputedStyle(tempDiv).lineHeight) || 28;
+    const lineDimensions = lines.map((line, index) => {
+      tempDiv.textContent = line;
+      return {
+        width: tempDiv.scrollWidth,
+        top: index * lineHeight,
+        height: lineHeight
+      };
+    });
+
+    document.body.removeChild(tempDiv);
+    setLineData(lineDimensions);
+    
+    // Initialiser les refs
+    lineRefs.current = new Array(lineDimensions.length).fill(null);
+  }, [text, className]);
+
+  return (
+    <div ref={containerRef} className="w-full relative">
+      {/* Texte normal pour la disposition */}
+      <div className={className}>
+        {text}
+      </div>
+      
+      {/* Overlays d'animation pour chaque ligne */}
+      {lineData.map((line, index) => (
+        <motion.div
+          key={index}
+          ref={(el) => lineRefs.current[index] = el}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.5 + (index * 0.2) }}
+          className="text-reveal-line"
+          style={{
+            top: `${line.top}px`,
+            left: '-12px', // Décalage pour compenser le padding gauche (8px) et créer l'espacement
+            width: `${line.width + 20}px`, // Largeur de la ligne + padding total (8px gauche + 12px droite)
+            height: `${line.height}px`, // Hauteur exacte de la ligne
+          }}
+          onAnimationComplete={() => {
+            setTimeout(() => {
+              if (lineRefs.current[index]) {
+                lineRefs.current[index]!.classList.add('animate-in');
+              }
+            }, 100);
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // Liste des photos dans le dossier gallery_flash
 const galleryImages = [
@@ -147,24 +241,39 @@ export default function GalleryFlash() {
             </div>
 
             {/* Texte à droite */}
-            <div className="text-black flex flex-col justify-center">
-              <h2 className="text-5xl font-title uppercase mb-8 leading-tight">
-                Rejoins le collectif
-              </h2>
-              <div className="space-y-6 text-xl font-text leading-relaxed">
-                <p>
-                  Tu es artiste, créateur, ou simplement passionné par la culture urbaine ? 
-                  Savage Block Party cherche de nouveaux talents pour enrichir sa communauté.
-                </p>
-                <p>
-                  Partage ton Instagram et montre-nous ton univers. Nous étudions chaque candidature 
-                  avec attention pour découvrir les prochaines pépites du collectif.
-                </p>
-                <p className="font-title text-2xl">
-                  Prêt à faire partie de l'aventure ?
-                </p>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-black flex flex-col justify-center relative z-10"
+            >
+              <div className="mb-8">
+                <LineByLineText 
+                  text="Rejoins le collectif" 
+                  className="text-5xl font-title uppercase leading-tight"
+                />
               </div>
-            </div>
+              <div className="space-y-6 text-xl font-text leading-relaxed">
+                <div>
+                  <LineByLineText 
+                    text="Tu es artiste, créateur, ou simplement passionné par la culture urbaine ? Savage Block Party cherche de nouveaux talents pour enrichir sa communauté." 
+                    className="text-xl font-text leading-relaxed"
+                  />
+                </div>
+                <div>
+                  <LineByLineText 
+                    text="Partage ton Instagram et montre-nous ton univers. Nous étudions chaque candidature avec attention pour découvrir les prochaines pépites du collectif." 
+                    className="text-xl font-text leading-relaxed"
+                  />
+                </div>
+                <div>
+                  <LineByLineText 
+                    text="Prêt à faire partie de l'aventure ?" 
+                    className="font-title text-2xl"
+                  />
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
