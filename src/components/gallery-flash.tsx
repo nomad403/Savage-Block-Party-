@@ -72,7 +72,7 @@ function LineByLineText({ text, className }: { text: string; className: string }
       {lineData.map((line, index) => (
         <motion.div
           key={index}
-          ref={(el) => lineRefs.current[index] = el}
+          ref={(el) => { lineRefs.current[index] = el; }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 + (index * 0.2) }}

@@ -14,15 +14,11 @@ function formatMonthYear(date: Date) {
 
 export default async function AgendaPage() {
   const today = new Date();
-  const monthYear = formatMonthYear(today);
   const weekDays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
   const events: EventItem[] = await getAllEvents();
   const featured = pickUpcoming(events, today);
   const byDate = eventsByDate(events);
   const featuredDesc = (featured?.description || "").replace(/<[^>]+>/g, "").trim();
-  const monthKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-  // Pour le scroll vertical: empiler mois-1, mois courant, mois+1
-  const monthOffsets = [-1, 0, 1];
 
   return (
     <main className="bg-yellow-400 text-black">
@@ -32,7 +28,7 @@ export default async function AgendaPage() {
           <AgendaGrid
             todayIso={today.toISOString()}
             weekDays={weekDays}
-            byDate={byDate as any}
+            byDate={byDate}
             featuredTitle={featured?.title}
             featuredImage={featured?.image}
             featuredDesc={featuredDesc}

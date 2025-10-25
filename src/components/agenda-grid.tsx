@@ -8,6 +8,7 @@ type EventItem = {
     title: string;
     image?: string;
     startsAt?: string;
+    url?: string;
 };
 
 export default function AgendaGrid({
@@ -31,8 +32,6 @@ export default function AgendaGrid({
     const [offsets, setOffsets] = useState<number[]>(() => Array.from({ length: 36 }, (_, i) => i - 18)); // ~3 ans seulement
     const [activeIndex, setActiveIndex] = useState<number>(18); // index du mois courant dans offsets
     const scrollRef = useRef<HTMLDivElement>(null);
-    const isAnimatingRef = useRef(false);
-    const pendingIndexRef = useRef<number | null>(null);
     const touchStartYRef = useRef<number | null>(null);
     const didCenterRef = useRef(false);
     const initializingRef = useRef(true);
@@ -114,7 +113,7 @@ export default function AgendaGrid({
             }
         };
 
-        let scrollTimeout: NodeJS.Timeout;
+        let scrollTimeout: NodeJS.Timeout | null = null;
         const onScroll = () => {
             if (initializingRef.current) return;
             
@@ -134,7 +133,7 @@ export default function AgendaGrid({
                         extendIfNeeded(clamped);
                     }
                 }
-                scrollTimeout = null as any;
+                scrollTimeout = null;
             }, 50); // Réduit à 20fps
         };
 
@@ -199,11 +198,11 @@ export default function AgendaGrid({
         el.addEventListener('touchend', onTouchEnd, { passive: true });
         return () => {
             clearTimeout(wheelTimeout);
-            clearTimeout(scrollTimeout);
+            if (scrollTimeout) clearTimeout(scrollTimeout);
             el.removeEventListener('scroll', onScroll);
-            el.removeEventListener('wheel', onWheel as any);
-            el.removeEventListener('touchstart', onTouchStart as any);
-            el.removeEventListener('touchend', onTouchEnd as any);
+            el.removeEventListener('wheel', onWheel);
+            el.removeEventListener('touchstart', onTouchStart);
+            el.removeEventListener('touchend', onTouchEnd);
         };
     }, [activeIndex, offsets.length]);
 
@@ -285,8 +284,8 @@ export default function AgendaGrid({
                         height: "100%",
                         scrollSnapType: "y proximity",
                         scrollBehavior: 'smooth',
-                        WebkitOverflowScrolling: 'touch' as any,
-                        overscrollBehavior: 'auto' as any,
+                        WebkitOverflowScrolling: 'touch',
+                        overscrollBehavior: 'auto',
                         display: "block",
                         verticalAlign: "top"
                     }}
@@ -481,7 +480,7 @@ export default function AgendaGrid({
                         <h3 className="font-title uppercase text-xl mb-3">{openKey}</h3>
                         <div className="space-y-3">
                             {openEvents.map((ev) => (
-                                <a key={ev.id} href={(ev as any).url} target="_blank" rel="noopener" className="flex gap-3 items-center hover:opacity-90">
+                                <a key={ev.id} href={ev.url || '#'} target="_blank" rel="noopener" className="flex gap-3 items-center hover:opacity-90">
                                     <img src={ev.image || makeThumb(ev.title)} alt={ev.title} className="w-12 h-12 object-cover rounded" />
                                     <div className="min-w-0">
                                         <div className="font-text font-semibold truncate">{ev.title}</div>

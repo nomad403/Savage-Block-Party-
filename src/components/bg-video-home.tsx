@@ -6,7 +6,12 @@ import { usePathname } from "next/navigation";
 declare global {
 	interface Window {
 		onYouTubeIframeAPIReady: () => void;
-		YT: any;
+		YT: {
+			Player: new (element: HTMLElement, config: unknown) => {
+				destroy: () => void;
+				playVideo: () => void;
+			};
+		};
 	}
 }
 
@@ -14,7 +19,7 @@ export default function BgVideoHome() {
 	const pathname = usePathname();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const iframeRef = useRef<HTMLIFrameElement>(null);
-	const playerRef = useRef<any>(null);
+	const playerRef = useRef<{ destroy: () => void; playVideo: () => void } | null>(null);
 	const [shouldLoad, setShouldLoad] = useState(false);
 	const [isPlayerReady, setIsPlayerReady] = useState(false);
 	const [isApiLoaded, setIsApiLoaded] = useState(false);
@@ -122,7 +127,7 @@ export default function BgVideoHome() {
 
 					const player = new window.YT.Player(iframeRef.current, {
 						events: {
-							onReady: (event: any) => {
+							onReady: (event: { target: { destroy: () => void; playVideo: () => void } }) => {
 								console.log('✅ Player YouTube prêt');
 								playerRef.current = event.target;
 								
@@ -136,7 +141,7 @@ export default function BgVideoHome() {
 									}
 								}, 500);
 							},
-							onError: (event: any) => {
+							onError: (event: { data: unknown }) => {
 								console.error('❌ Erreur player YouTube:', event.data);
 								// Tentative de récupération
 								if (retryCount < maxRetries) {

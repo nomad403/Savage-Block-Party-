@@ -183,9 +183,10 @@ export function useDMXControl() {
       
       // Effet strobe sur les beats
       if (audioData.beat && channels.strobe) {
-        newChannels[startChannel + channels.strobe] = 255;
+        const strobeChannel = startChannel + channels.strobe;
+        newChannels[strobeChannel] = 255;
         setTimeout(() => {
-          newChannels[startChannel + channels.strobe] = 0;
+          newChannels[strobeChannel] = 0;
         }, 100);
       }
     });

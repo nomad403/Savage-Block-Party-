@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from 'react';
 
+interface AudioFeatures {
+  rms: number;
+  spectralCentroid: number;
+  spectralRolloff?: number;
+  spectralFlux?: number;
+  spectralSpread?: number;
+}
+
 interface BPMVisualizerProps {
   bpm: number | null;
-  audioFeatures: any;
+  audioFeatures: AudioFeatures | null;
   isAnalyzing: boolean;
   className?: string;
 }

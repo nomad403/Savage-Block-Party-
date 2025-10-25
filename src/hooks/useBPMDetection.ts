@@ -246,7 +246,7 @@ export function useBPMDetection() {
         source,
         bufferSize: 512, // Buffer plus petit pour plus de réactivité
         featureExtractors: ["rms", "spectralCentroid", "spectralFlux"],
-        callback: (features) => {
+        callback: (features: { rms?: number; spectralCentroid?: number; spectralFlux?: number }) => {
           if (!features) return;
           
           // 🔥 CRUCIAL : Logs pour vérifier que Meyda reçoit des données
