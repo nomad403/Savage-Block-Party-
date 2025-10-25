@@ -31,6 +31,7 @@ declare global {
 				toggle: () => void;
 			});
 		};
+		onSoundCloudReady: () => void;
 	}
 }
 
@@ -126,6 +127,7 @@ export default function SoundCloudPlayer() {
 	const [isMuted, setIsMuted] = useState(false);
 	const [trackTitle, setTrackTitle] = useState<string>("Savage Block Party");
 	const [artistName, setArtistName] = useState<string>("Latest tracks");
+	const [isApiLoaded, setIsApiLoaded] = useState(false);
 	
 	// Générer un signal audio de test pour Meyda (version simplifiée)
 	const generateTestAudioSignal = useCallback(async () => {
@@ -384,15 +386,27 @@ export default function SoundCloudPlayer() {
 			!isRecovering;
 		
 		if (!isHealthy) {
-			console.warn('⚠️ Widget SoundCloud non disponible:', {
+			// Détecter les erreurs réseau spécifiques
+			const isNetworkError = !window.SC || (window.SC && typeof window.SC.Widget !== 'function');
+			const errorType = isNetworkError ? 'NETWORK_ERROR' : 'WIDGET_ERROR';
+			
+			console.warn(`⚠️ Widget SoundCloud non disponible (${errorType}):`, {
 				hasRef: !!widgetRef.current,
 				hasSC: !!window.SC,
+				hasWidgetAPI: !!(window.SC && typeof window.SC.Widget === 'function'),
 				health: widgetHealth,
 				timeSinceLastSuccess,
 				consecutiveFailures,
 				isRecovering,
-				recoveryAttempts
+				recoveryAttempts,
+				errorType
 			});
+			
+			// Si c'est une erreur réseau, déclencher une réinitialisation
+			if (isNetworkError && timeSinceLastSuccess > 5000) {
+				console.log('🔄 Erreur réseau détectée - déclenchement de la réinitialisation...');
+				window.dispatchEvent(new CustomEvent('soundcloud-network-error'));
+			}
 		}
 		
 		return isHealthy;
@@ -471,60 +485,112 @@ export default function SoundCloudPlayer() {
 		return () => clearInterval(interval);
 	}, [isWidgetHealthy, executeWithRetry, healthCheckInterval]);
 
-	// Écouter les événements de récupération
+	// Écouter les événements de récupération avec gestion d'erreur réseau améliorée
 	useEffect(() => {
-		const handleWidgetFailure = () => {
+		const handleWidgetFailure = async () => {
 			console.log('🔄 Réinitialisation du widget SoundCloud suite à un échec...');
 			setWidgetHealth('healthy');
 			setRetryCount(0);
 			setLastSuccessfulOperation(Date.now());
-			// Réinitialiser le widget
-			const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
-			if (iframe && window.SC) {
-				widgetRef.current = window.SC.Widget(iframe);
+			
+			// Attendre que l'API SoundCloud soit disponible
+			const waitForSC = () => {
+				return new Promise<void>((resolve) => {
+					const checkSC = () => {
+						if (window.SC && typeof window.SC.Widget === 'function') {
+							resolve();
+						} else {
+							setTimeout(checkSC, 100);
+						}
+					};
+					checkSC();
+				});
+			};
+			
+			try {
+				await waitForSC();
+				
+				// Réinitialiser le widget avec retry
+				const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
+				if (iframe && window.SC) {
+					console.log('🎵 Réinitialisation du widget SoundCloud...');
+					widgetRef.current = window.SC.Widget(iframe);
+					
+					// Vérifier que le widget est bien initialisé
+					setTimeout(() => {
+						if (widgetRef.current) {
+							console.log('✅ Widget SoundCloud réinitialisé avec succès');
+							setLastSuccessfulOperation(Date.now());
+						} else {
+							console.warn('⚠️ Échec de la réinitialisation du widget');
+						}
+					}, 1000);
+				}
+			} catch (error) {
+				console.error('❌ Erreur lors de la réinitialisation:', error);
 			}
 		};
 
 		window.addEventListener('soundcloud-widget-failed', handleWidgetFailure);
-		return () => window.removeEventListener('soundcloud-widget-failed', handleWidgetFailure);
+		window.addEventListener('soundcloud-network-error', handleWidgetFailure);
+		return () => {
+			window.removeEventListener('soundcloud-widget-failed', handleWidgetFailure);
+			window.removeEventListener('soundcloud-network-error', handleWidgetFailure);
+		};
 	}, []);
 
 	// Générer l'URL SoundCloud avec paramètre aléatoire côté client seulement
 	useEffect(() => {
 		// URL de base pour la playlist Savage Block Party
-		const baseUrl = `https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/savageblockpartys&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+		const baseUrl = `https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/savageblockpartys&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&callback=onSoundCloudReady`;
 		setSoundcloudUrl(baseUrl);
+		
+		// Ajouter un callback global pour SoundCloud
+		window.onSoundCloudReady = () => {
+			console.log('🎵 SoundCloud API prête');
+			setIsApiLoaded(true);
+		};
 	}, []);
 
-	// Fonction utilitaire pour charger la waveform
+	// Fonction utilitaire pour charger la waveform avec gestion d'erreur réseau améliorée
 	const loadWaveform = useCallback((waveformUrl: string, context: string = '') => {
 		console.log(`🌊 ${context}Récupération waveform:`, waveformUrl);
 		if (waveformUrl.endsWith('.json')) {
-			fetch(waveformUrl)
+			fetch(waveformUrl, {
+				method: 'GET',
+				mode: 'cors',
+				cache: 'no-cache',
+				headers: {
+					'Accept': 'application/json',
+				}
+			})
 				.then((r) => {
-					if (!r.ok) throw new Error(`HTTP ${r.status}`);
+					if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
 					return r.json();
 				})
-										.then((json) => {
-											const samples: number[] = json?.samples || json?.data || [];
-											if (samples.length > 0) {
+				.then((json) => {
+					const samples: number[] = json?.samples || json?.data || [];
+					if (samples.length > 0) {
 						console.log(`✅ ${context}Waveform samples chargés:`, samples.length);
-												setWaveformSamples(samples);
-												setWaveformImageUrl("");
+						setWaveformSamples(samples);
+						setWaveformImageUrl("");
 					} else {
 						console.log(`⚠️ ${context}Aucun sample trouvé dans le JSON`);
 						setWaveformSamples(null);
-												setWaveformImageUrl("");
-											}
-										})
+						setWaveformImageUrl("");
+					}
+				})
 				.catch((error) => {
-					console.log(`❌ ${context}Erreur chargement waveform JSON:`, error);
-											setWaveformSamples(null);
-											setWaveformImageUrl("");
-										});
-								} else {
+					console.error(`❌ ${context}Erreur réseau waveform JSON:`, error);
+					// Fallback : générer des samples simulés
+					console.log(`🔄 ${context}Utilisation de samples simulés comme fallback`);
+					const fallbackSamples = Array.from({ length: 100 }, () => Math.random() * 0.5 + 0.25);
+					setWaveformSamples(fallbackSamples);
+					setWaveformImageUrl("");
+				});
+		} else {
 			console.log(`✅ ${context}Waveform image URL:`, waveformUrl);
-									setWaveformSamples(null);
+			setWaveformSamples(null);
 			setWaveformImageUrl(waveformUrl);
 		}
 	}, []);
