@@ -539,20 +539,174 @@ export default function SoundCloudPlayer() {
 		};
 	}, []);
 
-	// Générer l'URL SoundCloud avec paramètre aléatoire côté client seulement
-	useEffect(() => {
-		// URL de base pour la playlist Savage Block Party
-		const baseUrl = `https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/savageblockpartys&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&callback=onSoundCloudReady`;
-		setSoundcloudUrl(baseUrl);
+	// Machine d'état simple pour l'initialisation
+	type InitState = 'idle' | 'loading-api' | 'api-ready' | 'loading-widget' | 'widget-ready' | 'failed';
+	const [initState, setInitState] = useState<InitState>('idle');
+	const [initError, setInitError] = useState<string | null>(null);
+	
+	// Initialisation séquentielle et robuste
+	const initializeSoundCloudSequentially = useCallback(async () => {
+		console.log('🎵 Début de l\'initialisation séquentielle SoundCloud...');
+		setInitState('loading-api');
+		setInitError(null);
 		
-		// Ajouter un callback global pour SoundCloud
-		window.onSoundCloudReady = () => {
-			console.log('🎵 SoundCloud API prête');
-			setIsApiLoaded(true);
-		};
+		try {
+			// Étape 1: Charger l'API SoundCloud
+			await loadSoundCloudAPI();
+			
+			// Étape 2: Attendre que l'API soit prête
+			await waitForSoundCloudAPI();
+			
+			// Étape 3: Initialiser le widget
+			await initializeWidget();
+			
+			// Étape 4: Configurer les événements
+			setupWidgetEvents();
+			
+			// Étape 5: Sélection aléatoire initiale
+			await performInitialRandomSelection();
+			
+			console.log('✅ Initialisation SoundCloud terminée avec succès');
+			setInitState('widget-ready');
+			
+		} catch (error) {
+			console.error('❌ Erreur lors de l\'initialisation:', error);
+			setInitError(error instanceof Error ? error.message : 'Erreur inconnue');
+			setInitState('failed');
+		}
 	}, []);
-
-	// Fonction utilitaire pour charger la waveform avec gestion d'erreur réseau améliorée
+	
+	// Étape 1: Charger l'API SoundCloud
+	const loadSoundCloudAPI = useCallback((): Promise<void> => {
+		return new Promise((resolve, reject) => {
+			// Vérifier si l'API est déjà chargée
+			if (window.SC && typeof window.SC.Widget === 'function') {
+				console.log('✅ API SoundCloud déjà disponible');
+				resolve();
+				return;
+			}
+			
+			console.log('📥 Chargement du script SoundCloud...');
+			const script = document.createElement('script');
+			script.src = 'https://w.soundcloud.com/player/api.js';
+			script.async = true;
+			
+			script.onload = () => {
+				console.log('✅ Script SoundCloud chargé');
+				resolve();
+			};
+			
+			script.onerror = () => {
+				console.error('❌ Erreur lors du chargement du script SoundCloud');
+				reject(new Error('Impossible de charger l\'API SoundCloud'));
+			};
+			
+			document.head.appendChild(script);
+		});
+	}, []);
+	
+	// Étape 2: Attendre que l'API soit prête
+	const waitForSoundCloudAPI = useCallback((): Promise<void> => {
+		return new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				reject(new Error('Timeout: API SoundCloud non disponible après 10s'));
+			}, 10000);
+			
+			const checkAPI = () => {
+				if (window.SC && typeof window.SC.Widget === 'function') {
+					console.log('✅ API SoundCloud prête');
+					clearTimeout(timeout);
+					setInitState('api-ready');
+					setIsApiLoaded(true);
+					resolve();
+				} else {
+					setTimeout(checkAPI, 100);
+				}
+			};
+			
+			checkAPI();
+		});
+	}, []);
+	
+	// Étape 3: Initialiser le widget
+	const initializeWidget = useCallback((): Promise<void> => {
+		return new Promise((resolve, reject) => {
+			setInitState('loading-widget');
+			
+			const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
+			if (!iframe) {
+				reject(new Error('Iframe SoundCloud non trouvée'));
+				return;
+			}
+			
+			// Attendre que l'iframe soit complètement chargée
+			const waitForIframe = () => {
+				return new Promise<void>((iframeResolve) => {
+					const checkIframe = () => {
+						try {
+							if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+								iframeResolve();
+							} else {
+								setTimeout(checkIframe, 100);
+							}
+						} catch (error) {
+							// Cross-origin, mais l'iframe existe
+							iframeResolve();
+						}
+					};
+					checkIframe();
+				});
+			};
+			
+			waitForIframe().then(() => {
+				// Délai supplémentaire pour s'assurer que l'iframe est prête
+				setTimeout(() => {
+					try {
+						widgetRef.current = window.SC.Widget(iframe);
+						console.log('✅ Widget SoundCloud créé');
+						resolve();
+					} catch (error) {
+						console.error('❌ Erreur lors de la création du widget:', error);
+						reject(error);
+					}
+				}, 1000);
+			});
+		});
+	}, []);
+	
+	// Étape 4: Configurer les événements
+	const setupWidgetEvents = useCallback(() => {
+		if (!widgetRef.current) return;
+		
+		console.log('🎛️ Configuration des événements du widget...');
+		
+		widgetRef.current.bind(window.SC.Widget.Events.READY, () => {
+			console.log('🎵 Widget SoundCloud prêt !');
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
+			setIsPlaying(true);
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
+			setIsPlaying(false);
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
+			setProgress(data.relativePosition || 0);
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
+			console.log('🎵 Track terminé');
+			setIsPlaying(false);
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
+			console.error('❌ Erreur widget SoundCloud:', error);
+		});
+	}, []);
+	
+	// Fonction pour charger la waveform
 	const loadWaveform = useCallback((waveformUrl: string, context: string = '') => {
 		console.log(`🌊 ${context}Récupération waveform:`, waveformUrl);
 		if (waveformUrl.endsWith('.json')) {
@@ -560,15 +714,9 @@ export default function SoundCloudPlayer() {
 				method: 'GET',
 				mode: 'cors',
 				cache: 'no-cache',
-				headers: {
-					'Accept': 'application/json',
-				}
 			})
-				.then((r) => {
-					if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-					return r.json();
-				})
-				.then((json) => {
+				.then(response => response.json())
+				.then(json => {
 					const samples: number[] = json?.samples || json?.data || [];
 					if (samples.length > 0) {
 						console.log(`✅ ${context}Waveform samples chargés:`, samples.length);
@@ -580,7 +728,7 @@ export default function SoundCloudPlayer() {
 						setWaveformImageUrl("");
 					}
 				})
-				.catch((error) => {
+				.catch(error => {
 					console.error(`❌ ${context}Erreur réseau waveform JSON:`, error);
 					// Fallback : générer des samples simulés
 					console.log(`🔄 ${context}Utilisation de samples simulés comme fallback`);
@@ -594,6 +742,62 @@ export default function SoundCloudPlayer() {
 			setWaveformImageUrl(waveformUrl);
 		}
 	}, []);
+
+	// Étape 5: Sélection aléatoire initiale
+	const performInitialRandomSelection = useCallback(async (): Promise<void> => {
+		if (!widgetRef.current) return;
+		
+		console.log('🎲 Sélection aléatoire initiale...');
+		
+		try {
+			// Récupérer la liste des sons
+			const sounds = await new Promise<any[]>((resolve) => {
+				widgetRef.current.getSounds((sounds: any[]) => {
+					resolve(sounds || []);
+				});
+			});
+			
+			if (sounds.length > 0) {
+				// Sélectionner un son aléatoire
+				const randomIndex = Math.floor(Math.random() * sounds.length);
+				const randomSound = sounds[randomIndex];
+				
+				console.log(`🎲 Son sélectionné: ${randomSound.title}`);
+				
+				// Aller au son sélectionné
+				widgetRef.current.skip(randomIndex);
+				
+				// Mettre à jour les informations
+				setTrackTitle(randomSound.title || "Savage Block Party");
+				setArtistName(randomSound.user?.username || "Latest tracks");
+				setArtworkUrl((randomSound.artwork_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"));
+				setPermalinkUrl(randomSound.permalink_url || "https://soundcloud.com/savageblockpartys");
+				
+				// Charger la waveform si disponible
+				if (randomSound.waveform_url) {
+					loadWaveform(randomSound.waveform_url, 'Initial ');
+				}
+			}
+		} catch (error) {
+			console.error('❌ Erreur lors de la sélection aléatoire:', error);
+		}
+	}, [loadWaveform]);
+	
+	// Initialisation principale
+	useEffect(() => {
+		console.log('🎵 Initialisation du widget SoundCloud...');
+		
+		// URL de base pour la playlist Savage Block Party
+		const baseUrl = `https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/savageblockpartys&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+		setSoundcloudUrl(baseUrl);
+		
+		// Démarrer l'initialisation séquentielle après un court délai
+		const timer = setTimeout(() => {
+			initializeSoundCloudSequentially();
+		}, 500);
+		
+		return () => clearTimeout(timer);
+	}, [initializeSoundCloudSequentially]);
 
 	// Éviter l'erreur d'hydratation et préparer la sélection aléatoire
 	useEffect(() => {
