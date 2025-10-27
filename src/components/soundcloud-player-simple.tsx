@@ -694,7 +694,7 @@ export default function SoundCloudPlayer() {
 		});
 	}, []);
 	
-	// Étape 4: Configurer les événements
+	// Étape 4: Configurer les événements (une seule fois, pas de double bind)
 	const setupWidgetEvents = useCallback(() => {
 		if (!widgetRef.current && !ensureWidgetRef()) {
 			console.warn('⚠️ Impossible de configurer les événements: widget non disponible');
@@ -703,30 +703,44 @@ export default function SoundCloudPlayer() {
 		
 		console.log('🎛️ Configuration des événements du widget...');
 		
-		widgetRef.current.bind(window.SC.Widget.Events.READY, () => {
-			console.log('🎵 Widget SoundCloud prêt !');
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
-			setIsPlaying(true);
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
-			setIsPlaying(false);
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
-			setProgress(data.relativePosition || 0);
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
-			console.log('🎵 Track terminé');
-			setIsPlaying(false);
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
-			console.error('❌ Erreur widget SoundCloud:', error);
-		});
+		try {
+			widgetRef.current.bind(window.SC.Widget.Events.READY, () => {
+				console.log('🎵 Widget SoundCloud prêt !');
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
+				setIsPlaying(true);
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
+				setIsPlaying(false);
+			});
+			
+			// Événement PLAY_PROGRESS pour mettre à jour le progress
+			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
+				if (typeof data?.relativePosition === 'number') {
+					setProgress(data.relativePosition);
+				}
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
+				if (typeof data?.relativePosition === 'number') {
+					setProgress(data.relativePosition);
+				}
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
+				console.log('🎵 Track terminé');
+				setIsPlaying(false);
+				setProgress(0);
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
+				console.error('❌ Erreur widget SoundCloud:', error);
+			});
+		} catch (error) {
+			console.error('❌ Erreur lors de la configuration des événements:', error);
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	
@@ -1097,29 +1111,23 @@ export default function SoundCloudPlayer() {
 				widgetRef.current.skip(randomIndex);
 				console.log(`✅ Skip vers son aléatoire réussi (index: ${randomIndex})`);
 				
-				// Mettre à jour immédiatement les infos du son sélectionné
+				// Attendre un peu pour que le widget change de track, puis mettre à jour les infos
 				setTimeout(() => {
-					widgetRef.current.getCurrentSound((currentSound: any) => {
+					widgetRef.current?.getCurrentSound((currentSound: any) => {
 						if (currentSound) {
 							console.log(`🎵 Son actuel après skip: ${currentSound.title}`);
-							// Mettre à jour les infos directement
 							setTrackTitle(currentSound.title || "Savage Block Party");
 							setArtistName(currentSound.user?.username || "Latest tracks");
-							const art = (currentSound.artwork_url || currentSound.user?.avatar_url || "/home/images/logo_orange.png") as string;
-								setArtworkUrl(art.replace("-large", "-t200x200"));
+							const art = (currentSound.artwork_url || "/home/images/logo_orange.png");
+							setArtworkUrl(art.replace("-large", "-t200x200"));
 							setPermalinkUrl(currentSound.permalink_url || "https://soundcloud.com/savageblockpartys");
 							
-							const wf = currentSound.waveform_url || currentSound.visual_waveform_url;
-							if (wf) {
-								loadWaveform(wf, 'Skip ');
-							}
-							
-							if (typeof currentSound.duration === 'number') {
-								setDurationMs(currentSound.duration);
+							if (currentSound.waveform_url) {
+								loadWaveform(currentSound.waveform_url, 'Skip ');
 							}
 						}
 					});
-				}, 200);
+				}, 300);
 			} catch (error) {
 				console.error('❌ Erreur skip vers son aléatoire:', error);
 			}
@@ -1321,13 +1329,8 @@ export default function SoundCloudPlayer() {
 						// Synchroniser l'audio HTML5 avec le widget SoundCloud
 						audioElementRef.current?.pause();
 					});
-					widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (e: any) => {
-						if (typeof e?.relativePosition === 'number') setProgress(e.relativePosition);
-					});
-					widgetRef.current.bind(window.SC.Widget.Events.SEEK, (e: any) => {
-						if (typeof e?.relativePosition === 'number') setProgress(e.relativePosition);
-						try { widgetRef.current.getDuration((ms: number) => setDurationMs(ms || 0)); } catch {}
-					});
+					// PLAY_PROGRESS et SEEK sont déjà bindés dans setupWidgetEvents
+					// Pas besoin de les re-binder ici pour éviter le double affichage
 					widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
 						setIsPlaying(false);
 						setProgress(0);
