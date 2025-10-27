@@ -628,6 +628,26 @@ export default function SoundCloudPlayer() {
 		});
 	}, []);
 	
+	// Fonction helper pour recréer la référence du widget si nécessaire
+	const ensureWidgetRef = useCallback(() => {
+		if (widgetRef.current) {
+			return true;
+		}
+		
+		const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
+		if (iframe && window.SC && typeof window.SC.Widget === 'function') {
+			try {
+				widgetRef.current = window.SC.Widget(iframe);
+				console.log('✅ Widget ref recréée automatiquement');
+				return true;
+			} catch (error) {
+				console.error('❌ Erreur lors de la recréation du widget ref:', error);
+			}
+		}
+		
+		return false;
+	}, []);
+	
 	// Étape 3: Initialiser le widget
 	const initializeWidget = useCallback((): Promise<void> => {
 		return new Promise((resolve, reject) => {
@@ -676,7 +696,10 @@ export default function SoundCloudPlayer() {
 	
 	// Étape 4: Configurer les événements
 	const setupWidgetEvents = useCallback(() => {
-		if (!widgetRef.current) return;
+		if (!widgetRef.current && !ensureWidgetRef()) {
+			console.warn('⚠️ Impossible de configurer les événements: widget non disponible');
+			return;
+		}
 		
 		console.log('🎛️ Configuration des événements du widget...');
 		
@@ -704,6 +727,7 @@ export default function SoundCloudPlayer() {
 		widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
 			console.error('❌ Erreur widget SoundCloud:', error);
 		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	
 	// Fonction pour charger la waveform
@@ -745,7 +769,8 @@ export default function SoundCloudPlayer() {
 
 	// Étape 5: Sélection aléatoire initiale avec retry robuste
 	const performInitialRandomSelection = useCallback(async (): Promise<void> => {
-		if (!widgetRef.current) {
+		// Assurer que la référence du widget existe
+		if (!widgetRef.current && !ensureWidgetRef()) {
 			console.warn('⚠️ Widget non disponible pour la sélection aléatoire');
 			return;
 		}
@@ -828,6 +853,7 @@ export default function SoundCloudPlayer() {
 		setArtistName("Latest tracks");
 		setArtworkUrl("/home/images/logo_orange.png");
 		setPermalinkUrl("https://soundcloud.com/savageblockpartys");
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [loadWaveform]);
 	
 	// Initialisation principale
@@ -850,6 +876,18 @@ export default function SoundCloudPlayer() {
 	useEffect(() => {
 		setIsMounted(true);
 		console.log('🎲 Composant monté - sélection aléatoire activée');
+	}, []);
+	
+	// Auto-récupération de la référence du widget en cas de perte
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (!widgetRef.current && window.SC && typeof window.SC.Widget === 'function') {
+				ensureWidgetRef();
+			}
+		}, 2000); // Vérifier toutes les 2 secondes
+		
+		return () => clearInterval(interval);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// Synchroniser les données audio avec le système DMX moderne
