@@ -719,6 +719,7 @@ export default function SoundCloudPlayer() {
 			// Événement PLAY_PROGRESS pour mettre à jour le progress
 			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
 				if (typeof data?.relativePosition === 'number') {
+					console.log('📊 Progress update:', data.relativePosition);
 					setProgress(data.relativePosition);
 				}
 			});
@@ -1122,8 +1123,16 @@ export default function SoundCloudPlayer() {
 							setArtworkUrl(art.replace("-large", "-t200x200"));
 							setPermalinkUrl(currentSound.permalink_url || "https://soundcloud.com/savageblockpartys");
 							
-							if (currentSound.waveform_url) {
-								loadWaveform(currentSound.waveform_url, 'Skip ');
+							// Charger la waveform si disponible
+							const waveform = currentSound.waveform_url || currentSound.visual_waveform_url;
+							console.log('🌊 Waveform disponible pour ce track:', waveform);
+							if (waveform) {
+								console.log('🌊 Chargement waveform depuis forceRandomSelection:', waveform);
+								loadWaveform(waveform, 'Skip ');
+							} else {
+								console.warn('⚠️ Aucune waveform disponible pour ce track');
+								setWaveformSamples(null);
+								setWaveformImageUrl("");
 							}
 						}
 					});
@@ -1329,8 +1338,19 @@ export default function SoundCloudPlayer() {
 						// Synchroniser l'audio HTML5 avec le widget SoundCloud
 						audioElementRef.current?.pause();
 					});
-					// PLAY_PROGRESS et SEEK sont déjà bindés dans setupWidgetEvents
-					// Pas besoin de les re-binder ici pour éviter le double affichage
+					// Bind PLAY_PROGRESS ici aussi car setupWidgetEvents pourrait ne pas être appelé
+					widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
+						if (typeof data?.relativePosition === 'number') {
+							setProgress(data.relativePosition);
+						}
+					});
+					
+					widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
+						if (typeof data?.relativePosition === 'number') {
+							setProgress(data.relativePosition);
+						}
+					});
+					
 					widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
 						setIsPlaying(false);
 						setProgress(0);
