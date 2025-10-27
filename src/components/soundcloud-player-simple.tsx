@@ -743,44 +743,91 @@ export default function SoundCloudPlayer() {
 		}
 	}, []);
 
-	// Étape 5: Sélection aléatoire initiale
+	// Étape 5: Sélection aléatoire initiale avec retry robuste
 	const performInitialRandomSelection = useCallback(async (): Promise<void> => {
-		if (!widgetRef.current) return;
+		if (!widgetRef.current) {
+			console.warn('⚠️ Widget non disponible pour la sélection aléatoire');
+			return;
+		}
 		
 		console.log('🎲 Sélection aléatoire initiale...');
 		
-		try {
-			// Récupérer la liste des sons
-			const sounds = await new Promise<any[]>((resolve) => {
-				widgetRef.current.getSounds((sounds: any[]) => {
-					resolve(sounds || []);
-				});
-			});
-			
-			if (sounds.length > 0) {
-				// Sélectionner un son aléatoire
-				const randomIndex = Math.floor(Math.random() * sounds.length);
-				const randomSound = sounds[randomIndex];
+		// Retry avec backoff exponentiel
+		const maxRetries = 5;
+		let attempt = 0;
+		
+		while (attempt < maxRetries) {
+			try {
+				// Attendre un court délai pour s'assurer que le widget est prêt
+				await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
 				
-				console.log(`🎲 Son sélectionné: ${randomSound.title}`);
+				// Récupérer la liste des sons avec timeout
+				const sounds = await Promise.race([
+					new Promise<any[]>((resolve, reject) => {
+						const timeout = setTimeout(() => {
+							reject(new Error('Timeout récupération sounds'));
+						}, 5000);
+						
+						try {
+							widgetRef.current.getSounds((sounds: any[]) => {
+								clearTimeout(timeout);
+								resolve(sounds || []);
+							});
+						} catch (error) {
+							clearTimeout(timeout);
+							reject(error);
+						}
+					})
+				]);
 				
-				// Aller au son sélectionné
-				widgetRef.current.skip(randomIndex);
-				
-				// Mettre à jour les informations
-				setTrackTitle(randomSound.title || "Savage Block Party");
-				setArtistName(randomSound.user?.username || "Latest tracks");
-				setArtworkUrl((randomSound.artwork_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"));
-				setPermalinkUrl(randomSound.permalink_url || "https://soundcloud.com/savageblockpartys");
-				
-				// Charger la waveform si disponible
-				if (randomSound.waveform_url) {
-					loadWaveform(randomSound.waveform_url, 'Initial ');
+				if (sounds && sounds.length > 0) {
+					// Sélectionner un son aléatoire
+					const randomIndex = Math.floor(Math.random() * sounds.length);
+					const randomSound = sounds[randomIndex];
+					
+					console.log(`🎲 Son sélectionné (tentative ${attempt + 1}/${maxRetries}): ${randomSound.title}`);
+					
+					// Aller au son sélectionné
+					await new Promise<void>((resolve) => {
+						try {
+							widgetRef.current.skip(randomIndex);
+							// Attendre que le track change
+							setTimeout(resolve, 500);
+						} catch (error) {
+							console.error('❌ Erreur lors du skip:', error);
+							resolve();
+						}
+					});
+					
+					// Mettre à jour les informations
+					setTrackTitle(randomSound.title || "Savage Block Party");
+					setArtistName(randomSound.user?.username || "Latest tracks");
+					setArtworkUrl((randomSound.artwork_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"));
+					setPermalinkUrl(randomSound.permalink_url || "https://soundcloud.com/savageblockpartys");
+					
+					// Charger la waveform si disponible
+					if (randomSound.waveform_url) {
+						loadWaveform(randomSound.waveform_url, 'Initial ');
+					}
+					
+					console.log('✅ Sélection aléatoire réussie');
+					return;
+				} else {
+					console.warn(`⚠️ Aucun son trouvé (tentative ${attempt + 1}/${maxRetries})`);
 				}
+			} catch (error) {
+				console.error(`❌ Erreur sélection aléatoire (tentative ${attempt + 1}/${maxRetries}):`, error);
 			}
-		} catch (error) {
-			console.error('❌ Erreur lors de la sélection aléatoire:', error);
+			
+			attempt++;
 		}
+		
+		// Si tous les retries ont échoué, afficher des valeurs par défaut
+		console.warn('⚠️ Échec de la sélection aléatoire après tous les retries - utilisation des valeurs par défaut');
+		setTrackTitle("Savage Block Party");
+		setArtistName("Latest tracks");
+		setArtworkUrl("/home/images/logo_orange.png");
+		setPermalinkUrl("https://soundcloud.com/savageblockpartys");
 	}, [loadWaveform]);
 	
 	// Initialisation principale
