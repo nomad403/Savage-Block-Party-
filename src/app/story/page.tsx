@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function StoryPage() {
   return (
-    <main className="w-full -mt-20">
+    <main id="story-root" className="w-full -mt-20">
       {/* Section 1: Accroche */}
       <section className="h-screen w-full relative">
         <Image

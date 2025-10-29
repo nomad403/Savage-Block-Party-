@@ -48,6 +48,18 @@
 html, body {
 	height: 100%;
 	overflow-x: hidden;
+	overflow-y: auto; /* Permettre le scroll vertical */
+	/* Masquer la scrollbar native par défaut, mais permettre le scroll */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE/Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+	display: none; /* Chrome/Safari */
+	width: 0;
+	height: 0;
+	background: transparent;
 }
 
 body {
@@ -164,6 +176,16 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	background: #FACC15 !important; /* Fond jaune pour story */
 }
 
+/* Menu sur page family - fond jaune */
+.menu-link-family::before {
+	background: #FACC15 !important; /* Fond jaune pour family */
+}
+
+/* Menu sur page presse - fond jaune */
+.menu-link-presse::before {
+	background: #FACC15 !important; /* Fond jaune pour presse */
+}
+
 /* Animation IN/OUT pour le player compact sur agenda */
 .player-compact-agenda {
 	position: relative;
@@ -177,13 +199,43 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	content: '';
 	position: absolute;
 	top: 0; left: 0; right: 0; bottom: 0;
-	background: #079fce; /* Cyan menu */
+	background: #22D3EE; /* Cyan-400 (même couleur que le footer story) */
 	transform: translateX(-100%);
 	transition: transform 0.35s ease;
 	pointer-events: none;
 	will-change: transform;
 	z-index: 1;
 	border-radius: 0.5rem;
+}
+
+/* Page family - fond vert pour les boutons du player */
+body:has(#family-root) .player-compact-agenda::before {
+	background: #22C55E; /* Green-500 (même couleur que le footer family) */
+}
+
+/* Page shop - fond rouge pour les boutons du player */
+body:has(#shop-root) .player-compact-agenda::before {
+	background: #EF4444; /* Red-500 (même couleur que le footer shop) */
+}
+
+/* Page presse - waveform en violet (même couleur que le footer) */
+body:has(#presse-root) #sbp-footer-waveform > div > div > div {
+	background-color: #A855F7 !important; /* Purple-500 */
+}
+/* Assurer que les barres jouées restent visibles sur presse */
+body:has(#presse-root) #sbp-footer-waveform [class*="bg-purple-500"] {
+	opacity: 1 !important;
+	background-color: #A855F7 !important;
+}
+/* Barres non jouées avec opacité réduite */
+body:has(#presse-root) #sbp-footer-waveform [class*="bg-purple-500/50"] {
+	opacity: 0.5 !important;
+	background-color: rgba(168, 85, 247, 0.5) !important;
+}
+
+/* Page presse - fond violet pour les boutons du player */
+body:has(#presse-root) .player-compact-agenda::before {
+	background: #A855F7; /* Purple-500 (même couleur que le footer presse) */
 }
 
 .player-compact-agenda.animate-in::before {
@@ -208,12 +260,25 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	filter: brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(2000%) hue-rotate(180deg) brightness(1.2);
 }
 
+.logo-tint-green {
+	filter: brightness(0) saturate(100%) invert(67%) sepia(100%) saturate(3000%) hue-rotate(90deg) brightness(1.1);
+}
+
+.logo-tint-purple {
+	filter: brightness(0) saturate(100%) invert(35%) sepia(100%) saturate(1000%) hue-rotate(240deg) brightness(1.2);
+}
+
 /* Animation de révélation de texte ligne par ligne */
 .text-reveal-line {
 	position: absolute;
 	overflow: hidden;
 	z-index: -1;
 	padding: 0 10px 0 8px;
+}
+
+/* Page presse - reveal line en violet */
+body:has(#presse-root) .text-reveal-line::before {
+	background: #A855F7 !important;
 }
 
 .text-reveal-line::before {
@@ -302,14 +367,32 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Scrollbar custom transparente avec couleur header */
+html.scrollable-page,
 body.scrollable-page {
-	/* Masquer la scrollbar native */
-	scrollbar-width: none; /* Firefox */
-	-ms-overflow-style: none; /* IE/Edge */
+	/* Masquer la scrollbar native complètement */
+	scrollbar-width: none !important; /* Firefox */
+	-ms-overflow-style: none !important; /* IE/Edge */
+	/* Permettre le scroll vertical mais masquer la scrollbar */
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
+	height: auto !important; /* Permettre à la hauteur de dépasser 100vh */
 }
 
+/* Masquer la scrollbar WebKit (Chrome/Safari/Edge) sur html et body */
+html.scrollable-page::-webkit-scrollbar,
 body.scrollable-page::-webkit-scrollbar {
-	display: none; /* Chrome/Safari */
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	background: transparent !important;
+}
+
+/* Masquer aussi sur les éléments de scroll potentiels */
+html.scrollable-page *::-webkit-scrollbar,
+body.scrollable-page *::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
 }
 
 /* Scrollbar custom pour pages scrollables */
@@ -375,6 +458,137 @@ body.scrollable-page.agenda .custom-scrollbar-thumb {
 body.scrollable-page.agenda .custom-scrollbar-thumb:hover {
 	background: #333333; /* Gris foncé au hover */
 }
+
+/* Page shop - désactiver la scrollbar par défaut sur body */
+body:has(#shop-root) {
+	-ms-overflow-style: none !important;
+	scrollbar-width: none !important;
+	overflow: hidden !important; /* Empêcher le scroll du body */
+}
+
+body:has(#shop-root)::-webkit-scrollbar {
+	width: 0px !important;
+	background: transparent !important;
+	display: none !important;
+}
+
+/* Page shop - Activer la scrollbar personnalisée rouge et la positionner entre header et footer */
+body:has(#shop-root).scrollable-page .custom-scrollbar {
+	display: block !important;
+	pointer-events: auto !important;
+	/* Positionner entre le header et le footer */
+	top: 140px !important; /* Hauteur du header */
+	height: calc(100vh - 140px - 200px) !important; /* 100vh - header - footer approximatif */
+	bottom: auto !important;
+	right: 0 !important;
+}
+
+body:has(#shop-root) .custom-scrollbar-thumb {
+	background: #000000 !important;
+}
+
+body:has(#shop-root) .custom-scrollbar-thumb:hover {
+	background: #333333 !important;
+}
+
+body:has(#presse-root) .custom-scrollbar-thumb {
+	background: #A855F7 !important;
+}
+
+body:has(#presse-root) .custom-scrollbar-thumb:hover {
+	background: #9333EA !important;
+}
+
+/* Page shop - Supprimer la scrollbar de la colonne de produits */
+body:has(#shop-root) .product-column {
+	-ms-overflow-style: none !important;
+	scrollbar-width: none !important;
+}
+
+body:has(#shop-root) .product-column::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	background: transparent !important;
+}
+
+/* Page shop - header avec fond rouge */
+body:has(#shop-root) header {
+	background-color: #EF4444 !important;
+	padding-top: 40px !important;
+	padding-bottom: 20px !important;
+	min-height: 140px !important;
+	height: 140px !important;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+body:has(#shop-root) header,
+body:has(#shop-root) header *,
+body:has(#shop-root) header span {
+	color: #000000 !important;
+}
+
+/* Page shop - footer : texte en rouge, fond en noir */
+body:has(#shop-root) footer,
+body:has(#shop-root) footer * {
+	color: #EF4444 !important;
+}
+
+/* Page shop - fond du footer en noir */
+body:has(#shop-root) footer {
+	background-color: #000000 !important;
+}
+body:has(#shop-root) footer > div {
+	background-color: #000000 !important;
+}
+body:has(#shop-root) footer > div > div:nth-child(2) {
+	background-color: #000000 !important;
+	box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Page shop - waveform en noir avec progression visible */
+body:has(#shop-root) #sbp-footer-waveform > div > div > div {
+	background-color: #000000 !important;
+}
+/* Assurer que les barres jouées restent visibles sur shop */
+body:has(#shop-root) #sbp-footer-waveform [class*="bg-black"] {
+	opacity: 1 !important;
+}
+/* Barres non jouées avec opacité réduite */
+body:has(#shop-root) #sbp-footer-waveform [class*="bg-black/30"] {
+	opacity: 0.3 !important;
+}
+
+/* Page story - waveform en cyan (même couleur que le footer) */
+body:has(#story-root) #sbp-footer-waveform > div > div > div {
+	background-color: #22D3EE !important; /* Cyan-400 */
+}
+/* Assurer que les barres jouées restent visibles sur story */
+body:has(#story-root) #sbp-footer-waveform [class*="bg-cyan-400"] {
+	opacity: 1 !important;
+	background-color: #22D3EE !important;
+}
+/* Barres non jouées avec opacité réduite */
+body:has(#story-root) #sbp-footer-waveform [class*="bg-cyan-400/50"] {
+	opacity: 0.5 !important;
+	background-color: rgba(34, 211, 238, 0.5) !important;
+}
+
+/* Page family - waveform en vert (même couleur que le footer) */
+body:has(#family-root) #sbp-footer-waveform > div > div > div {
+	background-color: #22C55E !important; /* Green-500 */
+}
+/* Assurer que les barres jouées restent visibles sur family */
+body:has(#family-root) #sbp-footer-waveform [class*="bg-green-500"] {
+	opacity: 1 !important;
+	background-color: #22C55E !important;
+}
+/* Barres non jouées avec opacité réduite */
+body:has(#family-root) #sbp-footer-waveform [class*="bg-green-500/50"] {
+	opacity: 0.5 !important;
+	background-color: rgba(34, 197, 94, 0.5) !important;
+}
+
+/* (supprimé) Les overrides globaux de classes utilitaires sur la page shop provoquaient des re-styles tardifs */
 
 iframe[src*="youtube.com"]::-webkit-media-controls-panel {
 	display: none !important;

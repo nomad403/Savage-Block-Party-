@@ -14,12 +14,13 @@ export default function Header() {
     const isAgenda = pathname?.startsWith("/agenda");
     const isStory = pathname?.startsWith("/story");
     const isFamily = pathname?.startsWith("/family");
+    const isPresse = pathname?.startsWith("/presse");
     
     // Utiliser les couleurs dynamiques globales
     const { colors, currentTheme, isTransitioning } = useGlobalDynamicColors();
     
-    const barColor = (isHome || isFamily) ? "bg-yellow-400" : "bg-black"; // couleur dynamique sur home et family, noir ailleurs
-    const logoClass = isHome ? "logo-tint-yellow" : (isStory ? "logo-tint-cyan" : (isFamily ? "logo-tint-yellow" : "logo-tint-black"));
+    const barColor = isHome ? "bg-yellow-400" : (isFamily ? "bg-green-500" : (isPresse ? "bg-purple-500" : "bg-black")); // couleur dynamique sur home, vert sur family, violet sur presse, noir ailleurs
+    const logoClass = isHome ? "logo-tint-yellow" : (isStory ? "logo-tint-cyan" : (isFamily ? "logo-tint-green" : (isPresse ? "logo-tint-purple" : "logo-tint-black")));
     const headerBg = isHome ? "bg-transparent" : (isAgenda ? "bg-yellow-400" : "bg-transparent");
 
     // Fermer le menu lors d'un changement de route
@@ -47,7 +48,7 @@ export default function Header() {
             <header className={`container-px h-20 flex items-center justify-between z-[60] relative ${headerBg} pt-8`}>
                 <div className="min-w-10">
                     {!isHome && (
-                        <span className={`font-title uppercase tracking-wide text-sm ${isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-yellow-400" : "text-black"))}`}>
+                        <span className={`font-title uppercase tracking-wide text-sm ${isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isPresse ? "text-purple-500" : "text-black")))}`}>
                             {pageLabel}
                         </span>
                     )}
@@ -67,21 +68,21 @@ export default function Header() {
 							className={`absolute left-0 right-0 top-1 block h-[2px] transition-all duration-300 ease-in-out ${
 								open ? 'rotate-45 translate-y-[10px]' : 'rotate-0 translate-y-0'
 							}`}
-							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#FBBF24' : '#000000')) }}
+							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
 						/>
 						{/* Barre du milieu */}
 						<span 
 							className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] transition-all duration-300 ease-in-out ${
 								open ? 'opacity-0' : 'opacity-100'
 							}`}
-							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#FBBF24' : '#000000')) }}
+							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
 						/>
 						{/* Barre du bas */}
 						<span 
 							className={`absolute left-0 right-0 bottom-1 block h-[2px] transition-all duration-300 ease-in-out ${
 								open ? '-rotate-45 -translate-y-[10px]' : 'rotate-0 translate-y-0'
 							}`}
-							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#FBBF24' : '#000000')) }}
+							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
 						/>
 					</div>
 				</button>
@@ -111,7 +112,7 @@ export default function Header() {
                                     <Link
 										key={item.href}
 										href={item.href}
-                                        className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl md:text-6xl leading-none ${isAgenda ? 'menu-link-agenda' : ''} ${isStory ? 'menu-link-story' : ''}`}
+                                        className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl md:text-6xl leading-none ${isAgenda ? 'menu-link-agenda' : ''} ${isStory ? 'menu-link-story' : ''} ${isFamily ? 'menu-link-family' : ''} ${isPresse ? 'menu-link-presse' : ''}`}
 										onClick={() => setOpen(false)}
 									>
 										<span>{item.label}</span>

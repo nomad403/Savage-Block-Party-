@@ -7,8 +7,11 @@ export default function Footer() {
 	const isHome = pathname === "/";
 	const isAgenda = pathname?.startsWith("/agenda");
 	const isStory = pathname?.startsWith("/story");
-	const footerBg = isHome ? "bg-yellow-400" : (isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : "bg-yellow-400"));
-	const footerText = isHome ? "text-black" : (isAgenda ? "text-yellow-400" : (isStory ? "text-black" : "text-black"));
+	const isShop = pathname?.startsWith("/shop");
+	const isFamily = pathname?.startsWith("/family");
+	const isPresse = pathname?.startsWith("/presse");
+	const footerBg = isHome ? "bg-yellow-400" : (isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isShop ? "bg-black" : (isFamily ? "bg-green-500" : (isPresse ? "bg-purple-500" : "bg-yellow-400")))));
+	const footerText = isHome ? "text-black" : (isAgenda ? "text-yellow-400" : (isStory ? "text-black" : (isShop ? "text-red-500" : (isFamily ? "text-black" : (isPresse ? "text-black" : "text-black")))));
 	
 	return (
 		<div className="fixed bottom-0 left-0 right-0 z-[10000] w-screen">
@@ -58,3 +61,4 @@ export default function Footer() {
 		</div>
 	);
 }
+

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import LenisProvider from "@/components/providers/lenis-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Header from "@/components/header";
@@ -54,13 +53,11 @@ export default function RootLayout({
 				<DynamicColorProvider />
 				<div className="noise-overlay" aria-hidden />
 				<BgVideoHome />
-				<LenisProvider>
 					<Header />
 					{children}
 					<SoundCloudPlayer />
-					<CustomScrollbar />
-				</LenisProvider>
-				<Footer />
+				<CustomScrollbar />
+					<Footer />
 				<Analytics />
 				<SpeedInsights />
 			</body>

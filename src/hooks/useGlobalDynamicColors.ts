@@ -37,6 +37,8 @@ export function useGlobalDynamicColors() {
   const isHome = pathname === "/";
   const isAgenda = pathname?.startsWith("/agenda");
   const isStory = pathname?.startsWith("/story");
+  const isFamily = pathname?.startsWith("/family");
+  const isShop = pathname?.startsWith("/shop");
   
   const [currentTheme, setCurrentTheme] = useState<ColorTheme>('yellow');
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -123,23 +125,23 @@ export function useGlobalDynamicColors() {
     if (!isHome) {
       // Couleurs statiques pour les autres pages
       return {
-        primary: isAgenda ? "#000000" : (isStory ? "#22D3EE" : "#FACC15"),
-        primaryHover: isAgenda ? "#333333" : (isStory ? "#06B6D4" : "#EAB308"),
-        primaryFaded: isAgenda ? "rgba(0,0,0,0.3)" : (isStory ? "rgba(34,211,238,0.3)" : "rgba(250,204,21,0.3)"),
+        primary: isAgenda ? "#000000" : (isStory ? "#22D3EE" : (isFamily ? "#22C55E" : (isShop ? "#EF4444" : "#FACC15"))),
+        primaryHover: isAgenda ? "#333333" : (isStory ? "#06B6D4" : (isFamily ? "#16A34A" : (isShop ? "#DC2626" : "#EAB308"))),
+        primaryFaded: isAgenda ? "rgba(0,0,0,0.3)" : (isStory ? "rgba(34,211,238,0.3)" : (isFamily ? "rgba(34,197,94,0.3)" : (isShop ? "rgba(239,68,68,0.3)" : "rgba(250,204,21,0.3)"))),
         
-        menuColor: isAgenda ? "#000000" : (isStory ? "#22D3EE" : "#FACC15"),
+        menuColor: isAgenda ? "#000000" : (isStory ? "#22D3EE" : (isFamily ? "#22C55E" : (isShop ? "#EF4444" : "#FACC15"))),
         menuHoverBg: "#079fce",
         menuHoverText: "#000000",
         
         logoColor: "#ff6a00",
         
-        scrollbarColor: isAgenda ? "#000000" : (isStory ? "#22D3EE" : "#FACC15"),
-        scrollbarHover: isAgenda ? "#333333" : (isStory ? "#06B6D4" : "#EAB308"),
+        scrollbarColor: isAgenda ? "#000000" : (isStory ? "#22D3EE" : (isFamily ? "#22C55E" : (isShop ? "#EF4444" : "#FACC15"))),
+        scrollbarHover: isAgenda ? "#333333" : (isStory ? "#06B6D4" : (isFamily ? "#16A34A" : (isShop ? "#DC2626" : "#EAB308"))),
         
-        playerColor: isAgenda ? "text-black" : (isStory ? "text-cyan-400" : "text-yellow-400"),
-        playerBgColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : "bg-yellow-400"),
-        waveformColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : "bg-yellow-400"),
-        waveformColorFaded: isAgenda ? "bg-black/30" : (isStory ? "bg-cyan-400/30" : "bg-yellow-400/30"),
+        playerColor: isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isShop ? "text-red-500" : "text-yellow-400"))),
+        playerBgColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isFamily ? "bg-green-500" : (isShop ? "bg-red-500" : "bg-yellow-400"))),
+        waveformColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isFamily ? "bg-green-500" : (isShop ? "bg-black" : "bg-yellow-400"))),
+        waveformColorFaded: isAgenda ? "bg-black/30" : (isStory ? "bg-cyan-400/50" : (isFamily ? "bg-green-500/50" : (isShop ? "bg-black/30" : "bg-yellow-400/30"))),
         
         noiseOverlay: "rgba(255,255,255,.035)",
         gridLines: "rgba(255,255,255,.05)"

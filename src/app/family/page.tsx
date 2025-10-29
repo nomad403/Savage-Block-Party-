@@ -4,6 +4,42 @@ import type { Metadata } from "next";
 import { useState } from "react";
 import FamilyDropdowns from "./family-dropdowns";
 
+// Styles pour l'animation de défilement du texte
+const scrollTextStyle = `
+  @keyframes scroll-text {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-33.333%);
+    }
+  }
+  
+  .animate-scroll-text {
+    animation: scroll-text 30s linear infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(8px);
+    }
+  }
+  
+  .animate-bounce {
+    animation: bounce 2s ease-in-out infinite;
+  }
+`;
+
+if (typeof document !== 'undefined' && !document.getElementById('family-scroll-styles')) {
+  const style = document.createElement('style');
+  style.id = 'family-scroll-styles';
+  style.textContent = scrollTextStyle;
+  document.head.appendChild(style);
+}
+
 type MediaType = {
   type: 'youtube';
   videoId: string;
@@ -43,7 +79,7 @@ export default function FamilyPage() {
     }
     
     // Vidéo spécifique pour SUNGOMA (YouTube)
-    if (item === 'SUNGOMA') {
+    if (item === 'Sungoma') {
       return {
         type: 'youtube',
         videoId: 'FWw28MR4jRw',
@@ -86,6 +122,10 @@ export default function FamilyPage() {
   };
 
   const media = selectedItem ? getMediaForItem(selectedItem) : null;
+  
+  // Vidéo par défaut quand aucun item n'est sélectionné
+  const defaultVideoId = 'eZto42hlGKA';
+  const defaultStartTime = 10; // Commence à la 10ème seconde
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +136,7 @@ export default function FamilyPage() {
   };
 
   return (
-    <main className="w-full -mt-20">
+    <main id="family-root" className="w-full -mt-20">
       {/* Section hero avec image de fond fullscreen */}
       <section className="h-screen w-full relative overflow-hidden">
         {/* Image de fond qui commence dès le top */}
@@ -115,7 +155,7 @@ export default function FamilyPage() {
         {/* Contenu centré */}
         <div className="relative z-10 h-full flex items-center justify-center">
           <div className="text-center px-4">
-            <h1 className="font-title uppercase text-6xl sm:text-7xl md:text-8xl text-yellow-400 mb-6 leading-tight">
+            <h1 className="font-title uppercase text-6xl sm:text-7xl md:text-8xl text-green-500 mb-6 leading-tight">
               Une famille
             </h1>
           </div>
@@ -124,13 +164,26 @@ export default function FamilyPage() {
       
       {/* Deuxième section avec fond rouge et vidéo fullscreen */}
       <section className="h-screen w-full relative overflow-hidden bg-red-500">
-        {/* Vidéo YouTube fullscreen */}
-        {media && media.type === 'youtube' && (
+        {/* Vidéo YouTube par défaut quand aucun item n'est sélectionné */}
+        {!selectedItem && (
+          <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden', transform: 'scale(1.2)' }}>
+            <iframe
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${defaultVideoId}?start=${defaultStartTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=${defaultVideoId}`}
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen={true}
+              style={{ border: 'none', width: '100%', height: '100%', pointerEvents: 'none' }}
+            />
+          </div>
+        )}
+        
+        {/* Vidéo YouTube fullscreen pour item sélectionné */}
+        {media && media.type === 'youtube' && selectedItem && (
           <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden', transform: 'scale(1.2)' }}>
             <iframe
               key={selectedItem}
               className="w-full h-full"
-              src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0`}
+              src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=${media.videoId}`}
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen={true}
               style={{ border: 'none', width: '100%', height: '100%', pointerEvents: 'none' }}
@@ -173,6 +226,28 @@ export default function FamilyPage() {
             </div>
           </div>
         )}
+      </section>
+      
+      {/* Barre de séparation avec texte défilant */}
+      <section className="w-full bg-green-500 text-black py-4 relative overflow-hidden">
+        <div className="flex flex-col items-center justify-center h-full gap-12">
+          {/* Texte défilant */}
+          <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
+            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+          </div>
+          
+          {/* Indication vers le bas */}
+          <div className="flex flex-col items-center animate-bounce">
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" />
+            </svg>
+          </div>
+        </div>
       </section>
       
       {/* Troisième section "Join the family" */}
@@ -219,21 +294,21 @@ export default function FamilyPage() {
                     Votre Instagram
                   </label>
                   <div className="flex w-full">
-                    <span className="bg-yellow-400 text-black px-4 py-3 text-lg font-title">@</span>
+                    <span className="bg-green-500 text-black px-4 py-3 text-lg font-title">@</span>
                     <input
                       type="text"
                       id="instagram"
                       value={instagramHandle}
                       onChange={(e) => setInstagramHandle(e.target.value)}
                       placeholder="votre_pseudo"
-                      className="flex-1 bg-transparent border-2 border-yellow-400 text-white text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      className="flex-1 bg-transparent border-2 border-green-500 text-white text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
                       required
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-yellow-400 text-black py-3 px-8 text-lg font-title uppercase tracking-wider hover:bg-yellow-300 transition-colors duration-200"
+                  className="w-full bg-green-500 text-black py-3 px-8 text-lg font-title uppercase tracking-wider hover:bg-green-600 transition-colors duration-200"
                 >
                   Candidater
                 </button>

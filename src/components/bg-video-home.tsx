@@ -29,23 +29,28 @@ export default function BgVideoHome() {
 	const VIDEO_ID = "e-1_tkJCuUs";
 
 	useEffect(() => {
-		// Désactiver le scroll sur la home
+		// Désactiver le scroll uniquement sur la home
 		if (pathname === "/") {
 			document.body.style.overflow = "hidden";
 			document.documentElement.style.overflow = "hidden";
 			document.body.classList.add("no-scroll");
 			document.documentElement.classList.add("no-scroll");
 		} else {
-			document.body.style.overflow = "auto";
-			document.documentElement.style.overflow = "auto";
+			// Pour toutes les autres pages, activer le scroll
+			document.body.style.overflow = "";
+			document.body.style.overflowY = "auto";
+			document.documentElement.style.overflow = "";
+			document.documentElement.style.overflowY = "auto";
 			document.body.classList.remove("no-scroll");
 			document.documentElement.classList.remove("no-scroll");
 		}
 
 		// Cleanup au démontage
 		return () => {
-			document.body.style.overflow = "auto";
-			document.documentElement.style.overflow = "auto";
+			document.body.style.overflow = "";
+			document.body.style.overflowY = "auto";
+			document.documentElement.style.overflow = "";
+			document.documentElement.style.overflowY = "auto";
 			document.body.classList.remove("no-scroll");
 			document.documentElement.classList.remove("no-scroll");
 		};

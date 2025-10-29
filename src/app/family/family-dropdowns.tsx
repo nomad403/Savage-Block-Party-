@@ -58,7 +58,7 @@ function LineByLineText({ text, className, delay = 0 }: { text: string; classNam
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: #FBBF24;
+        background: #22C55E;
         transform: translateX(-100%);
         transition: transform 0.6s ease;
         pointer-events: none;
@@ -115,7 +115,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
     "HAX", 
     "Le Sympathique",
     "Rita Amoureux",
-    "SUNGOMA",
+    "Sungoma",
     "Bengala",
     "Darlean",
     "Woodneymo"
@@ -149,7 +149,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       <div className="flex-1 relative">
         <button
           onClick={() => toggleDropdown('djs')}
-          className="w-full bg-yellow-400 text-black font-title uppercase text-lg py-4 px-6 hover:bg-yellow-300 transition-colors"
+          className="w-full bg-green-500 text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-colors"
         >
           DJs
         </button>
@@ -186,7 +186,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       <div className="flex-1 relative">
         <button
           onClick={() => toggleDropdown('danseurs')}
-          className="w-full bg-yellow-400 text-black font-title uppercase text-lg py-4 px-6 hover:bg-yellow-300 transition-colors"
+          className="w-full bg-green-500 text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-colors"
         >
           Danseurs
         </button>
@@ -223,7 +223,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       <div className="flex-1 relative">
         <button
           onClick={() => toggleDropdown('collab')}
-          className="w-full bg-yellow-400 text-black font-title uppercase text-lg py-4 px-6 hover:bg-yellow-300 transition-colors"
+          className="w-full bg-green-500 text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-colors"
         >
           Collab
         </button>

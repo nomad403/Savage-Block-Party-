@@ -40,6 +40,11 @@ export default function SoundCloudPlayer() {
 	const isHome = pathname === "/";
 	const isAgenda = pathname?.startsWith("/agenda");
 	const isStory = pathname?.startsWith("/story");
+	const isShop = pathname?.startsWith("/shop");
+	const isFamily = pathname?.startsWith("/family");
+	const isPresse = pathname?.startsWith("/presse");
+	// Désactiver temporairement les couleurs dynamiques (BPM/son)
+	const enableDynamicColors = false;
 	
 	// États pour couleurs dynamiques au rythme de la musique (déclarés en premier)
 	const [dynamicColorTheme, setDynamicColorTheme] = useState<'yellow' | 'cyan' | 'red'>('yellow');
@@ -47,15 +52,25 @@ export default function SoundCloudPlayer() {
 	const [lastBeatTime, setLastBeatTime] = useState(0);
 	const [beatCount, setBeatCount] = useState(0);
 	
-	// Couleurs dynamiques basées sur le thème musical
+	// Couleurs basées sur le thème musical (statique si dynamic désactivé)
 	const getDynamicColors = () => {
 		if (!isHome) {
 			// Couleurs statiques pour les autres pages
 			return {
-				waveformColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : "bg-yellow-400"),
-				waveformColorFaded: isAgenda ? "bg-black/30" : (isStory ? "bg-cyan-400/30" : "bg-yellow-400/30"),
-				playerColor: isAgenda ? "text-black" : (isStory ? "text-cyan-400" : "text-yellow-400"),
-				playerBgColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : "bg-yellow-400")
+				waveformColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isFamily ? "bg-green-500" : (isShop ? "bg-black" : (isPresse ? "bg-purple-500" : "bg-yellow-400")))),
+				waveformColorFaded: isAgenda ? "bg-black/30" : (isStory ? "bg-cyan-400/50" : (isFamily ? "bg-green-500/50" : (isShop ? "bg-black/30" : (isPresse ? "bg-purple-500/50" : "bg-yellow-400/30")))),
+				playerColor: isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isShop ? "text-red-500" : (isPresse ? "text-purple-500" : "text-yellow-400")))),
+				playerBgColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isFamily ? "bg-green-500" : (isShop ? "bg-red-500" : (isPresse ? "bg-purple-500" : "bg-yellow-400"))))
+			};
+		}
+
+		// Home: si les couleurs dynamiques sont désactivées, rester en jaune
+		if (!enableDynamicColors) {
+			return {
+				waveformColor: "bg-yellow-400",
+				waveformColorFaded: "bg-yellow-400/30",
+				playerColor: "text-yellow-400",
+				playerBgColor: "bg-yellow-400"
 			};
 		}
 
@@ -64,7 +79,7 @@ export default function SoundCloudPlayer() {
 			case 'cyan':
 				return {
 					waveformColor: "bg-cyan-400",
-					waveformColorFaded: "bg-cyan-400/30",
+					waveformColorFaded: "bg-cyan-400/50",
 					playerColor: "text-cyan-400",
 					playerBgColor: "bg-cyan-400"
 				};
@@ -91,10 +106,11 @@ export default function SoundCloudPlayer() {
 		console.log('🎨 Couleurs calculées:', { 
 			theme: dynamicColorTheme, 
 			waveformColor: result.waveformColor,
-			playerColor: result.playerColor 
+			playerColor: result.playerColor,
+			pathname
 		});
 		return result;
-	}, [isHome, isAgenda, dynamicColorTheme]);
+	}, [isHome, isAgenda, isStory, isShop, isFamily, isPresse, dynamicColorTheme, pathname]);
 	const waveformColor = colors.waveformColor;
 	const waveformColorFaded = colors.waveformColorFaded;
 	const playerColor = colors.playerColor;
@@ -278,12 +294,14 @@ export default function SoundCloudPlayer() {
 	const [waveformImageUrl, setWaveformImageUrl] = useState<string>("");
 	const [waveformSamples, setWaveformSamples] = useState<number[] | null>(null);
 	const [durationMs, setDurationMs] = useState<number>(0);
-	const waveformRef = useRef<HTMLDivElement | null>(null);
+const waveformRef = useRef<HTMLDivElement | null>(null);
 	const [barCount, setBarCount] = useState<number>(300);
 	const [progress, setProgress] = useState<number>(0);
 	const [isMounted, setIsMounted] = useState(false);
-	const [isPlayerExpanded, setIsPlayerExpanded] = useState(true);
+	const [isPlayerExpanded, setIsPlayerExpanded] = useState(isHome);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	// Mémoriser l'état désiré de lecture pour éviter un auto-play lors des réinits
+	const desiredIsPlayingRef = useRef(false);
 	const widgetRef = useRef<any>(null);
 	const [soundcloudUrl, setSoundcloudUrl] = useState<string>("");
 	// États de robustesse renforcés
@@ -413,7 +431,7 @@ export default function SoundCloudPlayer() {
 	}, [widgetHealth, lastSuccessfulOperation, healthCheckInterval, consecutiveFailures, maxConsecutiveFailures, isRecovering, recoveryAttempts]);
 
 	// Système de monitoring de santé du widget
-	useEffect(() => {
+useEffect(() => {
 		const healthCheck = async () => {
 			if (!isWidgetHealthy()) {
 				console.warn('🏥 Widget SoundCloud en mauvaise santé, tentative de récupération...');
@@ -634,7 +652,7 @@ export default function SoundCloudPlayer() {
 			return true;
 		}
 		
-		const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
+			const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
 		if (iframe && window.SC && typeof window.SC.Widget === 'function') {
 			try {
 				widgetRef.current = window.SC.Widget(iframe);
@@ -756,28 +774,28 @@ export default function SoundCloudPlayer() {
 			})
 				.then(response => response.json())
 				.then(json => {
-					const samples: number[] = json?.samples || json?.data || [];
-					if (samples.length > 0) {
+											const samples: number[] = json?.samples || json?.data || [];
+											if (samples.length > 0) {
 						console.log(`✅ ${context}Waveform samples chargés:`, samples.length);
-						setWaveformSamples(samples);
-						setWaveformImageUrl("");
+												setWaveformSamples(samples);
+												setWaveformImageUrl("");
 					} else {
 						console.log(`⚠️ ${context}Aucun sample trouvé dans le JSON`);
 						setWaveformSamples(null);
-						setWaveformImageUrl("");
-					}
-				})
+												setWaveformImageUrl("");
+											}
+										})
 				.catch(error => {
 					console.error(`❌ ${context}Erreur réseau waveform JSON:`, error);
 					// Fallback : générer des samples simulés
 					console.log(`🔄 ${context}Utilisation de samples simulés comme fallback`);
 					const fallbackSamples = Array.from({ length: 100 }, () => Math.random() * 0.5 + 0.25);
 					setWaveformSamples(fallbackSamples);
-					setWaveformImageUrl("");
-				});
-		} else {
+											setWaveformImageUrl("");
+										});
+								} else {
 			console.log(`✅ ${context}Waveform image URL:`, waveformUrl);
-			setWaveformSamples(null);
+									setWaveformSamples(null);
 			setWaveformImageUrl(waveformUrl);
 		}
 	}, []);
@@ -922,6 +940,7 @@ export default function SoundCloudPlayer() {
 
 	// Système optimisé de détection de beats avec listeners
 	const detectBeatAndChangeColors = useCallback(() => {
+		if (!enableDynamicColors) return; // blocage global
 		if (!isPlaying) return;
 
 		const currentTime = Date.now();
@@ -987,7 +1006,7 @@ export default function SoundCloudPlayer() {
 				newTheme = 'yellow';
 			}
 			
-			setDynamicColorTheme(newTheme);
+			if (enableDynamicColors) setDynamicColorTheme(newTheme);
 			setColorTransitionActive(true);
 			setTimeout(() => setColorTransitionActive(false), 300);
 			
@@ -996,10 +1015,11 @@ export default function SoundCloudPlayer() {
 				detail: { theme: newTheme, beatCount: beatCount + 1, intensity, source }
 			}));
 		}
-	}, [isPlaying, bpm, audioFeatures, waveformSamples, progress, durationMs, lastBeatTime, beatCount]);
+	}, [enableDynamicColors, isPlaying, bpm, audioFeatures, waveformSamples, progress, durationMs, lastBeatTime, beatCount]);
 
 	// Système de listeners pour détecter les changements en temps réel
 	useEffect(() => {
+		if (!enableDynamicColors) return;
 		if (!isPlaying) return;
 
 		// Listener pour les changements de progression SoundCloud
@@ -1022,7 +1042,7 @@ export default function SoundCloudPlayer() {
 			clearInterval(progressInterval);
 			window.removeEventListener('audioFeatures', handleAudioFeatures as EventListener);
 		};
-	}, [isPlaying, detectBeatAndChangeColors]);
+	}, [enableDynamicColors, isPlaying, detectBeatAndChangeColors]);
 
 	// Écouter l'état du menu
 	useEffect(() => {
@@ -1120,7 +1140,7 @@ export default function SoundCloudPlayer() {
 							setTrackTitle(currentSound.title || "Savage Block Party");
 							setArtistName(currentSound.user?.username || "Latest tracks");
 							const art = (currentSound.artwork_url || "/home/images/logo_orange.png");
-							setArtworkUrl(art.replace("-large", "-t200x200"));
+								setArtworkUrl(art.replace("-large", "-t200x200"));
 							setPermalinkUrl(currentSound.permalink_url || "https://soundcloud.com/savageblockpartys");
 							
 							// Charger la waveform si disponible
@@ -1185,6 +1205,7 @@ export default function SoundCloudPlayer() {
 
 			if (playState !== null) {
 				setIsPlaying(playState);
+				desiredIsPlayingRef.current = playState; // mémoriser l'état voulu
 			}
 			
 			// Vérifier périodiquement les infos du track avec retry
@@ -1250,10 +1271,18 @@ export default function SoundCloudPlayer() {
 					waveform?: string;
 					duration?: number;
 				} | null>((resolve) => {
-					widgetRef.current.getCurrentSound((sound: any) => {
+					const widget = widgetRef.current;
+					// Sécurité: si le widget n'est pas prêt, retourner null sans lancer postMessage
+					if (!widget || !window.SC || typeof widget.getCurrentSound !== 'function') {
+						resolve(null);
+						return;
+					}
+					try {
+						widget.getCurrentSound((sound: any) => {
 						if (!sound) {
 							// Si pas de son actuel, récupérer la liste des sons
-						widgetRef.current.getSounds((sounds: any[]) => {
+							try {
+								widget.getSounds((sounds: any[]) => {
 							if (sounds && sounds.length > 0) {
 								const first = sounds[0];
 									resolve({
@@ -1268,6 +1297,9 @@ export default function SoundCloudPlayer() {
 									resolve(null);
 								}
 							});
+							} catch {
+								resolve(null);
+							}
 						} else {
 							resolve({
 								title: sound.title || "Savage Block Party",
@@ -1278,7 +1310,10 @@ export default function SoundCloudPlayer() {
 								duration: sound.duration
 							});
 						}
-					});
+						});
+					} catch {
+						resolve(null);
+					}
 				});
 			}, 'update-from-current-sound');
 
@@ -1310,52 +1345,57 @@ export default function SoundCloudPlayer() {
 				console.log('🎵 Widget SoundCloud prêt !');
 				
 				// Initialiser les états de base seulement
-					widgetRef.current.isPaused((paused: boolean) => setIsPlaying(!paused));
+				widgetRef.current.isPaused((paused: boolean) => {
+					setIsPlaying(!paused);
+					desiredIsPlayingRef.current = !paused;
+				});
 					try { widgetRef.current.getDuration((ms: number) => setDurationMs(ms || 0)); } catch {}
 				
-				// Faire la sélection aléatoire IMMÉDIATEMENT, sans afficher les infos par défaut
-				console.log('🎲 Sélection aléatoire immédiate depuis READY...');
-				forceRandomSelection();
+				// Empêcher tout auto-play après réinit si l'utilisateur était en pause
+				try {
+					if (!desiredIsPlayingRef.current) {
+						widgetRef.current.pause();
+					}
+				} catch {}
 				
-				// Mettre à jour les infos APRÈS la sélection aléatoire
-				setTimeout(() => {
-					updateFromCurrentSound();
-				}, 1000);
-				
+				// NOTE: Ne pas appeler forceRandomSelection ni updateFromCurrentSound ici
+				// car cela relance le player. Le player conserve son état et sa track actuelle.
+			});
+			
 					widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
 						setIsPlaying(true);
 						updateFromCurrentSound();
-						// Synchroniser l'audio HTML5 avec le widget SoundCloud (avec gestion d'erreur autoplay)
-						if (audioElementRef.current) {
-							audioElementRef.current.play().catch(error => {
-								console.log('🎵 Autoplay bloqué par le navigateur (normal):', error instanceof Error ? error.message : String(error));
-								// L'utilisateur devra interagir pour démarrer l'analyse audio
-							});
-						}
+				// Synchroniser l'audio HTML5 avec le widget SoundCloud (avec gestion d'erreur autoplay)
+				if (audioElementRef.current) {
+					audioElementRef.current.play().catch(error => {
+						console.log('🎵 Autoplay bloqué par le navigateur (normal):', error instanceof Error ? error.message : String(error));
+						// L'utilisateur devra interagir pour démarrer l'analyse audio
 					});
+				}
+			});
+			
 					widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
 						setIsPlaying(false);
-						// Synchroniser l'audio HTML5 avec le widget SoundCloud
-						audioElementRef.current?.pause();
-					});
-					// Bind PLAY_PROGRESS ici aussi car setupWidgetEvents pourrait ne pas être appelé
-					widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
-						if (typeof data?.relativePosition === 'number') {
-							setProgress(data.relativePosition);
-						}
-					});
-					
-					widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
-						if (typeof data?.relativePosition === 'number') {
-							setProgress(data.relativePosition);
-						}
-					});
-					
+				// Synchroniser l'audio HTML5 avec le widget SoundCloud
+				audioElementRef.current?.pause();
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
+				if (typeof data?.relativePosition === 'number') {
+					setProgress(data.relativePosition);
+				}
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
+				if (typeof data?.relativePosition === 'number') {
+					setProgress(data.relativePosition);
+				}
+			});
+			
 					widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
 						setIsPlaying(false);
 						setProgress(0);
 					});
-				});
 		};
 
 		const loadSoundCloudAPI = async () => {
@@ -1468,13 +1508,14 @@ export default function SoundCloudPlayer() {
 		};
 
 		// Attendre que le composant soit monté avant d'initialiser
-		if (isMounted) {
+		// ET ne réinitialiser que si le widget n'est pas déjà actif
+		if (isMounted && !widgetRef.current) {
 		loadSoundCloudAPI();
 		}
 	}, [isMounted]); // Charger l'API SoundCloud après le montage du composant
 
 	// Ajuster dynamiquement le nombre de barres pour occuper toute la largeur
-	useEffect(() => {
+useEffect(() => {
 		if (pathname !== "/") return;
 		if (!waveformRef.current) return;
 		const element = waveformRef.current;
@@ -1485,7 +1526,7 @@ export default function SoundCloudPlayer() {
 		});
 		resizeObserver.observe(element);
 		return () => resizeObserver.disconnect();
-	}, [pathname]);
+}, [pathname]);
 
 	const handlePlayPause = useCallback(async () => {
 		if (!isWidgetHealthy()) {
@@ -1606,7 +1647,7 @@ export default function SoundCloudPlayer() {
 			getColorTheme: () => dynamicColorTheme,
 			setColorTheme: (theme: 'yellow' | 'cyan' | 'red') => {
 				console.log(`🎨 Changement manuel de thème: ${theme}`);
-				setDynamicColorTheme(theme);
+				if (enableDynamicColors) setDynamicColorTheme(theme);
 			},
 			
 			// Test immédiat des couleurs
@@ -1626,7 +1667,7 @@ export default function SoundCloudPlayer() {
 				const quickTest = setInterval(() => {
 					const theme = themes[index];
 					console.log(`🎨 Test immédiat couleur: ${theme}`);
-					setDynamicColorTheme(theme);
+					if (enableDynamicColors) setDynamicColorTheme(theme);
 					
 					window.dispatchEvent(new CustomEvent('soundcloud-color-change', {
 						detail: {
@@ -1736,7 +1777,7 @@ export default function SoundCloudPlayer() {
 		console.log('  - testRandomSelection() - Test avec logging détaillé');
 	}, [forceRandomSelection, testRandomSelection]);
 
-	function AutoScrollText({ text, className }: { text: string; className?: string }) {
+function AutoScrollText({ text, className }: { text: string; className?: string }) {
 		const containerRef = useRef<HTMLDivElement>(null);
 		const [shouldScroll, setShouldScroll] = useState(false);
 
@@ -1775,7 +1816,7 @@ export default function SoundCloudPlayer() {
 		// 	timestamp: new Date().toISOString(),
 		// 	stackTrace: new Error().stack?.split('\n').slice(1, 4)
 		// });
-	return (
+return (
 		<div className="fixed left-6 top-[50%] z-[10002] flex items-center gap-4" style={{ transform: "translateY(-50%)", willChange: "transform" }}>
 			{/* Indicateur de santé du widget */}
 			{widgetHealth !== 'healthy' && (
@@ -1785,13 +1826,13 @@ export default function SoundCloudPlayer() {
 			)}
 			{/* Image SoundCloud en vignette */}
 			<div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-200">
-				<img 
-					src={artworkUrl} 
+					<img
+						src={artworkUrl}
 					alt={trackTitle || "Track artwork"} 
-					className="w-full h-full object-cover"
-				/>
-			</div>
-			
+						className="w-full h-full object-cover"
+					/>
+				</div>
+
 			{/* Conteneur avec titre/artiste et boutons */}
 			<div className="flex flex-col gap-2 h-20">
 				{/* Titre et artiste */}
@@ -1801,12 +1842,12 @@ export default function SoundCloudPlayer() {
 					</div>
 					<AutoScrollText 
 						text={artistName || "Latest tracks"} 
-						className={`font-text text-xs mt-1 ${isStory ? 'text-cyan-400/80' : playerColor + '/80'}`}
+						className={`font-text text-xs mt-1 ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))}`}
 					/>
-				</div>
-				
-				{/* Conteneur des boutons avec fond cyan sur agenda */}
-				<div className={`flex items-center gap-4 ${isAgenda ? 'player-compact-agenda animate-in' : ''}`}>
+					</div>
+
+				{/* Conteneur des boutons avec fond cyan sur agenda et story */}
+				<div className={`flex items-center gap-4 ${isAgenda || isStory || isFamily || isShop || isPresse ? 'player-compact-agenda animate-in' : ''}`}>
 				{/* Bouton mute */}
 				<button 
 					onClick={(e) => {
@@ -1824,11 +1865,11 @@ export default function SoundCloudPlayer() {
 					title={isMuted ? "Activer le son" : "Couper le son"}
 				>
 					{isMuted ? (
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="#000000" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 							<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
 						</svg>
 					) : (
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="#000000" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 							<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
 						</svg>
 					)}
@@ -1850,14 +1891,14 @@ export default function SoundCloudPlayer() {
 					>
 						{isPlaying ? (
 									<div className="flex gap-0.5">
-										<div className={`w-1 h-4 ${playerBgColor}`}></div>
-										<div className={`w-1 h-4 ${playerBgColor}`}></div>
+									<div className={`w-1 h-4 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+									<div className={`w-1 h-4 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
 							</div>
 						) : (
 									<div 
 										className={`w-0 h-0 border-l-[8px] border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-0.5`} 
 										style={{
-											borderLeftColor: isAgenda ? '#000000' : 
+											borderLeftColor: (isAgenda || isStory || isFamily || isShop || isPresse) ? '#000000' : 
 												playerBgColor.includes('cyan') ? '#22d3ee' : 
 												playerBgColor.includes('red') ? '#ef4444' : '#facc15'
 										}}
@@ -1877,9 +1918,9 @@ export default function SoundCloudPlayer() {
 								className="w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
 								title="Suivant"
 							>
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
-									<path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
-								</svg>
+							<svg width="18" height="18" viewBox="0 0 24 24" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "currentColor"} className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+								<path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
+							</svg>
 							</button>
 						)}
 						
@@ -1898,11 +1939,7 @@ export default function SoundCloudPlayer() {
 									});
 									setIsPlayerExpanded(!isPlayerExpanded);
 								}}
-								className={`w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity relative z-[10001] cursor-pointer ${
-									isPlayerExpanded 
-										? `${playerBgColor} border ${playerBgColor} rounded-l-lg` 
-										: 'rounded-r-lg'
-								}`}
+							className="w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity relative z-[10001] cursor-pointer"
 								title={isPlayerExpanded ? "Masquer le player" : "Révéler le player"}
 								style={{ pointerEvents: 'auto' }}
 							>
@@ -1911,7 +1948,7 @@ export default function SoundCloudPlayer() {
 									height="16" 
 									viewBox="0 0 24 24" 
 									fill="currentColor" 
-									className={isPlayerExpanded ? (isAgenda ? "text-white" : "text-black") : playerColor}
+									className={playerColor}
 								>
 									{isPlayerExpanded ? (
 										<path d="M15 18l-6-6 6-6"/>
@@ -1973,29 +2010,29 @@ export default function SoundCloudPlayer() {
 					<div
 						ref={waveformRef}
 						className="w-full h-24 select-none cursor-pointer bg-transparent relative z-[10001]"
-					onClick={(e) => {
+						onClick={(e) => {
 						console.log('🎯 Clic sur waveform (compact):', {
 							hasRef: !!waveformRef.current,
 							hasWidget: !!widgetRef.current,
 							clientX: e.clientX,
 							timestamp: new Date().toISOString()
 						});
-						if (!waveformRef.current || !widgetRef.current) return;
-						const rect = waveformRef.current.getBoundingClientRect();
-						const x = e.clientX - rect.left;
-						const rel = Math.max(0, Math.min(1, x / rect.width));
+							if (!waveformRef.current || !widgetRef.current) return;
+							const rect = waveformRef.current.getBoundingClientRect();
+							const x = e.clientX - rect.left;
+							const rel = Math.max(0, Math.min(1, x / rect.width));
 						console.log('📍 Position calculée (compact):', { x, rel, width: rect.width });
-						try {
-							widgetRef.current.getDuration((ms: number) => {
-								const targetMs = (ms || durationMs || 0) * rel;
+							try {
+								widgetRef.current.getDuration((ms: number) => {
+									const targetMs = (ms || durationMs || 0) * rel;
 								console.log('⏰ Seek vers (compact):', { targetMs, durationMs: ms || durationMs });
-								if (targetMs > 0) widgetRef.current.seekTo(targetMs);
-							});
+									if (targetMs > 0) widgetRef.current.seekTo(targetMs);
+								});
 						} catch (error) {
 							console.log('❌ Erreur seek (compact):', error);
-							if (durationMs > 0) widgetRef.current.seekTo(durationMs * rel);
-						}
-					}}
+								if (durationMs > 0) widgetRef.current.seekTo(durationMs * rel);
+							}
+						}}
 					>
 						{waveformSamples && waveformSamples.length > 0 ? (
 							<div
@@ -2011,7 +2048,7 @@ export default function SoundCloudPlayer() {
 										<div key={i} style={{ height: h, width: '2px' }} className={played ? waveformColor : waveformColorFaded} />
 									);
 								})}
-			</div>
+							</div>
 						) : waveformImageUrl ? (
 							<div className="relative h-full w-full overflow-hidden" style={{ transform: 'scaleY(-1)' }}>
 							<img src={waveformImageUrl} alt="waveform" className="w-full h-full object-cover opacity-20" />
@@ -2021,12 +2058,12 @@ export default function SoundCloudPlayer() {
 							</div>
 						) : (
 						<div className="flex items-end gap-[0.5px] h-full w-full">
-							{Array.from({ length: barCount }).map((_, i) => {
-								const sin = Math.sin((i / Math.max(1, barCount)) * Math.PI);
+								{Array.from({ length: barCount }).map((_, i) => {
+									const sin = Math.sin((i / Math.max(1, barCount)) * Math.PI);
 								const h = Math.max(1, Math.round(sin * 80));
 								return <div key={i} style={{ height: h, width: '1px' }} className={waveformColorFaded} />;
-							})}
-			</div>
+								})}
+							</div>
 						)}
 					</div>,
 					document.getElementById('sbp-footer-waveform') as HTMLElement
@@ -2122,13 +2159,13 @@ export default function SoundCloudPlayer() {
 									<div key={i} style={{ height: h, width: '2px' }} className={played ? waveformColor : waveformColorFaded} />
 								);
 							})}
-						</div>
+					</div>
 					) : waveformImageUrl ? (
 						<div className="relative h-full w-full overflow-hidden" style={{ transform: 'scaleY(-1)' }}>
 						<img src={waveformImageUrl} alt="waveform" className="w-full h-full object-cover opacity-20" />
 							<div className="absolute inset-0 overflow-hidden" style={{ width: `${Math.max(0, Math.min(100, progress * 100))}%` }}>
 							<img src={waveformImageUrl} alt="waveform-progress" className="w-full h-full object-cover opacity-80" />
-							</div>
+				</div>
 						</div>
 					) : (
 					<div className="flex items-end gap-[0.5px] h-full w-full">
@@ -2153,19 +2190,21 @@ export default function SoundCloudPlayer() {
 					{/* Play button centered */}
 					<div className="fixed inset-0 z-[30] pointer-events-none">
 						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-				<button
-								onClick={handlePlayPause}
+					<button 
+						onClick={handlePlayPause}
 								className="w-40 h-40 flex items-center justify-center hover:opacity-80 transition-opacity"
-							>
-							{isPlaying ? (
+					>
+						{isPlaying ? (
 								<div className="flex gap-1">
-									<div className={`w-2 h-12 ${playerBgColor}`}></div>
-									<div className={`w-2 h-12 ${playerBgColor}`}></div>
-								</div>
-							) : (
-								<div className={`w-0 h-0 border-l-[32px] ${isAgenda ? 'border-l-black' : 'border-l-yellow-400'} border-t-[24px] border-t-transparent border-b-[24px] border-b-transparent ml-2`}></div>
-							)}
-				</button>
+									<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+									<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+							</div>
+						) : (
+								<svg width="64" height="48" viewBox="0 0 64 48" fill="none" className="ml-2">
+									<path d="M16 0L52 24L16 48V0Z" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "#FACC15"}/>
+								</svg>
+						)}
+					</button>
 						</div>
 					</div>
 
@@ -2173,24 +2212,24 @@ export default function SoundCloudPlayer() {
 					<div className={`fixed left-6 top-1/2 -translate-y-1/2 z-[25] ${playerColor} px-4 flex items-center gap-6`}>
 						<div>
 							<div className="font-title text-base leading-tight">{trackTitle || ""}</div>
-							<AutoScrollText text={artistName || ""} className={`font-text text-sm ${isStory ? 'text-cyan-400/80' : playerColor + '/80'} mt-0.5`} />
+							<AutoScrollText text={artistName || ""} className={`font-text text-sm ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
 						</div>
 						{/* Mute button */}
-				<button 
-					onClick={handleMuteToggle}
+					<button 
+						onClick={handleMuteToggle}
 							className="w-14 h-14 flex items-center justify-center hover:opacity-80 transition-opacity"
-					title={isMuted ? "Activer le son" : "Couper le son"}
-				>
-					{isMuted ? (
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
-							<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-						</svg>
-					) : (
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
-							<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-						</svg>
-					)}
-				</button>
+						title={isMuted ? "Activer le son" : "Couper le son"}
+					>
+						{isMuted ? (
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="#000000" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+								<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+							</svg>
+						) : (
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="#000000" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+								<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+							</svg>
+						)}
+					</button>
 						{/* Reduce button */}
 						<button 
 							onClick={() => setIsPlayerExpanded(false)}
@@ -2210,11 +2249,11 @@ export default function SoundCloudPlayer() {
 							className="w-28 h-28 flex items-center justify-center hover:opacity-80 transition-opacity"
 							title="Suivant"
 						>
-							<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
+							<svg width="48" height="48" viewBox="0 0 24 24" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "currentColor"} className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 								<path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
-							</svg>
+						</svg>
 						</button>
-					</div>
+				</div>
 				</>
 			)}
 		</>
