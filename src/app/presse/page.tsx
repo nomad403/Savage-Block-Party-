@@ -2,60 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-
-function TextRevealLines({ text, color = "#A855F7", lineHeight = 1.2, delayStep = 0.2, className = "" }: { text: string; color?: string; lineHeight?: number; delayStep?: number; className?: string }) {
-	const containerRef = useRef<HTMLDivElement | null>(null);
-	const textRef = useRef<HTMLSpanElement | null>(null);
-	const [rects, setRects] = useState<Array<{ left: number; top: number; width: number; height: number }>>([]);
-	const [active, setActive] = useState(false);
-
-	useEffect(() => {
-		const measure = () => {
-			if (!containerRef.current || !textRef.current) return;
-			const containerRect = containerRef.current.getBoundingClientRect();
-			const range = document.createRange();
-			range.selectNodeContents(textRef.current);
-			const clientRects = Array.from(range.getClientRects());
-			const mapped = clientRects.map((r) => ({
-				left: r.left - containerRect.left,
-				top: r.top - containerRect.top,
-				width: r.width,
-				height: r.height,
-			}));
-			setRects(mapped);
-			requestAnimationFrame(() => setActive(true));
-		};
-
-		measure();
-		window.addEventListener('resize', measure);
-		return () => window.removeEventListener('resize', measure);
-	}, []);
-
-	return (
-		<div ref={containerRef} style={{ position: 'relative', lineHeight }} className={className}>
-			<span ref={textRef} style={{ position: 'relative', zIndex: 1 }}>{text}</span>
-			{rects.map((r, i) => (
-				<div
-					key={i}
-					style={{
-						position: 'absolute',
-						left: r.left,
-						top: r.top,
-						width: r.width,
-						height: r.height,
-						background: color,
-						transformOrigin: 'left center',
-						transform: active ? 'scaleX(1)' : 'scaleX(0)',
-						transition: 'transform 800ms ease-out',
-						transitionDelay: `${i * delayStep}s`,
-						zIndex: 0,
-						pointerEvents: 'none',
-					}}
-				/>
-			))}
-		</div>
-	);
-}
+import TextRevealLines from "@/components/text-reveal-lines";
 
 // Style pour l'effet text reveal line
 const textRevealStyle = `
@@ -97,7 +44,9 @@ export default function PressePage() {
   const [formData, setFormData] = useState({
     organisme: "",
     email: "",
-    typeCollaboration: "",
+    phone: "",
+    website: "",
+    subject: "",
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,12 +70,7 @@ export default function PressePage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSubmitStatus("success");
-      setFormData({
-        organisme: "",
-        email: "",
-        typeCollaboration: "",
-        message: "",
-      });
+      setFormData({ organisme: "", email: "", phone: "", website: "", subject: "", message: "" });
     } catch (error) {
       setSubmitStatus("error");
     } finally {
@@ -149,141 +93,137 @@ export default function PressePage() {
       </div>
 
       {/* Formulaire avec fond couleur uni par-dessus */}
-      <section className="relative z-10 py-32 pb-32">
+      <section className="relative z-10 pt-56 pb-32" style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
         <div className="container-px w-full max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-10 items-start">
+            <div className="flex flex-col lg:flex-row gap-10 items-start justify-center">
             {/* Texte à gauche */}
-            <div className="flex-1 pt-4">
-              <h1 className="font-title uppercase text-3xl sm:text-4xl md:text-5xl mb-8 text-purple-500">
-                Collaboration
-              </h1>
-              <div className="space-y-0">
+            <div className="pt-4 w-full lg:flex-1">
+              <div className="mb-8 text-left">
+                <TextRevealLines 
+                  text={"Collaboration"} 
+                  color="#A855F7" 
+                  className="font-title uppercase text-3xl sm:text-4xl md:text-5xl text-black" 
+                  delayStep={0.12}
+                />
+              </div>
+              <div className="space-y-0 text-left w-full mb-8">
                 <TextRevealLines 
                   text={"Soutenez la culture indépendante : musique, danse, graffiti et médias urbains. Co-créons des formats exigeants, roots et inclusifs, ancrés dans le réel. Rejoignez un réseau d’artistes, lieux et labels pour faire rayonner l’underground."}
                   color="#A855F7"
-                  lineHeight={1.18}
                   delayStep={0.12}
-                  className="font-text text-2xl md:text-3xl text-black max-w-[48ch] md:max-w-[54ch] tracking-tight"
+                  className="font-text font-semibold text-xl md:text-2xl leading-[1.18] text-black max-w-[48ch] md:max-w-[54ch] tracking-tight"
                 />
               </div>
-            </div>
-
             {/* Formulaire à droite */}
-            <div className="flex-1 bg-purple-500 p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Organisme */}
-              <div>
-                <label
-                  htmlFor="organisme"
-                  className="block font-text font-medium text-black mb-2"
-                >
-                  Nom de l'organisme *
-                </label>
-                <input
-                  type="text"
-                  id="organisme"
-                  name="organisme"
-                  required
-                  value={formData.organisme}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white border-2 border-black focus:border-black focus:outline-none text-black placeholder:text-black/50 font-text transition-colors"
-                  placeholder="Votre organisme"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block font-text font-medium text-black mb-2"
-                >
-                  Email de contact *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white border-2 border-black focus:border-black focus:outline-none text-black placeholder:text-black/50 font-text transition-colors"
-                  placeholder="contact@organisme.com"
-                />
-              </div>
-
-              {/* Type de collaboration */}
-              <div>
-                <label
-                  htmlFor="typeCollaboration"
-                  className="block font-text font-medium text-black mb-2"
-                >
-                  Type de collaboration *
-                </label>
-                <div className="relative">
-                  <select
-                    id="typeCollaboration"
-                    name="typeCollaboration"
-                    required
-                    value={formData.typeCollaboration}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white border-2 border-black focus:border-black focus:outline-none text-black font-text transition-colors appearance-none cursor-pointer pr-10"
-                  >
-                    <option value="" className="bg-white text-black">
-                      Sélectionnez un type
-                    </option>
-                    <option value="event" className="bg-white text-black">
-                      Organisation d'événement
-                    </option>
-                    <option value="media" className="bg-white text-black">
-                      Presse / Média
-                    </option>
-                    <option value="partnership" className="bg-white text-black">
-                      Partenariat
-                    </option>
-                    <option value="booking" className="bg-white text-black">
-                      Booking / Réservation
-                    </option>
-                    <option value="other" className="bg-white text-black">
-                      Autre
-                    </option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg
-                      className="w-5 h-5 text-black"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+            <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-6 items-stretch w-full lg:flex-1 mt-8">
+                {/* Nom de l'organisme */}
+                <div>
+                  <label htmlFor="organisme" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Nom de l'organisme"} color="#A855F7" className="font-text font-bold text-base md:text-lg text-black" delayStep={0.06} />
+                  </label>
+                  <div className="reveal-focus -mt-1 w-full">
+                    <input
+                      type="text"
+                      id="organisme"
+                      name="organisme"
+                      value={formData.organisme}
+                      onChange={handleChange}
+                      placeholder="Nom officiel"
+                      className="w-full px-4 py-3 bg-transparent border-2 border-[var(--presse-accent)] focus:border-[var(--presse-accent)] focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:text-[var(--presse-accent)] placeholder:opacity-100 placeholder:font-semibold placeholder-title caret-[var(--presse-accent)] focus:caret-black font-title transition-colors"
+                    />
                   </div>
                 </div>
-              </div>
 
-              {/* Message */}
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block font-text font-medium text-black mb-2"
-                >
-                  Votre message *
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  required
-                  rows={6}
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white border-2 border-black focus:border-black focus:outline-none text-black placeholder:text-black/50 font-text transition-colors resize-none"
-                  placeholder="Décrivez votre projet de collaboration..."
-                />
-              </div>
+                {/* Email de contact */}
+                <div>
+                  <label htmlFor="email" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Email de contact"} color="#A855F7" className="font-text font-bold text-base md:text-lg text-black" delayStep={0.06} />
+                  </label>
+                  <div className="reveal-focus -mt-1 w-full">
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="contact@organisme.com"
+                      className="w-full px-4 py-3 bg-transparent border-2 border-[var(--presse-accent)] focus:border-[var(--presse-accent)] focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:text-[var(--presse-accent)] placeholder:opacity-100 placeholder:font-semibold placeholder-title caret-[var(--presse-accent)] focus:caret-black font-title transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Téléphone */}
+                <div>
+                  <label htmlFor="phone" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Téléphone"} color="#A855F7" className="font-text font-bold text-base md:text-lg text-black" delayStep={0.06} />
+                  </label>
+                  <div className="reveal-focus -mt-1 w-full">
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+33 6 12 34 56 78"
+                      className="w-full px-4 py-3 bg-transparent border-2 border-[var(--presse-accent)] focus:border-[var(--presse-accent)] focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:text-[var(--presse-accent)] placeholder:opacity-100 placeholder:font-semibold placeholder-title caret-[var(--presse-accent)] focus:caret-black font-title transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Site / Réseaux */}
+                <div>
+                  <label htmlFor="website" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Site / Réseaux"} color="#A855F7" className="font-text font-bold text-base md:text-lg text-black" delayStep={0.06} />
+                  </label>
+                  <div className="reveal-focus -mt-1 w-full">
+                    <input
+                      type="text"
+                      id="website"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleChange}
+                      placeholder="site ou @compte"
+                      className="w-full px-4 py-3 bg-transparent border-2 border-[var(--presse-accent)] focus:border-[var(--presse-accent)] focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:text-[var(--presse-accent)] placeholder:opacity-100 placeholder:font-semibold placeholder-title caret-[var(--presse-accent)] focus:caret-black font-title transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Objet */}
+                <div>
+                  <label htmlFor="subject" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Objet"} color="#A855F7" className="font-text font-bold text-base md:text-lg text-black" delayStep={0.06} />
+                  </label>
+                  <div className="reveal-focus -mt-1 w-full">
+                    <input
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      placeholder="Sujet de la collaboration"
+                      className="w-full px-4 py-3 bg-transparent border-2 border-[var(--presse-accent)] focus:border-[var(--presse-accent)] focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:text-[var(--presse-accent)] placeholder:opacity-100 placeholder:font-semibold placeholder-title caret-[var(--presse-accent)] focus:caret-black font-title transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label htmlFor="message" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Votre message"} color="#A855F7" className="font-text font-bold text-base md:text-lg text-black" delayStep={0.06} />
+                  </label>
+                  <div className="reveal-focus -mt-1 w-full">
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={6}
+                      value={formData.message}
+                      onChange={handleChange}
+                      placeholder="Décrivez votre projet"
+                      className="w-full px-4 py-3 bg-transparent border-2 border-[var(--presse-accent)] focus:border-[var(--presse-accent)] focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:text-[var(--presse-accent)] placeholder:opacity-100 placeholder:font-semibold placeholder-title font-title transition-colors resize-none caret-[var(--presse-accent)] focus:caret-black"
+                    />
+                  </div>
+                </div>
+                
 
               {/* Submit button */}
               <div>
@@ -307,7 +247,7 @@ export default function PressePage() {
                   Erreur lors de l'envoi. Veuillez réessayer.
                 </div>
               )}
-              </form>
+            </form>
             </div>
           </div>
         </div>

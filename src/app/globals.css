@@ -10,13 +10,78 @@
 		 url('/fonts/hanson/Hanson-Bold.otf') format('opentype');
 }
 
+/* CY Font - remplace Satoshi */
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 100;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Thin-iF6673e736d93c9.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 200;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-ExtraLight-iF6673e7371dad1.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Light-iF6673e7370fbcf.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Regular-iF6673e73706204.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-SemiLight-iF6673e736e6655.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-SemiBold-iF6673e736f094d.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Bold-iF6673e737316f8.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 800;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-ExtraBold-iF6673e73727887.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 900;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Black-iF6673e7373b6aa.ttf') format('truetype');
+}
+
 :root {
 	--logo-color: #ff6a00;
 	--background: #0a0a0a;
 	--foreground: var(--logo-color);
 	--muted: #9a9a9a;
 	--font-title: 'Hanson', system-ui, sans-serif;
-	--font-text: 'Satoshi', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	--font-text: 'Cy', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 	
 	/* Variables pour couleurs dynamiques */
 	--dynamic-primary: #FACC15;
@@ -184,6 +249,26 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 /* Menu sur page presse - fond jaune */
 .menu-link-presse::before {
 	background: #FACC15 !important; /* Fond jaune pour presse */
+}
+
+/* Menu sur page presse - texte violet (fond jaune conservé) */
+body:has(#presse-root) .menu-link,
+.menu-link-presse {
+    color: #A855F7 !important; /* Violet presse */
+}
+
+/* Menu sur page shop - texte noir (fond/hover existants conservés) */
+body:has(#shop-root) .menu-link,
+.menu-link-shop {
+    color: #000000 !important; /* Noir pour shop */
+}
+
+/* Menu sur page shop - texte rouge au hover/focus */
+body:has(#shop-root) .menu-link:hover > span,
+body:has(#shop-root) .menu-link:focus-visible > span,
+.menu-link-shop:hover > span,
+.menu-link-shop:focus-visible > span {
+	color: #EF4444 !important; /* Red-500 au hover */
 }
 
 /* Animation IN/OUT pour le player compact sur agenda */
@@ -376,6 +461,40 @@ body.scrollable-page {
 	overflow-y: auto !important;
 	overflow-x: hidden !important;
 	height: auto !important; /* Permettre à la hauteur de dépasser 100vh */
+}
+
+/* Effet reveal line au focus pour les champs */
+.reveal-focus {
+    position: relative;
+}
+.reveal-focus::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    left: 0px;   /* aligne visuellement avec le padding du label (≈8px) */
+    right: -8px;  /* symétrie à droite pour garder la même largeur perçue */
+    background: #22C55E; /* vert family */
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+.reveal-focus:focus-within::before {
+    transform: scaleX(1);
+}
+
+/* Variante violette sur la page presse */
+body:has(#presse-root) .reveal-focus::before {
+    background: #A855F7; /* Purple-500 */
+    left: -2px; /* compense la bordure 2px côté gauche */
+    right: -2px; /* compense la bordure 2px côté droit */
+}
+
+/* Utilitaire: placeholder en Hanson (font-title) */
+.placeholder-title::placeholder {
+    font-family: var(--font-title);
 }
 
 /* Masquer la scrollbar WebKit (Chrome/Safari/Edge) sur html et body */

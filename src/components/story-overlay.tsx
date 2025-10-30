@@ -28,90 +28,101 @@ interface TextBlockProps {
 }
 
 function LineByLineText({ text, className }: { text: string; className: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [lineData, setLineData] = useState<Array<{width: number, top: number, height: number}>>([]);
-  const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const textRef = useRef<HTMLSpanElement | null>(null);
+  const [rects, setRects] = useState<Array<{ left: number; top: number; width: number; height: number }>>([]);
+  const [active, setActive] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const container = containerRef.current;
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let currentLine = '';
-    
-    // Créer un élément temporaire pour mesurer
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.visibility = 'hidden';
-    tempDiv.style.whiteSpace = 'nowrap';
-    tempDiv.className = className;
-    document.body.appendChild(tempDiv);
-
-    words.forEach((word, index) => {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      tempDiv.textContent = testLine;
-      
-      if (tempDiv.scrollWidth > container.offsetWidth && currentLine) {
-        // La ligne précédente était complète
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
+    const measure = () => {
+      if (!containerRef.current || !textRef.current) return;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(textRef.current);
+      const clientRects = Array.from(range.getClientRects());
+      const mapped = clientRects.map((r) => ({
+        left: r.left - containerRect.left,
+        top: r.top - containerRect.top,
+        width: r.width,
+        height: r.height,
+      }));
+      // Ajustement sans interlignes: alignement aux pixels + pont entre lignes
+      const adjusted = mapped.map((r) => ({
+        left: Math.floor(r.left),
+        top: Math.floor(r.top),
+        width: Math.ceil(r.width),
+        height: Math.ceil(r.height)
+      }));
+      for (let i = 0; i < adjusted.length; i++) {
+        const prev = adjusted[i - 1];
+        const curr = adjusted[i];
+        const next = adjusted[i + 1];
+        let topExp = curr.top;
+        let bottomExp = curr.top + curr.height;
+        if (prev) {
+          const prevBottom = prev.top + prev.height;
+          if (topExp > prevBottom) topExp = prevBottom; // combler l'espace
+        }
+        if (next) {
+          const nextTop = next.top;
+          if (bottomExp < nextTop) bottomExp = nextTop; // étendre jusqu'à la ligne suivante
+        }
+        curr.top = topExp;
+        curr.height = Math.max(1, bottomExp - topExp);
       }
-      
-      if (index === words.length - 1) {
-        // Dernière ligne
-        lines.push(currentLine);
+      setRects(adjusted);
+      requestAnimationFrame(() => setActive(true));
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    // Observer les changements de taille dus à la typo responsive/chargement de police
+    let roContainer: ResizeObserver | null = null;
+    let roText: ResizeObserver | null = null;
+    if (window.ResizeObserver) {
+      if (containerRef.current) {
+        roContainer = new ResizeObserver(() => measure());
+        roContainer.observe(containerRef.current);
       }
-    });
-
-    // Calculer les dimensions de chaque ligne
-    const lineHeight = parseFloat(getComputedStyle(tempDiv).lineHeight) || 28;
-    const lineDimensions = lines.map((line, index) => {
-      tempDiv.textContent = line;
-      return {
-        width: tempDiv.scrollWidth,
-        top: index * lineHeight,
-        height: lineHeight
-      };
-    });
-
-    document.body.removeChild(tempDiv);
-    setLineData(lineDimensions);
-    
-    // Initialiser les refs
-    lineRefs.current = new Array(lineDimensions.length).fill(null);
-  }, [text, className]);
+      if (textRef.current) {
+        roText = new ResizeObserver(() => measure());
+        roText.observe(textRef.current);
+      }
+    }
+    // Re-mesurer après chargement des polices
+    // @ts-ignore
+    if ((document as any).fonts && (document as any).fonts.ready) {
+      // @ts-ignore
+      (document as any).fonts.ready.then(() => measure()).catch(() => {});
+    }
+    return () => {
+      window.removeEventListener('resize', measure);
+      if (roContainer) roContainer.disconnect();
+      if (roText) roText.disconnect();
+    };
+  }, [text]);
 
   return (
     <div ref={containerRef} className="w-full relative">
-      {/* Texte normal pour la disposition */}
-      <div className={className}>
-        {text}
-      </div>
-      
-      {/* Overlays d'animation pour chaque ligne */}
-      {lineData.map((line, index) => (
-        <motion.div
-          key={index}
-          ref={(el) => { lineRefs.current[index] = el; }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.7 + (index * 0.2) }}
-          className="text-reveal-line"
+      {/* Texte au-dessus */}
+      <span ref={textRef} className={className} style={{ position: 'relative', zIndex: 1 }}>{text}</span>
+      {/* Overlays cyan par ligne (révélation gauche→droite) */}
+      {rects.map((r, i) => (
+        <div
+          key={i}
           style={{
-            top: `${line.top}px`,
-            left: '-12px', // Décalage pour compenser le padding gauche (8px) et créer l'espacement
-            width: `${line.width + 20}px`, // Largeur de la ligne + padding total (8px gauche + 12px droite)
-            height: `${line.height}px`, // Hauteur exacte de la ligne
-          }}
-          onAnimationComplete={() => {
-            setTimeout(() => {
-              if (lineRefs.current[index]) {
-                lineRefs.current[index]!.classList.add('animate-in');
-              }
-            }, 100);
+            position: 'absolute',
+            left: r.left,
+            top: r.top,
+            width: r.width,
+            height: r.height,
+            background: '#22D3EE', // cyan
+            transformOrigin: 'left center',
+            transform: active ? 'scaleX(1)' : 'scaleX(0)',
+            transition: 'transform 700ms ease-out',
+            transitionDelay: `${i * 0.12}s`,
+            zIndex: 0,
+            pointerEvents: 'none',
           }}
         />
       ))}

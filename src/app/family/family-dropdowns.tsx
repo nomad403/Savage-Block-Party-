@@ -171,7 +171,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                   >
                     <LineByLineText
                       text={dj}
-                      className="font-title text-4xl text-black whitespace-nowrap"
+                      className="font-text font-semibold tracking-tight leading-tight text-4xl text-black whitespace-nowrap"
                       delay={index * 100}
                     />
                   </div>
@@ -208,7 +208,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                   >
                     <LineByLineText
                       text={danseur}
-                      className="font-title text-4xl text-black whitespace-nowrap"
+                      className="font-text font-semibold tracking-tight leading-tight text-4xl text-black whitespace-nowrap"
                       delay={index * 100}
                     />
                   </div>
@@ -245,7 +245,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                   >
                     <LineByLineText
                       text={collab}
-                      className="font-title text-4xl text-black whitespace-nowrap"
+                      className="font-text font-semibold tracking-tight leading-tight text-4xl text-black whitespace-nowrap"
                       delay={index * 100}
                     />
                   </div>

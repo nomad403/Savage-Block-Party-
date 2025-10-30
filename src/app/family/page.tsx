@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { useState } from "react";
+import TextRevealLines from "@/components/text-reveal-lines";
 import FamilyDropdowns from "./family-dropdowns";
 
 // Styles pour l'animation de défilement du texte
@@ -155,9 +156,14 @@ export default function FamilyPage() {
         {/* Contenu centré */}
         <div className="relative z-10 h-full flex items-center justify-center">
           <div className="text-center px-4">
-            <h1 className="font-title uppercase text-6xl sm:text-7xl md:text-8xl text-green-500 mb-6 leading-tight">
-              Une famille
-            </h1>
+            <div className="mb-6">
+              <TextRevealLines 
+                text={"Une famille"} 
+                color="#22C55E" 
+                className="font-title uppercase text-6xl sm:text-7xl md:text-8xl text-black leading-tight" 
+                delayStep={0.12}
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -220,9 +226,12 @@ export default function FamilyPage() {
         {selectedItem && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="text-center">
-              <h2 className="font-title text-6xl sm:text-7xl md:text-8xl text-white uppercase leading-tight">
-                {selectedItem}
-              </h2>
+              <TextRevealLines 
+                text={selectedItem || ""} 
+                color="#22C55E" 
+                className="font-title text-6xl sm:text-7xl md:text-8xl text-black uppercase leading-tight" 
+                delayStep={0.1}
+              />
             </div>
           </div>
         )}
@@ -251,7 +260,7 @@ export default function FamilyPage() {
       </section>
       
       {/* Troisième section "Join the family" */}
-      <section className="h-screen w-full relative overflow-hidden text-white">
+      <section className="h-screen w-full relative overflow-hidden text-black">
         {/* Image de fond */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -264,44 +273,61 @@ export default function FamilyPage() {
         <div className="absolute inset-0 bg-black/40" />
         
         <div className="container-px relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[400px]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start min-h-[400px] mt-12 md:mt-16">
             {/* Titre à gauche */}
-            <div className="flex flex-col justify-center">
-              <h2 className="font-title uppercase text-6xl sm:text-7xl md:text-8xl leading-tight">
-                Join the family
-              </h2>
+            <div className="flex flex-col justify-start">
+              <TextRevealLines 
+                text={"Join the family"} 
+                color="#22C55E" 
+                className="font-title uppercase text-6xl sm:text-7xl md:text-8xl leading-tight text-black" 
+                delayStep={0.1}
+              />
             </div>
 
             {/* Description et formulaire à droite */}
-            <div className="flex flex-col justify-center space-y-8">
+            <div className="flex flex-col justify-start space-y-8 lg:mt-0 lg:w-[70%]">
               {/* Description */}
-              <div className="space-y-4">
-                <p className="font-text text-xl leading-relaxed">
-                  Tu es artiste, créateur, ou simplement passionné par la culture urbaine ?
-                </p>
-                <p className="font-text text-xl leading-relaxed">
-                  Savage Block Party cherche de nouveaux talents pour enrichir sa communauté.
-                </p>
-                <p className="font-text text-xl leading-relaxed">
-                  Partage ton Instagram et montre-nous ton univers.
-                </p>
+              <div className="w-full mt-0 space-y-4" style={{ hyphens: 'none', overflowWrap: 'normal', wordBreak: 'normal' }}>
+                <TextRevealLines
+                  text={"Tu es artiste, créateur, beatmaker, danseur, DJ, photographe ou média indépendant ? Rejoins une communauté qui fait vibrer la ville hors des circuits, entre friches, parkings et lieux improbables."}
+                  color="#22C55E"
+                  className="font-text font-semibold text-xl md:text-2xl leading-[1.12] tracking-tight text-black text-justify"
+                  delayStep={0.07}
+                />
+                <TextRevealLines
+                  text={"Ensemble, on fabrique des formats roots, exigeants et inclusifs, où la musique et le mouvement parlent plus fort que les discours."}
+                  color="#22C55E"
+                  className="font-text font-semibold text-xl md:text-2xl leading-[1.12] tracking-tight text-black text-justify"
+                  delayStep={0.07}
+                />
+                <TextRevealLines
+                  text={"Prêt à faire partie de l’aventure ?"}
+                  color="#22C55E"
+                  className="font-title text-2xl md:text-3xl leading-[1.12] tracking-tight text-black"
+                  delayStep={0.06}
+                />
               </div>
 
               {/* Formulaire Instagram */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="instagram" className="block text-white text-lg font-title mb-3">
-                    Votre Instagram
+                  <label htmlFor="instagram" className="block text-black text-lg font-title leading-none mb-0 relative z-[2]">
+                    <TextRevealLines 
+                      text={"Votre Instagram"}
+                      color="#22C55E"
+                      className="font-title text-lg text-black"
+                      delayStep={0.06}
+                    />
                   </label>
-                  <div className="flex w-full">
-                    <span className="bg-green-500 text-black px-4 py-3 text-lg font-title">@</span>
+                  <div className="reveal-focus flex w-full -mt-1">
+                    <span className="bg-green-500 text-black px-4 py-3 text-lg font-title relative z-[1]">@</span>
                     <input
                       type="text"
                       id="instagram"
                       value={instagramHandle}
                       onChange={(e) => setInstagramHandle(e.target.value)}
                       placeholder="votre_pseudo"
-                      className="flex-1 bg-transparent border-2 border-green-500 text-white text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="flex-1 bg-transparent border-2 border-green-500 text-green-500 focus:text-black placeholder:text-green-500 placeholder:opacity-100 placeholder:font-text caret-green-500 focus:caret-black text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 relative z-[1]"
                       required
                     />
                   </div>
