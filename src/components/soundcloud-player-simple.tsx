@@ -1657,18 +1657,26 @@ useEffect(() => {
 	}, [isMounted]); // Charger l'API SoundCloud après le montage du composant
 
 	// Ajuster dynamiquement le nombre de barres pour occuper toute la largeur
+// Responsive bar count based on window width
 useEffect(() => {
-		if (pathname !== "/") return;
-		if (!waveformRef.current) return;
-		const element = waveformRef.current;
-		const resizeObserver = new ResizeObserver((entries) => {
-			const width = entries[0]?.contentRect?.width || 0;
-			const count = Math.max(60, Math.floor(width / 3));
+	const updateBarCount = () => {
+		const width = window.innerWidth;
+		// Adjust bar count based on screen size
+		let count = 300; // default for large screens
+		if (width < 640) { // sm breakpoint
+			count = 80;
+		} else if (width < 768) { // md breakpoint
+			count = 120;
+		} else if (width < 1024) { // lg breakpoint
+			count = 200;
+		}
 			setBarCount(count);
-		});
-		resizeObserver.observe(element);
-		return () => resizeObserver.disconnect();
-}, [pathname]);
+	};
+	
+	updateBarCount();
+	window.addEventListener('resize', updateBarCount);
+	return () => window.removeEventListener('resize', updateBarCount);
+}, []);
 
 	const handlePlayPause = useCallback(async () => {
 		if (!isWidgetHealthy()) {
@@ -1959,7 +1967,7 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 		// 	stackTrace: new Error().stack?.split('\n').slice(1, 4)
 		// });
 return (
-		<div className="fixed left-6 top-[50%] z-[10002] flex items-center gap-4" style={{ transform: "translateY(-50%)", willChange: "transform" }}>
+		<div className="fixed left-6 bottom-[112px] md:top-[50%] md:bottom-auto z-[10002] flex items-center gap-4" style={{ willChange: "transform" }}>
 			{/* Indicateur de santé du widget */}
 			{widgetHealth !== 'healthy' && (
 				<div className={`absolute -top-2 -right-2 w-3 h-3 rounded-full ${
@@ -2336,66 +2344,94 @@ return (
 				</>
 			) : (
 				<>
-					{/* Play button centered */}
+					{/* Controls centered (mobile) / Play centered (desktop) */}
 					<div className="fixed inset-0 z-[30] pointer-events-none">
-						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex items-center gap-4">
+							{/* Mute button (mobile only, to the left of play) */}
+							<button 
+								onClick={handleMuteToggle}
+								className="w-20 h-20 md:hidden flex items-center justify-center hover:opacity-80 transition-opacity"
+								title={isMuted ? "Activer le son" : "Couper le son"}
+							>
+								{isMuted ? (
+									<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+										<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+									</svg>
+								) : (
+									<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+										<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+									</svg>
+								)}
+							</button>
+							{/* Play button */}
 					<button 
 						onClick={handlePlayPause}
-						disabled={isLoadingRandomTrack}
-						className="w-40 h-40 flex items-center justify-center hover:opacity-80 transition-opacity disabled:cursor-not-allowed"
-					>
-						{isLoadingRandomTrack ? (
-							<div className={`w-16 h-16 border-4 border-t-transparent border-r-transparent ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'border-black' : 'border-yellow-400'} rounded-full animate-spin`}></div>
-						) : isPlaying ? (
-							<div className="flex gap-1">
-								<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
-								<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+								disabled={isLoadingRandomTrack}
+								className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center hover:opacity-80 transition-opacity disabled:cursor-not-allowed"
+							>
+								{isLoadingRandomTrack ? (
+									<div className={`w-16 h-16 border-4 border-t-transparent border-r-transparent ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'border-black' : 'border-yellow-400'} rounded-full animate-spin`}></div>
+								) : isPlaying ? (
+									<div className="flex gap-1">
+										<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+										<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
 							</div>
 						) : (
-							<svg width="64" height="48" viewBox="0 0 64 48" fill="none" className="ml-2">
-								<path d="M16 0L52 24L16 48V0Z" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "#FACC15"}/>
-							</svg>
+									<svg width="64" height="48" viewBox="0 0 64 48" fill="none" className="ml-2">
+										<path d="M16 0L52 24L16 48V0Z" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "#FACC15"}/>
+									</svg>
 						)}
+					</button>
+							{/* Skip button (mobile only, to the right of play) */}
+					<button
+						onClick={() => { try { widgetRef.current?.next(); } catch {} }}
+								className="w-20 h-20 md:hidden flex items-center justify-center hover:opacity-80 transition-opacity"
+						title="Suivant"
+					>
+								<svg width="48" height="48" viewBox="0 0 24 24" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "currentColor"} className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+							<path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
+						</svg>
 					</button>
 						</div>
 					</div>
 
-					{/* Title left side with mute button and reduce button (fixed) */}
-					<div className={`fixed left-6 top-1/2 -translate-y-1/2 z-[25] ${playerColor} px-4 flex items-center gap-6`}>
-						<div>
-							<div className="font-title text-base leading-tight">{trackTitle || ""}</div>
-							<AutoScrollText text={artistName || ""} className={`font-text text-sm ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
-						</div>
+					{/* Desktop: Mute and title left */}
+					<div className="hidden md:flex fixed left-6 top-1/2 -translate-y-1/2 z-[25] px-4 items-center gap-6">
 						{/* Mute button */}
 					<button 
 						onClick={handleMuteToggle}
-							className="w-14 h-14 flex items-center justify-center hover:opacity-80 transition-opacity"
+							className="w-14 h-14 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
 						title={isMuted ? "Activer le son" : "Couper le son"}
 					>
 						{isMuted ? (
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 								<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
 							</svg>
 						) : (
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 								<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
 							</svg>
 						)}
 					</button>
+						{/* Title */}
+						<div className={`${playerColor}`}>
+							<div className="font-title text-base leading-tight">{trackTitle || ""}</div>
+							<AutoScrollText text={artistName || ""} className={`font-text text-sm ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
+						</div>
 						{/* Reduce button */}
 						<button 
 							onClick={() => setIsPlayerExpanded(false)}
-							className="w-14 h-14 flex items-center justify-center hover:opacity-80 transition-opacity"
+							className="w-14 h-14 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
 							title="Réduire le player"
-					>
+						>
 							<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={playerColor}>
 								<path d="M15 6l-6 6 6 6"/>
 							</svg>
-				</button>
-			</div>
+						</button>
+					</div>
 
-					{/* Skip button centered right */}
-					<div className="fixed right-6 top-1/2 -translate-y-1/2 z-[30] flex items-center">
+					{/* Desktop: Skip button right */}
+					<div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-[30] items-center">
 						<button
 							onClick={() => { try { widgetRef.current?.next(); } catch {} }}
 							className="w-28 h-28 flex items-center justify-center hover:opacity-80 transition-opacity"
@@ -2406,6 +2442,14 @@ return (
 						</svg>
 						</button>
 				</div>
+
+					{/* Title left bottom above waveform (mobile only) */}
+					<div className={`fixed bottom-28 left-4 z-[25] md:hidden ${playerColor}`}>
+						<div className="max-w-[200px]">
+							<div className="font-title text-sm leading-tight truncate">{trackTitle || ""}</div>
+							<AutoScrollText text={artistName || ""} className={`font-text text-xs ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
+			</div>
+		</div>
 				</>
 			)}
 		</>

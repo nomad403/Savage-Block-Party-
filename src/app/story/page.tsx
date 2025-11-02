@@ -1,12 +1,55 @@
-import type { Metadata } from "next";
+"use client";
+
 import Image from "next/image";
 import StoryOverlay, { AccrocheText, TextBlock } from "@/components/story-overlay";
+import { useMenu } from "@/hooks/useMenu";
 
-export const metadata: Metadata = {
-  title: "Story — Savage Block Party",
-};
+// Styles pour l'animation de défilement du texte
+const scrollTextStyle = `
+  @keyframes scroll-text {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-33.333%);
+    }
+  }
+  
+  .animate-scroll-text {
+    animation: scroll-text 30s linear infinite;
+  }
+`;
+
+if (typeof document !== 'undefined' && !document.getElementById('story-scroll-styles')) {
+  const style = document.createElement('style');
+  style.id = 'story-scroll-styles';
+  style.textContent = scrollTextStyle;
+  document.head.appendChild(style);
+}
 
 export default function StoryPage() {
+  const { isMenuOpen } = useMenu();
+
+  // Tous les talents mélangés
+  const allTalents = [
+    'Rita Amoureux', 'Woodneymo', 'HAX', 'Bengala', 'Niel', 'Darlean', 'Le Sympathique', 'Sungoma',
+    'Ambre', 'Vins Crespo', 'Milliard', 'Morgane', 'Rocket'
+  ];
+
+  // Les 10 commandements de la Savage
+  const commandments = [
+    "DANS UNE BOUTEILLE EN PLASTIQUE, TON BREUVAGE TU RAMÈNERAS.",
+    "LE GARDIEN DE TON FRÈRE TU SERAS, SUR TOUT LE MONDE TU VEILLERAS.",
+    "LA LOCALISATION POUR TOI ET TON GROUPE D'AMIS TU GARDERAS.",
+    "COMME TU ES TU VIENDRAS. DANS UN TROU, UN GRILLAGE, COMME TOUT LE MONDE, TU PASSERAS.",
+    "AUX ABORDS DU LIEU, DISCRET TU RESTERAS.",
+    "LE LIEU TU RESPECTERAS, DANS UNE POUBELLE TES DÉCHETS TU JETTERAS.",
+    "TOUT COMPORTEMENT IRRESPECTUEUX (BAGARRES, ATTOUCHEMENTS) : LA SORTIE TU PRENDRAS.",
+    "LES OBJETS TROUVÉS À L'ORGA TU RAMÈNERAS.",
+    "TES AMIS TU AVERTIRAS ET TON DÉPART DE LA SOIRÉE TU PRÉVOIRAS.",
+    "EN CAS DE PROBLÈMES, UN SAVER (ORGA) TU PRÉVIENDRAS."
+  ];
+
   return (
     <main id="story-root" className="w-full -mt-20">
       {/* Section 1: Accroche */}
@@ -21,6 +64,24 @@ export default function StoryPage() {
         <StoryOverlay>
           <AccrocheText text="Par nous, pour nous." />
         </StoryOverlay>
+      </section>
+
+      {/* Bannière commandements défilant */}
+      <section className="w-full bg-yellow-400 text-black py-4 relative overflow-hidden">
+        <div className={`flex flex-col items-center justify-center h-full gap-12 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {/* Texte défilant */}
+          <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
+            {commandments.map((commandment, i) => (
+              <span key={`banner1-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{commandment}</span>
+            ))}
+            {commandments.map((commandment, i) => (
+              <span key={`banner1-repeat-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{commandment}</span>
+            ))}
+            {commandments.map((commandment, i) => (
+              <span key={`banner1-repeat2-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{commandment}</span>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Section 2: Qui sommes-nous */}
@@ -44,6 +105,24 @@ export default function StoryPage() {
             />
           </div>
         </StoryOverlay>
+      </section>
+
+      {/* Bannière talents défilant */}
+      <section className="w-full bg-yellow-400 text-black py-4 relative overflow-hidden">
+        <div className={`flex flex-col items-center justify-center h-full gap-12 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {/* Texte défilant */}
+          <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
+            {allTalents.map((talent, i) => (
+              <span key={i} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{talent}</span>
+            ))}
+            {allTalents.map((talent, i) => (
+              <span key={`repeat-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{talent}</span>
+            ))}
+            {allTalents.map((talent, i) => (
+              <span key={`repeat2-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{talent}</span>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Section 3: L'équipe */}

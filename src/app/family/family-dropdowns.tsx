@@ -146,12 +146,12 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
   ];
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-20 flex">
+    <div className="absolute top-0 left-0 right-0 z-20 flex-col">
       {/* Dropdown DJs */}
-      <div className="flex-1 relative bg-green-500">
+      <div className="w-full relative">
         <button
           onClick={() => toggleDropdown('djs')}
-          className={`w-full text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           DJs
         </button>
@@ -162,9 +162,9 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute top-full left-0 right-0 overflow-hidden"
+              className="overflow-hidden"
             >
-              <div className="w-1/3">
+              <div className="w-full">
                 {djs.map((dj, index) => (
                   <div 
                     key={dj}
@@ -185,10 +185,10 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Danseurs */}
-      <div className="flex-1 relative bg-green-500">
+      <div className="w-full relative">
         <button
           onClick={() => toggleDropdown('danseurs')}
-          className={`w-full text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           Danseurs
         </button>
@@ -199,9 +199,9 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute top-full left-0 right-0 overflow-hidden"
+              className="overflow-hidden"
             >
-              <div className="w-1/3">
+              <div className="w-full">
                 {danseurs.map((danseur, index) => (
                   <div 
                     key={danseur}
@@ -222,10 +222,10 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Collab */}
-      <div className="flex-1 relative bg-green-500">
+      <div className="w-full relative">
         <button
           onClick={() => toggleDropdown('collab')}
-          className={`w-full text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           Collab
         </button>
@@ -236,9 +236,9 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute top-full left-0 right-0 overflow-hidden"
+              className="overflow-hidden"
             >
-              <div className="w-1/3">
+              <div className="w-full">
                 {collabs.map((collab, index) => (
                   <div 
                     key={collab}

@@ -174,27 +174,27 @@ export default function FamilyPage() {
       <section className="h-screen w-full relative overflow-hidden bg-red-500">
         {/* Vidéo YouTube par défaut quand aucun item n'est sélectionné */}
         {!selectedItem && (
-          <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden', transform: 'scale(1.2)' }}>
+          <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden' }}>
             <iframe
-              className="w-full h-full"
+              className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2"
               src={`https://www.youtube.com/embed/${defaultVideoId}?start=${defaultStartTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=${defaultVideoId}`}
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen={true}
-              style={{ border: 'none', width: '100%', height: '100%', pointerEvents: 'none' }}
+              style={{ border: 'none', width: '120vw', height: '67.5vw', minWidth: '213.33vh', minHeight: '120vh', pointerEvents: 'none' }}
             />
           </div>
         )}
         
         {/* Vidéo YouTube fullscreen pour item sélectionné */}
         {media && media.type === 'youtube' && selectedItem && (
-          <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden', transform: 'scale(1.2)' }}>
+          <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden' }}>
             <iframe
               key={selectedItem}
-              className="w-full h-full"
+              className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2"
               src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=${media.videoId}`}
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen={true}
-              style={{ border: 'none', width: '100%', height: '100%', pointerEvents: 'none' }}
+              style={{ border: 'none', width: '120vw', height: '67.5vw', minWidth: '213.33vh', minHeight: '120vh', pointerEvents: 'none' }}
             />
           </div>
         )}
