@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useMenu } from "../hooks/useMenu";
 
 type EventItem = {
     id: string;
@@ -26,6 +27,7 @@ export default function AgendaGrid({
     featuredImage?: string;
     featuredDesc?: string;
 }) {
+    const { isMenuOpen } = useMenu();
     const today = useMemo(() => new Date(todayIso), [todayIso]);
     const baseYear = today.getFullYear();
     const baseMonth = today.getMonth();
@@ -207,7 +209,7 @@ export default function AgendaGrid({
     }, [activeIndex, offsets.length]);
 
     return (
-        <div className="absolute inset-0 grid grid-cols-13 grid-rows-7">
+        <div className={`absolute inset-0 grid grid-cols-13 grid-rows-7 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             {/* Ligne 1 */}
             <div className="col-span-3 relative flex items-center px-4">
                 <div className="absolute bg-yellow-400" style={{ left: 1, right: 1, top: 1, bottom: 1, pointerEvents: 'none', zIndex: 0 }} aria-hidden />

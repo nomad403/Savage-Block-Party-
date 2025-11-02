@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useMenu } from "../hooks/useMenu";
 
 interface StoryOverlayProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export default function StoryOverlay({ children, className = "" }: StoryOverlayP
 
 interface TextBlockProps {
   title: string;
-  description?: string;
+  description?: string | string[];
   className?: string;
 }
 
@@ -131,35 +132,41 @@ function LineByLineText({ text, className }: { text: string; className: string }
 }
 
 export function TextBlock({ title, description, className = "" }: TextBlockProps) {
+  const descriptions = Array.isArray(description) ? description : (description ? [description] : []);
+  const { isMenuOpen } = useMenu();
+  
   return (
-    <div className={`max-w-md ${className}`}>
+    <div className={`max-w-2xl transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} ${className}`}>
       {title && (
         <LineByLineText 
           text={title} 
-          className="font-title text-4xl md:text-5xl lg:text-6xl text-black mb-6 leading-tight"
+          className="font-title text-4xl md:text-5xl lg:text-6xl text-black mb-6 leading-tight text-justify break-words"
         />
       )}
-      {description && (
-        <LineByLineText 
-          text={description} 
-          className="font-text text-lg md:text-xl text-black leading-relaxed"
-        />
+      {descriptions.length > 0 && (
+        <div className="space-y-4">
+          {descriptions.map((desc, idx) => (
+            <LineByLineText 
+              key={idx}
+              text={desc} 
+              className="font-text text-lg md:text-xl text-black leading-[1.12] tracking-tight text-justify"
+            />
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
 export function AccrocheText({ text }: { text: string }) {
+  const { isMenuOpen } = useMenu();
+  
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 1, delay: 0.5 }}
-      className="text-center"
-    >
-      <h1 className="font-title text-5xl md:text-6xl lg:text-7xl text-cyan-400 leading-tight">
-        {text}
-      </h1>
-    </motion.div>
+    <div className={`text-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <LineByLineText 
+        text={text}
+        className="font-title text-5xl md:text-6xl lg:text-7xl text-black leading-tight"
+      />
+    </div>
   );
 }

@@ -33,13 +33,15 @@ export default function StoryPage() {
         />
         <StoryOverlay className="justify-center items-center px-8 md:px-16">
           <div className="w-full max-w-6xl flex justify-start">
-            <div className="max-w-md">
-              <TextBlock 
-                title="Qui sommes-nous ?"
-                description="Née dans les marges, Savage Block Party fait vibrer les lieux que la ville oublie, les friches, les rails, les bois, les parkings, en y ramenant la vie, le son et la lumière. Nos événements rassemblent DJs, danseurs, photographes et performeurs venus de tous horizons, unis par une même énergie brute, libre et humaine. Chaque soirée devient un manifeste, un moment où la culture underground reprend sa place, où la fête devient un langage, et où la communauté écrit, nuit après nuit, l'histoire vivante de l'underground parisien et plus."
-                className="text-left"
-              />
-            </div>
+            <TextBlock 
+              title="Qui sommes-nous ?"
+              description={[
+                "Née dans les marges, Savage Block Party fait vibrer les lieux que la ville oublie, les friches, les rails, les bois, les parkings, en y ramenant la vie, le son et la lumière.",
+                "Nos événements rassemblent DJs, danseurs, photographes et performeurs venus de tous horizons, unis par une même énergie brute, libre et humaine.",
+                "Chaque soirée devient un manifeste, un moment où la culture underground reprend sa place, où la fête devient un langage, et où la communauté écrit, nuit après nuit, l'histoire vivante de l'underground parisien et plus."
+              ]}
+              className="text-left"
+            />
           </div>
         </StoryOverlay>
       </section>
@@ -54,13 +56,14 @@ export default function StoryPage() {
         />
         <StoryOverlay className="justify-center items-center px-8 md:px-16">
           <div className="w-full max-w-6xl flex justify-end">
-            <div className="max-w-md">
-              <TextBlock 
-                title="L'équipe"
-                description="Notre équipe est composée de Vins Crespo, créateur de la Savage et danseur professionnel, Niel DJ, Philipinne, Bilal, HAX, Saki, Rita amoureux, Le sympathique, Queen2 et SUNGOMA DJ. Chacun apporte sa créativité et son expertise pour créer des moments uniques où la musique et la danse se rencontrent dans une explosion d'énergie pure."
-                className="text-left"
-              />
-            </div>
+            <TextBlock 
+              title="L'équipe"
+              description={[
+                "Notre équipe est composée de Vins Crespo, créateur de la Savage et danseur professionnel, Niel DJ, Philipinne, Bilal, HAX, Saki, Rita amoureux, Le sympathique, Queen2 et SUNGOMA DJ.",
+                "Chacun apporte sa créativité et son expertise pour créer des moments uniques où la musique et la danse se rencontrent dans une explosion d'énergie pure."
+              ]}
+              className="text-left"
+            />
           </div>
         </StoryOverlay>
       </section>

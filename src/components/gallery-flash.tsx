@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
+import TextRevealLines from "@/components/text-reveal-lines";
+import { useMenu } from "../hooks/useMenu";
 
 // Composant LineByLineText pour l'effet de révélation de texte
 function LineByLineText({ text, className }: { text: string; className: string }) {
@@ -114,6 +116,7 @@ const galleryImages = [
 ];
 
 export default function GalleryFlash() {
+  const { isMenuOpen } = useMenu();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [instagramHandle, setInstagramHandle] = useState("");
 
@@ -139,7 +142,7 @@ export default function GalleryFlash() {
   };
 
   return (
-    <div className="w-full">
+    <div className={`w-full transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       {/* Galerie photos avec défilement flash */}
       <div className="relative w-full aspect-video overflow-hidden">
         {/* Galerie photos avec défilement flash */}
@@ -207,6 +210,20 @@ export default function GalleryFlash() {
         </div>
       </div>
 
+      {/* Bannière de séparation */}
+      <section className="w-full bg-cyan-400 text-black py-4 relative overflow-hidden">
+        <div className="flex flex-col items-center justify-center h-full gap-4">
+          {/* Texte défilant */}
+          <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <span key={i} className="font-title uppercase text-2xl sm:text-3xl md:text-4xl">
+                LE LIEU TU RESPECTERAS, DANS UNE POUBELLE TES DÉCHETS TU JETTERAS
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Section formulaire de candidature */}
       <div className="w-full bg-yellow-400 py-20 px-8 pb-68">
         <div className="max-w-7xl mx-auto">
@@ -215,25 +232,30 @@ export default function GalleryFlash() {
             <div className="flex flex-col justify-center">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="instagram" className="block text-black text-lg font-title mb-3">
-                    Votre Instagram
+                  <label htmlFor="instagram" className="block text-black text-lg font-title leading-none mb-0 relative z-[2]">
+                    <TextRevealLines 
+                      text={"Votre Instagram"}
+                      color="#22D3EE"
+                      className="font-title text-lg text-black"
+                      delayStep={0.06}
+                    />
                   </label>
-                  <div className="flex w-full max-w-md">
-                    <span className="bg-black text-yellow-400 px-4 py-3 text-lg font-title">@</span>
+                  <div className="reveal-focus flex w-full -mt-1">
+                    <span className="bg-cyan-400 text-black px-4 py-3 text-lg font-title relative z-[1]">@</span>
                     <input
                       type="text"
                       id="instagram"
                       value={instagramHandle}
                       onChange={(e) => setInstagramHandle(e.target.value)}
                       placeholder="votre_pseudo"
-                      className="flex-1 bg-transparent border-2 border-black text-black text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      className="flex-1 bg-transparent border-2 border-cyan-400 text-cyan-400 focus:text-black placeholder:text-cyan-400 placeholder:opacity-100 placeholder:font-text caret-cyan-400 focus:caret-black text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 relative z-[1]"
                       required
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full max-w-md bg-black text-yellow-400 py-3 px-8 text-lg font-title uppercase tracking-wider hover:bg-gray-800 transition-colors duration-200"
+                  className="w-full bg-cyan-400 text-black py-3 px-8 text-lg font-title uppercase tracking-wider hover:bg-cyan-500 transition-colors duration-200"
                 >
                   Candidater
                 </button>
@@ -248,28 +270,36 @@ export default function GalleryFlash() {
               className="text-black flex flex-col justify-center relative z-10"
             >
               <div className="mb-8">
-                <LineByLineText 
+                <TextRevealLines 
                   text="Rejoins le collectif" 
-                  className="text-5xl font-title uppercase leading-tight"
+                  color="#22D3EE"
+                  className="text-5xl font-title uppercase leading-tight text-black"
+                  delayStep={0.12}
                 />
               </div>
               <div className="space-y-6 text-xl font-text leading-relaxed">
                 <div>
-                  <LineByLineText 
+                  <TextRevealLines 
                     text="Tu es artiste, créateur, ou simplement passionné par la culture urbaine ? Savage Block Party cherche de nouveaux talents pour enrichir sa communauté." 
-                    className="text-xl font-text leading-relaxed"
+                    color="#22D3EE"
+                    className="text-xl font-text leading-relaxed text-black"
+                    delayStep={0.12}
                   />
                 </div>
                 <div>
-                  <LineByLineText 
+                  <TextRevealLines 
                     text="Partage ton Instagram et montre-nous ton univers. Nous étudions chaque candidature avec attention pour découvrir les prochaines pépites du collectif." 
-                    className="text-xl font-text leading-relaxed"
+                    color="#22D3EE"
+                    className="text-xl font-text leading-relaxed text-black"
+                    delayStep={0.12}
                   />
                 </div>
                 <div>
-                  <LineByLineText 
+                  <TextRevealLines 
                     text="Prêt à faire partie de l'aventure ?" 
-                    className="font-title text-2xl"
+                    color="#22D3EE"
+                    className="font-title text-2xl text-black"
+                    delayStep={0.12}
                   />
                 </div>
               </div>

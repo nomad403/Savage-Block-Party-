@@ -150,6 +150,17 @@ html.no-scroll {
 .font-title { font-family: var(--font-title); }
 .font-text { font-family: var(--font-text); }
 
+/* Justification améliorée sans césures */
+.text-justify {
+	text-align: justify;
+	hyphens: none;
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+
 /* Layout helpers */
 .container-px {
 	padding-left: clamp(16px, 5vw, 48px);
@@ -470,8 +481,8 @@ body.scrollable-page {
 .reveal-focus::before {
     content: '';
     position: absolute;
-    top: -2px;
-    bottom: -2px;
+    top: 0;
+    bottom: 0;
     left: 0px;   /* aligne visuellement avec le padding du label (≈8px) */
     right: -8px;  /* symétrie à droite pour garder la même largeur perçue */
     background: #22C55E; /* vert family */
@@ -488,6 +499,13 @@ body.scrollable-page {
 /* Variante violette sur la page presse */
 body:has(#presse-root) .reveal-focus::before {
     background: #A855F7; /* Purple-500 */
+    left: -2px; /* compense la bordure 2px côté gauche */
+    right: -2px; /* compense la bordure 2px côté droit */
+}
+
+/* Variante cyan sur la page agenda */
+body:has(.bg-yellow-400) .reveal-focus::before {
+    background: #22D3EE; /* Cyan-400 */
     left: -2px; /* compense la bordure 2px côté gauche */
     right: -2px; /* compense la bordure 2px côté droit */
 }
@@ -752,4 +770,18 @@ iframe[src*="youtube.com"]::after {
 	background: transparent;
 	pointer-events: none;
 	z-index: 1;
+}
+
+/* Animation défilement infini pour les bannières de séparation */
+@keyframes scroll-text {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.animate-scroll-text {
+	animation: scroll-text 30s linear infinite;
 }

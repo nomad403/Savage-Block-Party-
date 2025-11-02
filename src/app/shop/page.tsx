@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useLayoutEffect } from "react";
+import { useMenu } from "@/hooks/useMenu";
 
 export default function ShopPage() {
   const videoRef = useRef<HTMLIFrameElement>(null);
   const productColumnRef = useRef<HTMLDivElement>(null);
   const shopRootRef = useRef<HTMLDivElement>(null);
+  const { isMenuOpen } = useMenu();
 
   // Utiliser useLayoutEffect pour garantir que le DOM est mis à jour avant le paint
   useLayoutEffect(() => {
@@ -122,18 +124,18 @@ export default function ShopPage() {
             {products.map((product, index) => (
               <div key={product.id} className={`relative ${index < products.length - 1 ? 'border-b-2' : ''}`} style={{ height: 'calc(100vh - 140px - 200px)', borderColor: '#000000', backgroundColor: '#EF4444' }}>
                 {/* Prix en haut à droite */}
-                <div className="absolute top-6 right-6 z-10">
+                <div className={`absolute top-6 right-6 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                   <span className="font-title text-black text-2xl">{product.price}</span>
                 </div>
 
                 {/* Titre en haut à gauche */}
-                <div className="absolute top-6 left-6 z-10">
+                <div className={`absolute top-6 left-6 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                   <h3 className="font-title text-black text-2xl uppercase">{product.title}</h3>
                 </div>
 
                 {/* Photo fullscreen */}
                 {product.imageHover ? (
-                  <div className="product-image-container">
+                  <div className={`product-image-container transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div 
                       className="product-image-front"
                       style={{ backgroundImage: `url(${product.image})` }}
@@ -145,13 +147,13 @@ export default function ShopPage() {
                   </div>
                 ) : (
                   <div 
-                    className="h-full w-full bg-cover bg-center bg-no-repeat"
+                    className={`h-full w-full bg-cover bg-center bg-no-repeat transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                     style={{ backgroundImage: `url(${product.image})` }}
                   />
                 )}
 
                 {/* Bouton plus pour achat en bas à droite */}
-                <div className="absolute bottom-16 right-8 z-10">
+                <div className={`absolute bottom-16 right-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                   <button className="w-16 h-16 rounded-full flex items-center justify-center transition-colors">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round">
                       <path d="M12 5v14M5 12h14"/>

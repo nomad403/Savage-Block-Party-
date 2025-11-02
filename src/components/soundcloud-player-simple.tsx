@@ -144,6 +144,7 @@ export default function SoundCloudPlayer() {
 	const [trackTitle, setTrackTitle] = useState<string>("Savage Block Party");
 	const [artistName, setArtistName] = useState<string>("Latest tracks");
 	const [isApiLoaded, setIsApiLoaded] = useState(false);
+	const [isLoadingRandomTrack, setIsLoadingRandomTrack] = useState(false);
 	
 	// Générer un signal audio de test pour Meyda (version simplifiée)
 	const generateTestAudioSignal = useCallback(async () => {
@@ -303,6 +304,12 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 	// Mémoriser l'état désiré de lecture pour éviter un auto-play lors des réinits
 	const desiredIsPlayingRef = useRef(false);
 	const widgetRef = useRef<any>(null);
+	// Mémoriser la dernière waveform chargée pour éviter les rechargements inutiles
+	const lastWaveformUrlRef = useRef<string>("");
+	// Flag pour ignorer le premier READY (chargement initial) et faire la sélection aléatoire directement
+	const isInitialLoadRef = useRef<boolean>(true);
+	// Ref pour la fonction de sélection aléatoire initiale (évite les problèmes de dépendances)
+	const performInitialRandomSelectionRef = useRef<(() => Promise<void>) | null>(null);
 	const [soundcloudUrl, setSoundcloudUrl] = useState<string>("");
 	// États de robustesse renforcés
 	const [widgetHealth, setWidgetHealth] = useState<'healthy' | 'degraded' | 'failed'>('healthy');
@@ -579,10 +586,8 @@ useEffect(() => {
 			await initializeWidget();
 			
 			// Étape 4: Configurer les événements
+			// La sélection aléatoire initiale sera faite dans READY pour éviter le flash de ROB'ZOO
 			setupWidgetEvents();
-			
-			// Étape 5: Sélection aléatoire initiale
-			await performInitialRandomSelection();
 			
 			console.log('✅ Initialisation SoundCloud terminée avec succès');
 			setInitState('widget-ready');
@@ -601,6 +606,27 @@ useEffect(() => {
 			if (window.SC && typeof window.SC.Widget === 'function') {
 				console.log('✅ API SoundCloud déjà disponible');
 				resolve();
+				return;
+			}
+			
+			// Vérifier si le script est déjà en cours de chargement
+			const existingScript = document.querySelector('script[src="https://w.soundcloud.com/player/api.js"]');
+			if (existingScript) {
+				console.log('⏳ Script SoundCloud déjà en cours de chargement...');
+				// Attendre que le script soit chargé
+				const waitForSC = () => {
+					return new Promise<void>((resolve) => {
+						const checkSC = () => {
+							if (window.SC && typeof window.SC.Widget === 'function') {
+								resolve();
+							} else {
+								setTimeout(checkSC, 100);
+							}
+						};
+						checkSC();
+					});
+				};
+				waitForSC().then(resolve).catch(reject);
 				return;
 			}
 			
@@ -722,82 +748,140 @@ useEffect(() => {
 		console.log('🎛️ Configuration des événements du widget...');
 		
 		try {
-			widgetRef.current.bind(window.SC.Widget.Events.READY, () => {
-				console.log('🎵 Widget SoundCloud prêt !');
-			});
+			// Nettoyer d'abord les anciens listeners pour éviter les doublons
+			try {
+				widgetRef.current.unbind(window.SC.Widget.Events.READY);
+				widgetRef.current.unbind(window.SC.Widget.Events.PLAY);
+				widgetRef.current.unbind(window.SC.Widget.Events.PAUSE);
+				widgetRef.current.unbind(window.SC.Widget.Events.PLAY_PROGRESS);
+				widgetRef.current.unbind(window.SC.Widget.Events.SEEK);
+				widgetRef.current.unbind(window.SC.Widget.Events.FINISH);
+				widgetRef.current.unbind(window.SC.Widget.Events.ERROR);
+			} catch (unbindError) {
+				console.log('ℹ️ Aucun listener à nettoyer (normal à la première initialisation)');
+			}
 			
-			widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
-				setIsPlaying(true);
-			});
+		widgetRef.current.bind(window.SC.Widget.Events.READY, async () => {
+			console.log('🎵 Widget SoundCloud prêt !');
 			
-			widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
-				setIsPlaying(false);
-			});
-			
-			// Événement PLAY_PROGRESS pour mettre à jour le progress
-			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
-				if (typeof data?.relativePosition === 'number') {
-					console.log('📊 Progress update:', data.relativePosition);
-					setProgress(data.relativePosition);
+			// Si c'est le premier chargement, faire immédiatement la sélection aléatoire
+			// pour éviter d'afficher le son par défaut (ROB'ZOO)
+			if (isInitialLoadRef.current && performInitialRandomSelectionRef.current) {
+				isInitialLoadRef.current = false;
+				console.log('🎲 Premier chargement - sélection aléatoire immédiate...');
+				setIsLoadingRandomTrack(true);
+				try {
+					await performInitialRandomSelectionRef.current();
+				} catch (error) {
+					console.error('❌ Erreur lors de la sélection aléatoire initiale:', error);
+					setIsLoadingRandomTrack(false);
 				}
-			});
-			
-			widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
-				if (typeof data?.relativePosition === 'number') {
-					setProgress(data.relativePosition);
-				}
-			});
-			
-			widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
-				console.log('🎵 Track terminé');
-				setIsPlaying(false);
-				setProgress(0);
-			});
-			
-			widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
-				console.error('❌ Erreur widget SoundCloud:', error);
-			});
+			}
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
+			setIsPlaying(true);
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
+			setIsPlaying(false);
+		});
+		
+		// Événement PLAY_PROGRESS pour mettre à jour le progress
+		widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
+			if (typeof data?.relativePosition === 'number') {
+				setProgress(data.relativePosition);
+			}
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
+			if (typeof data?.relativePosition === 'number') {
+				setProgress(data.relativePosition);
+			}
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
+			console.log('🎵 Track terminé');
+			setIsPlaying(false);
+			setProgress(0);
+		});
+		
+		widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
+			console.error('❌ Erreur widget SoundCloud:', error);
+		});
 		} catch (error) {
 			console.error('❌ Erreur lors de la configuration des événements:', error);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	
-	// Fonction pour charger la waveform
-	const loadWaveform = useCallback((waveformUrl: string, context: string = '') => {
+	// Fonction pour charger la waveform avec retry
+	const loadWaveform = useCallback(async (waveformUrl: string, context: string = '', retries: number = 3) => {
+		// Vérifier si la waveform a déjà été chargée
+		if (lastWaveformUrlRef.current === waveformUrl) {
+			console.log(`ℹ️ ${context}Waveform déjà chargée:`, waveformUrl);
+			return;
+		}
+		
 		console.log(`🌊 ${context}Récupération waveform:`, waveformUrl);
+		
 		if (waveformUrl.endsWith('.json')) {
-			fetch(waveformUrl, {
-				method: 'GET',
-				mode: 'cors',
-				cache: 'no-cache',
-			})
-				.then(response => response.json())
-				.then(json => {
+			for (let attempt = 1; attempt <= retries; attempt++) {
+				try {
+					const response = await fetch(waveformUrl, {
+						method: 'GET',
+						mode: 'cors',
+						cache: 'no-cache',
+					});
+					
+					if (!response.ok && attempt < retries) {
+						console.warn(`⚠️ ${context}Tentative ${attempt}/${retries} échouée, retry...`);
+						await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+						continue;
+					}
+					
+					const json = await response.json();
 											const samples: number[] = json?.samples || json?.data || [];
+					
 											if (samples.length > 0) {
 						console.log(`✅ ${context}Waveform samples chargés:`, samples.length);
 												setWaveformSamples(samples);
 												setWaveformImageUrl("");
+						lastWaveformUrlRef.current = waveformUrl;
+						return;
 					} else {
 						console.log(`⚠️ ${context}Aucun sample trouvé dans le JSON`);
-											setWaveformSamples(null);
-												setWaveformImageUrl("");
-											}
-										})
-				.catch(error => {
-					console.error(`❌ ${context}Erreur réseau waveform JSON:`, error);
-					// Fallback : générer des samples simulés
+						break;
+					}
+				} catch (error) {
+					console.error(`❌ ${context}Erreur réseau waveform JSON (tentative ${attempt}/${retries}):`, error);
+					
+					if (attempt < retries) {
+						await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+						continue;
+					}
+					
+					// Dernière tentative échouée, utiliser des samples simulés
 					console.log(`🔄 ${context}Utilisation de samples simulés comme fallback`);
 					const fallbackSamples = Array.from({ length: 100 }, () => Math.random() * 0.5 + 0.25);
 					setWaveformSamples(fallbackSamples);
+					setWaveformImageUrl("");
+					// Ne pas mettre à jour lastWaveformUrlRef pour les samples simulés
+					return;
+				}
+			}
+			
+			// Aucune tentative n'a réussi
+											setWaveformSamples(null);
 											setWaveformImageUrl("");
-										});
+			lastWaveformUrlRef.current = "";
 								} else {
+			// Waveform image
 			console.log(`✅ ${context}Waveform image URL:`, waveformUrl);
 									setWaveformSamples(null);
 			setWaveformImageUrl(waveformUrl);
-								}
+			lastWaveformUrlRef.current = waveformUrl;
+		}
 	}, []);
 
 	// Étape 5: Sélection aléatoire initiale avec retry robuste
@@ -809,85 +893,96 @@ useEffect(() => {
 		}
 		
 		console.log('🎲 Sélection aléatoire initiale...');
+		setIsLoadingRandomTrack(true);
 		
-		// Retry avec backoff exponentiel
-		const maxRetries = 5;
-		let attempt = 0;
-		
-		while (attempt < maxRetries) {
-			try {
-				// Attendre un court délai pour s'assurer que le widget est prêt
-				await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
-				
-				// Récupérer la liste des sons avec timeout
-				const sounds = await Promise.race([
-					new Promise<any[]>((resolve, reject) => {
-						const timeout = setTimeout(() => {
-							reject(new Error('Timeout récupération sounds'));
-						}, 5000);
-						
-						try {
-							widgetRef.current.getSounds((sounds: any[]) => {
+		try {
+			// Retry avec backoff exponentiel
+			const maxRetries = 5;
+			let attempt = 0;
+			
+			while (attempt < maxRetries) {
+				try {
+					// Attendre un court délai pour s'assurer que le widget est prêt
+					await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+					
+					// Récupérer la liste des sons avec timeout
+					const sounds = await Promise.race([
+						new Promise<any[]>((resolve, reject) => {
+							const timeout = setTimeout(() => {
+								reject(new Error('Timeout récupération sounds'));
+							}, 5000);
+							
+							try {
+								widgetRef.current.getSounds((sounds: any[]) => {
+									clearTimeout(timeout);
+									resolve(sounds || []);
+								});
+							} catch (error) {
 								clearTimeout(timeout);
-								resolve(sounds || []);
-							});
-						} catch (error) {
-							clearTimeout(timeout);
-							reject(error);
+								reject(error);
+							}
+						})
+					]);
+					
+					if (sounds && sounds.length > 0) {
+						// Sélectionner un son aléatoire
+						const randomIndex = Math.floor(Math.random() * sounds.length);
+						const randomSound = sounds[randomIndex];
+						
+						console.log(`🎲 Son sélectionné (tentative ${attempt + 1}/${maxRetries}): ${randomSound.title}`);
+						
+						// Aller au son sélectionné
+						await new Promise<void>((resolve) => {
+							try {
+								widgetRef.current.skip(randomIndex);
+								// Attendre que le track change
+								setTimeout(resolve, 500);
+							} catch (error) {
+								console.error('❌ Erreur lors du skip:', error);
+								resolve();
+							}
+						});
+						
+						// Mettre à jour les informations
+						setTrackTitle(randomSound.title || "Savage Block Party");
+						setArtistName(randomSound.user?.username || "Latest tracks");
+						setArtworkUrl((randomSound.artwork_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"));
+						setPermalinkUrl(randomSound.permalink_url || "https://soundcloud.com/savageblockpartys");
+						
+						// Charger la waveform si disponible
+						if (randomSound.waveform_url) {
+							loadWaveform(randomSound.waveform_url, 'Initial ');
 						}
-					})
-				]);
-				
-				if (sounds && sounds.length > 0) {
-					// Sélectionner un son aléatoire
-					const randomIndex = Math.floor(Math.random() * sounds.length);
-					const randomSound = sounds[randomIndex];
-					
-					console.log(`🎲 Son sélectionné (tentative ${attempt + 1}/${maxRetries}): ${randomSound.title}`);
-					
-					// Aller au son sélectionné
-					await new Promise<void>((resolve) => {
-						try {
-							widgetRef.current.skip(randomIndex);
-							// Attendre que le track change
-							setTimeout(resolve, 500);
-						} catch (error) {
-							console.error('❌ Erreur lors du skip:', error);
-							resolve();
-						}
-					});
-					
-					// Mettre à jour les informations
-					setTrackTitle(randomSound.title || "Savage Block Party");
-					setArtistName(randomSound.user?.username || "Latest tracks");
-					setArtworkUrl((randomSound.artwork_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"));
-					setPermalinkUrl(randomSound.permalink_url || "https://soundcloud.com/savageblockpartys");
-					
-					// Charger la waveform si disponible
-					if (randomSound.waveform_url) {
-						loadWaveform(randomSound.waveform_url, 'Initial ');
+						
+						console.log('✅ Sélection aléatoire réussie');
+						setIsLoadingRandomTrack(false);
+						return;
+					} else {
+						console.warn(`⚠️ Aucun son trouvé (tentative ${attempt + 1}/${maxRetries})`);
 					}
-					
-					console.log('✅ Sélection aléatoire réussie');
-					return;
-				} else {
-					console.warn(`⚠️ Aucun son trouvé (tentative ${attempt + 1}/${maxRetries})`);
+				} catch (error) {
+					console.error(`❌ Erreur sélection aléatoire (tentative ${attempt + 1}/${maxRetries}):`, error);
 				}
-			} catch (error) {
-				console.error(`❌ Erreur sélection aléatoire (tentative ${attempt + 1}/${maxRetries}):`, error);
+				
+				attempt++;
 			}
 			
-			attempt++;
+			// Si tous les retries ont échoué, afficher des valeurs par défaut
+			console.warn('⚠️ Échec de la sélection aléatoire après tous les retries - utilisation des valeurs par défaut');
+			setTrackTitle("Savage Block Party");
+			setArtistName("Latest tracks");
+			setArtworkUrl("/home/images/logo_orange.png");
+			setPermalinkUrl("https://soundcloud.com/savageblockpartys");
+		} finally {
+			setIsLoadingRandomTrack(false);
 		}
-		
-		// Si tous les retries ont échoué, afficher des valeurs par défaut
-		console.warn('⚠️ Échec de la sélection aléatoire après tous les retries - utilisation des valeurs par défaut');
-		setTrackTitle("Savage Block Party");
-		setArtistName("Latest tracks");
-		setArtworkUrl("/home/images/logo_orange.png");
-		setPermalinkUrl("https://soundcloud.com/savageblockpartys");
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [loadWaveform]);
+	
+	// Mettre à jour la ref de performInitialRandomSelection
+	useEffect(() => {
+		performInitialRandomSelectionRef.current = performInitialRandomSelection;
+	}, [performInitialRandomSelection]);
 	
 	// Initialisation principale
 	useEffect(() => {
@@ -969,11 +1064,15 @@ useEffect(() => {
 		// Méthode 2: Données waveform SoundCloud
 		if (!shouldChangeColor && waveformSamples && waveformSamples.length > 0 && durationMs > 0) {
 			const currentSampleIndex = Math.floor((progress / 100) * waveformSamples.length);
-			const currentAmplitude = Math.abs(waveformSamples[currentSampleIndex] || 0);
+			const currentAmplitudeRaw = Math.abs(waveformSamples[currentSampleIndex] || 0);
+			// Normaliser les valeurs: SoundCloud retourne des valeurs 0-1, mais certaines APIs retournent 0-255
+			const currentAmplitude = currentAmplitudeRaw > 1 ? currentAmplitudeRaw / 255 : currentAmplitudeRaw;
 			
 			const windowSize = Math.min(15, waveformSamples.length - currentSampleIndex);
 			const currentWindow = waveformSamples.slice(currentSampleIndex, currentSampleIndex + windowSize);
-			const avgEnergy = currentWindow.reduce((sum, sample) => sum + Math.abs(sample), 0) / currentWindow.length;
+			const avgEnergyRaw = currentWindow.reduce((sum, sample) => sum + Math.abs(sample), 0) / currentWindow.length;
+			// Normaliser l'énergie moyenne
+			const avgEnergy = avgEnergyRaw > 1 ? avgEnergyRaw / 255 : avgEnergyRaw;
 			const energyThreshold = Math.max(0.2, avgEnergy * 1.1);
 			
 			if (currentAmplitude > energyThreshold) {
@@ -1107,74 +1206,84 @@ useEffect(() => {
 		}
 
 		console.log('🎲 Forçage de la sélection aléatoire...');
+		setIsLoadingRandomTrack(true);
 		
-		const sounds = await executeWithRetry(() => {
-			return new Promise<any[]>((resolve) => {
+		try {
+			const sounds = await executeWithRetry(() => {
+				return new Promise<any[]>((resolve) => {
 						widgetRef.current.getSounds((sounds: any[]) => {
-					resolve(sounds || []);
+						resolve(sounds || []);
+					});
 				});
-			});
-		}, 'get-sounds-for-random', 2);
+			}, 'get-sounds-for-random', 2);
 
 							if (sounds && sounds.length > 0) {
-			// Afficher tous les sons disponibles pour debug
-			console.log('🎵 Sons disponibles:', sounds.map((s, i) => `${i + 1}. ${s.title}`));
-			
-			const randomIndex = Math.floor(Math.random() * sounds.length);
-			const randomSound = sounds[randomIndex];
-			
-			console.log(`🎲 Son sélectionné aléatoirement: ${randomIndex + 1}/${sounds.length} - ${randomSound.title}`);
-			
-			// Les infos seront mises à jour après le skip pour éviter l'affichage des infos par défaut
-			
-			// Aller au son sélectionné
-			try {
-				widgetRef.current.skip(randomIndex);
-				console.log(`✅ Skip vers son aléatoire réussi (index: ${randomIndex})`);
+				// Afficher tous les sons disponibles pour debug
+				console.log('🎵 Sons disponibles:', sounds.map((s, i) => `${i + 1}. ${s.title}`));
 				
-				// Attendre un peu pour que le widget change de track, puis mettre à jour les infos
-				setTimeout(() => {
-					widgetRef.current?.getCurrentSound((currentSound: any) => {
-						if (currentSound) {
-							console.log(`🎵 Son actuel après skip: ${currentSound.title}`);
-							setTrackTitle(currentSound.title || "Savage Block Party");
-							setArtistName(currentSound.user?.username || "Latest tracks");
-							const art = (currentSound.artwork_url || "/home/images/logo_orange.png");
+				const randomIndex = Math.floor(Math.random() * sounds.length);
+				const randomSound = sounds[randomIndex];
+				
+				console.log(`🎲 Son sélectionné aléatoirement: ${randomIndex + 1}/${sounds.length} - ${randomSound.title}`);
+				
+				// Les infos seront mises à jour après le skip pour éviter l'affichage des infos par défaut
+				
+				// Aller au son sélectionné
+				try {
+					widgetRef.current.skip(randomIndex);
+					console.log(`✅ Skip vers son aléatoire réussi (index: ${randomIndex})`);
+					
+					// Attendre un peu pour que le widget change de track, puis mettre à jour les infos
+					setTimeout(() => {
+						widgetRef.current?.getCurrentSound((currentSound: any) => {
+							if (currentSound) {
+								console.log(`🎵 Son actuel après skip: ${currentSound.title}`);
+								setTrackTitle(currentSound.title || "Savage Block Party");
+								setArtistName(currentSound.user?.username || "Latest tracks");
+								const art = (currentSound.artwork_url || "/home/images/logo_orange.png");
 								setArtworkUrl(art.replace("-large", "-t200x200"));
-							setPermalinkUrl(currentSound.permalink_url || "https://soundcloud.com/savageblockpartys");
-							
-							// Charger la waveform si disponible
-							const waveform = currentSound.waveform_url || currentSound.visual_waveform_url;
-							console.log('🌊 Waveform disponible pour ce track:', waveform);
-							if (waveform) {
-								console.log('🌊 Chargement waveform depuis forceRandomSelection:', waveform);
-								loadWaveform(waveform, 'Skip ');
-							} else {
-								console.warn('⚠️ Aucune waveform disponible pour ce track');
-								setWaveformSamples(null);
-								setWaveformImageUrl("");
+								setPermalinkUrl(currentSound.permalink_url || "https://soundcloud.com/savageblockpartys");
+								
+								// Charger la waveform si disponible
+								const waveform = currentSound.waveform_url || currentSound.visual_waveform_url;
+								console.log('🌊 Waveform disponible pour ce track:', waveform);
+								if (waveform) {
+									console.log('🌊 Chargement waveform depuis forceRandomSelection:', waveform);
+									loadWaveform(waveform, 'Skip ');
+								} else {
+									console.warn('⚠️ Aucune waveform disponible pour ce track');
+									setWaveformSamples(null);
+									setWaveformImageUrl("");
+								}
 							}
-						}
-					});
-				}, 300);
-			} catch (error) {
-				console.error('❌ Erreur skip vers son aléatoire:', error);
-			}
-			
-			// Sélection aléatoire terminée avec succès
-			console.log('✅ Sélection aléatoire terminée');
-			
-			// Dispatcher un événement pour notifier le changement de track
-			window.dispatchEvent(new CustomEvent('soundcloud-track-changed', {
-				detail: {
-					title: randomSound.title,
-					artist: randomSound.user?.username,
-					artwork: randomSound.artwork_url,
-					permalink: randomSound.permalink_url,
-					duration: randomSound.duration,
-					isRandom: true
+							setIsLoadingRandomTrack(false);
+						});
+					}, 300);
+				} catch (error) {
+					console.error('❌ Erreur skip vers son aléatoire:', error);
+					setIsLoadingRandomTrack(false);
 				}
-			}));
+				
+				// Sélection aléatoire terminée avec succès
+				console.log('✅ Sélection aléatoire terminée');
+				
+				// Dispatcher un événement pour notifier le changement de track
+				window.dispatchEvent(new CustomEvent('soundcloud-track-changed', {
+					detail: {
+						title: randomSound.title,
+						artist: randomSound.user?.username,
+						artwork: randomSound.artwork_url,
+						permalink: randomSound.permalink_url,
+						duration: randomSound.duration,
+						isRandom: true
+					}
+				}));
+			} else {
+				setIsLoadingRandomTrack(false);
+			}
+		} catch (error) {
+			console.error('❌ Erreur lors du forçage de la sélection aléatoire:', error);
+			setIsLoadingRandomTrack(false);
 		}
 	}, [isWidgetHealthy, executeWithRetry, loadWaveform]);
 
@@ -1191,6 +1300,11 @@ useEffect(() => {
 		const interval = setInterval(async () => {
 			if (!isWidgetHealthy()) {
 				console.warn('⚠️ Widget SoundCloud non disponible pour le polling');
+				return;
+			}
+			
+			// Ne pas faire de polling si une sélection aléatoire est en cours
+			if (isLoadingRandomTrack) {
 				return;
 			}
 
@@ -1237,7 +1351,8 @@ useEffect(() => {
 				setArtistName(trackInfo.artist);
 				setArtworkUrl(trackInfo.artwork);
 				
-				if (trackInfo.waveform && trackInfo.waveform !== waveformImageUrl) {
+				// Charger la waveform si elle a changé (utiliser la ref pour éviter les états)
+				if (trackInfo.waveform && trackInfo.waveform !== lastWaveformUrlRef.current) {
 					loadWaveform(trackInfo.waveform, 'Périodique ');
 				}
 			}
@@ -1257,6 +1372,12 @@ useEffect(() => {
 	// Charger l'API SoundCloud et initialiser le widget
 	useEffect(() => {
 		const updateFromCurrentSound = async () => {
+			// Ne pas mettre à jour si une sélection aléatoire est en cours
+			if (isLoadingRandomTrack) {
+				console.log('ℹ️ Mise à jour ignorée - sélection aléatoire en cours');
+				return;
+			}
+			
 			if (!isWidgetHealthy()) {
 				console.warn('⚠️ Widget SoundCloud non disponible pour updateFromCurrentSound');
 				return;
@@ -1338,8 +1459,22 @@ useEffect(() => {
 			}
 		};
 
-		const setupWidgetEvents = () => {
-			if (!widgetRef.current) return;
+	const setupFallbackWidgetEvents = () => {
+		if (!widgetRef.current) return;
+
+		try {
+			// Nettoyer d'abord les anciens listeners pour éviter les doublons
+			try {
+				widgetRef.current.unbind(window.SC.Widget.Events.READY);
+				widgetRef.current.unbind(window.SC.Widget.Events.PLAY);
+				widgetRef.current.unbind(window.SC.Widget.Events.PAUSE);
+				widgetRef.current.unbind(window.SC.Widget.Events.PLAY_PROGRESS);
+				widgetRef.current.unbind(window.SC.Widget.Events.SEEK);
+				widgetRef.current.unbind(window.SC.Widget.Events.FINISH);
+				widgetRef.current.unbind(window.SC.Widget.Events.ERROR);
+			} catch (unbindError) {
+				console.log('ℹ️ Aucun listener à nettoyer (normal à la première initialisation)');
+			}
 
 			widgetRef.current.bind(window.SC.Widget.Events.READY, () => {
 				console.log('🎵 Widget SoundCloud prêt !');
@@ -1396,45 +1531,52 @@ useEffect(() => {
 						setIsPlaying(false);
 						setProgress(0);
 					});
-		};
+			
+			widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
+				console.error('❌ Erreur widget SoundCloud:', error);
+			});
+		} catch (error) {
+			console.error('❌ Erreur lors de la configuration des événements:', error);
+		}
+	};
 
 		const loadSoundCloudAPI = async () => {
 			console.log('🔄 Chargement de l\'API SoundCloud...');
 			
-			if (window.SC) {
-				console.log('✅ API SoundCloud déjà chargée');
-				await initializeWidget();
-				return;
-			}
+		if (window.SC) {
+			console.log('✅ API SoundCloud déjà chargée');
+			await initializeFallbackWidget();
+			return;
+		}
 
-			// Vérifier si le script est déjà en cours de chargement
-			const existingScript = document.querySelector('script[src="https://w.soundcloud.com/player/api.js"]');
-			if (existingScript) {
-				console.log('⏳ Script SoundCloud déjà en cours de chargement...');
-				// Attendre que le script soit chargé
-				const waitForSC = () => {
-					return new Promise<void>((resolve) => {
-						const checkSC = () => {
-							if (window.SC) {
-								resolve();
-							} else {
-								setTimeout(checkSC, 100);
-							}
-						};
-						checkSC();
-					});
-				};
-				await waitForSC();
-				await initializeWidget();
-				return;
-			}
-
-			const script = document.createElement('script');
-			script.src = 'https://w.soundcloud.com/player/api.js';
-			script.onload = async () => {
-				console.log('✅ API SoundCloud chargée avec succès');
-				await initializeWidget();
+		// Vérifier si le script est déjà en cours de chargement
+		const existingScript = document.querySelector('script[src="https://w.soundcloud.com/player/api.js"]');
+		if (existingScript) {
+			console.log('⏳ Script SoundCloud déjà en cours de chargement...');
+			// Attendre que le script soit chargé
+			const waitForSC = () => {
+				return new Promise<void>((resolve) => {
+					const checkSC = () => {
+						if (window.SC) {
+							resolve();
+						} else {
+							setTimeout(checkSC, 100);
+						}
+					};
+					checkSC();
+				});
 			};
+			await waitForSC();
+			await initializeFallbackWidget();
+			return;
+		}
+
+		const script = document.createElement('script');
+		script.src = 'https://w.soundcloud.com/player/api.js';
+		script.onload = async () => {
+			console.log('✅ API SoundCloud chargée avec succès');
+			await initializeFallbackWidget();
+		};
 			script.onerror = () => {
 				console.error('❌ Échec du chargement de l\'API SoundCloud');
 				setWidgetHealth('failed');
@@ -1442,7 +1584,7 @@ useEffect(() => {
 			document.head.appendChild(script);
 		};
 
-		const initializeWidget = async () => {
+		const initializeFallbackWidget = async () => {
 			// Attendre que l'iframe soit montée
 			const waitForIframe = () => {
 				return new Promise<boolean>((resolve) => {
@@ -1484,7 +1626,7 @@ useEffect(() => {
 				if (iframe && window.SC && window.SC.Widget) {
 					try {
 						widgetRef.current = window.SC.Widget(iframe);
-						setupWidgetEvents();
+						setupFallbackWidgetEvents();
 						console.log('✅ Widget SoundCloud initialisé avec succès');
 						return true;
 					} catch (error) {
@@ -1886,10 +2028,13 @@ return (
 									e.stopPropagation();
 									handlePlayPause();
 								}}
-								className="w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-								title={isPlaying ? "Pause" : "Play"}
+								disabled={isLoadingRandomTrack}
+								className="w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+								title={isLoadingRandomTrack ? "Chargement..." : (isPlaying ? "Pause" : "Play")}
 					>
-						{isPlaying ? (
+						{isLoadingRandomTrack ? (
+							<div className={`w-6 h-6 border-2 border-t-transparent border-r-transparent ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'border-black' : 'border-yellow-400'} rounded-full animate-spin`}></div>
+						) : isPlaying ? (
 									<div className="flex gap-0.5">
 									<div className={`w-1 h-4 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
 									<div className={`w-1 h-4 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
@@ -1964,7 +2109,7 @@ return (
 			</div>
 			</div>
 		);
-	}, [isPlayerExpanded, artworkUrl, trackTitle, artistName, isMuted, handleMuteToggle, setIsPlayerExpanded, isMenuOpen, isHome, playerBgColor, playerColor, isAgenda, isPlaying, handlePlayPause, widgetHealth]);
+	}, [isPlayerExpanded, artworkUrl, trackTitle, artistName, isMuted, handleMuteToggle, setIsPlayerExpanded, isMenuOpen, isHome, playerBgColor, playerColor, isAgenda, isPlaying, handlePlayPause, widgetHealth, isLoadingRandomTrack]);
 
 
 	// Si le player est réduit OU si le menu est ouvert, afficher la version compacte
@@ -2042,7 +2187,9 @@ return (
 								{Array.from({ length: barCount }).map((_, i) => {
 									const sampleIndex = Math.floor(((barCount - 1 - i) / Math.max(1, barCount - 1)) * (waveformSamples!.length - 1));
 									const v = waveformSamples![sampleIndex] ?? 0;
-									const h = Math.max(1, Math.round((v / 255) * 80));
+									// Normaliser les valeurs: SoundCloud retourne des valeurs 0-1, mais certaines APIs retournent 0-255
+									const normalizedV = v > 1 ? v / 255 : v;
+									const h = Math.max(1, Math.round(normalizedV * 80));
 									const played = i / Math.max(1, barCount) <= progress;
 									return (
 										<div key={i} style={{ height: h, width: '2px' }} className={played ? waveformColor : waveformColorFaded} />
@@ -2153,7 +2300,9 @@ return (
 							{Array.from({ length: barCount }).map((_, i) => {
 								const sampleIndex = Math.floor(((barCount - 1 - i) / Math.max(1, barCount - 1)) * (waveformSamples!.length - 1));
 								const v = waveformSamples![sampleIndex] ?? 0;
-								const h = Math.max(1, Math.round((v / 255) * 80));
+								// Normaliser les valeurs: SoundCloud retourne des valeurs 0-1, mais certaines APIs retournent 0-255
+								const normalizedV = v > 1 ? v / 255 : v;
+								const h = Math.max(1, Math.round(normalizedV * 80));
 								const played = i / Math.max(1, barCount) <= progress;
 								return (
 									<div key={i} style={{ height: h, width: '2px' }} className={played ? waveformColor : waveformColorFaded} />
@@ -2192,17 +2341,20 @@ return (
 						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
 					<button 
 						onClick={handlePlayPause}
-								className="w-40 h-40 flex items-center justify-center hover:opacity-80 transition-opacity"
+						disabled={isLoadingRandomTrack}
+						className="w-40 h-40 flex items-center justify-center hover:opacity-80 transition-opacity disabled:cursor-not-allowed"
 					>
-						{isPlaying ? (
-								<div className="flex gap-1">
-									<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
-									<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+						{isLoadingRandomTrack ? (
+							<div className={`w-16 h-16 border-4 border-t-transparent border-r-transparent ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'border-black' : 'border-yellow-400'} rounded-full animate-spin`}></div>
+						) : isPlaying ? (
+							<div className="flex gap-1">
+								<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+								<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
 							</div>
 						) : (
-								<svg width="64" height="48" viewBox="0 0 64 48" fill="none" className="ml-2">
-									<path d="M16 0L52 24L16 48V0Z" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "#FACC15"}/>
-								</svg>
+							<svg width="64" height="48" viewBox="0 0 64 48" fill="none" className="ml-2">
+								<path d="M16 0L52 24L16 48V0Z" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "#FACC15"}/>
+							</svg>
 						)}
 					</button>
 						</div>

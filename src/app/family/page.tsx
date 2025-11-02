@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { useState } from "react";
 import TextRevealLines from "@/components/text-reveal-lines";
 import FamilyDropdowns from "./family-dropdowns";
+import { useMenu } from "@/hooks/useMenu";
 
 // Styles pour l'animation de défilement du texte
 const scrollTextStyle = `
@@ -56,6 +57,7 @@ type MediaType = {
 export default function FamilyPage() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [instagramHandle, setInstagramHandle] = useState("");
+  const { isMenuOpen } = useMenu();
 
   // Fonction pour obtenir le média correspondant à l'item sélectionné
   const getMediaForItem = (item: string): MediaType => {
@@ -239,7 +241,7 @@ export default function FamilyPage() {
       
       {/* Barre de séparation avec texte défilant */}
       <section className="w-full bg-green-500 text-black py-4 relative overflow-hidden">
-        <div className="flex flex-col items-center justify-center h-full gap-12">
+        <div className={`flex flex-col items-center justify-center h-full gap-12 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           {/* Texte défilant */}
           <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
             <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
@@ -272,7 +274,7 @@ export default function FamilyPage() {
         {/* Overlay sombre pour la lisibilité */}
         <div className="absolute inset-0 bg-black/40" />
         
-        <div className="container-px relative z-10">
+        <div className={`container-px relative z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start min-h-[400px] mt-12 md:mt-16">
             {/* Titre à gauche */}
             <div className="flex flex-col justify-start">

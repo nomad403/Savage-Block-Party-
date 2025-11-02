@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useMenu } from "../hooks/useMenu";
 
 interface Props {
 	text: string;
@@ -14,6 +15,7 @@ export default function TextRevealLines({ text, color = "#22D3EE", className = "
 	const textRef = useRef<HTMLSpanElement | null>(null);
 	const [rects, setRects] = useState<Array<{ left: number; top: number; width: number; height: number }>>([]);
 	const [active, setActive] = useState(false);
+	const { isMenuOpen } = useMenu();
 
 	useEffect(() => {
 		const measure = () => {
@@ -84,7 +86,7 @@ export default function TextRevealLines({ text, color = "#22D3EE", className = "
 	}, [text]);
 
 	return (
-		<div ref={containerRef} className="w-full relative" style={{ position: 'relative' }}>
+		<div ref={containerRef} className={`w-full relative transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ position: 'relative' }}>
 			<span ref={textRef} className={className} style={{ position: 'relative', zIndex: 1 }}>{text}</span>
 			{rects.map((r, i) => (
 				<div

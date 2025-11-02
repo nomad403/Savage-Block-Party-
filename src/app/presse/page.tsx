@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import TextRevealLines from "@/components/text-reveal-lines";
+import { useMenu } from "@/hooks/useMenu";
 
 // Style pour l'effet text reveal line
 const textRevealStyle = `
@@ -51,6 +52,7 @@ export default function PressePage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const { isMenuOpen } = useMenu();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -90,14 +92,14 @@ export default function PressePage() {
           priority
           quality={90}
         />
+        {/* Overlay violet foncé pour la lisibilité */}
+        <div className="absolute inset-0 bg-cyan-400/40" />
       </div>
 
       {/* Formulaire avec fond couleur uni par-dessus */}
-      <section className="relative z-10 pt-56 pb-32" style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
+      <section className={`relative z-10 pt-56 pb-32 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
         <div className="container-px w-full max-w-6xl mx-auto">
-            <div className="flex flex-col lg:flex-row gap-10 items-start justify-center">
-            {/* Texte à gauche */}
-            <div className="pt-4 w-full lg:flex-1">
+            <div className="w-full lg:w-[80%] lg:mx-auto">
               <div className="mb-8 text-left">
                 <TextRevealLines 
                   text={"Collaboration"} 
@@ -115,7 +117,7 @@ export default function PressePage() {
                 />
               </div>
             {/* Formulaire à droite */}
-            <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-6 items-stretch w-full lg:flex-1 mt-8">
+            <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-6 items-stretch w-full mt-8">
                 {/* Nom de l'organisme */}
                 <div>
                   <label htmlFor="organisme" className="block font-text font-bold text-black leading-none mb-0 relative z-[2]">
@@ -249,7 +251,6 @@ export default function PressePage() {
               )}
             </form>
             </div>
-          </div>
         </div>
       </section>
     </main>

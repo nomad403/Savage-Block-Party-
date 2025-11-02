@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMenu } from "@/hooks/useMenu";
 
 // Composant pour l'animation de révélation ligne par ligne (version robuste)
 function LineByLineText({ text, className, delay = 0 }: { text: string; className: string; delay?: number }) {
@@ -100,6 +101,7 @@ interface FamilyDropdownsProps {
 
 export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDropdownsProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const { isMenuOpen } = useMenu();
 
   const toggleDropdown = (dropdown: string) => {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
@@ -146,10 +148,10 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
   return (
     <div className="absolute top-0 left-0 right-0 z-20 flex">
       {/* Dropdown DJs */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative bg-green-500">
         <button
           onClick={() => toggleDropdown('djs')}
-          className="w-full bg-green-500 text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-colors"
+          className={`w-full text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           DJs
         </button>
@@ -183,10 +185,10 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Danseurs */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative bg-green-500">
         <button
           onClick={() => toggleDropdown('danseurs')}
-          className="w-full bg-green-500 text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-colors"
+          className={`w-full text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           Danseurs
         </button>
@@ -220,10 +222,10 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Collab */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative bg-green-500">
         <button
           onClick={() => toggleDropdown('collab')}
-          className="w-full bg-green-500 text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-colors"
+          className={`w-full text-black font-title uppercase text-lg py-4 px-6 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           Collab
         </button>
