@@ -783,5 +783,5 @@ iframe[src*="youtube.com"]::after {
 }
 
 .animate-scroll-text {
-	animation: scroll-text 30s linear infinite;
+	animation: scroll-text 15s linear infinite;
 }

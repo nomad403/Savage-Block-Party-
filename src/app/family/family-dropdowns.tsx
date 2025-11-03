@@ -146,9 +146,9 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
   ];
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-20 flex-col">
+    <div className="absolute top-0 left-0 right-0 z-20 flex flex-col md:flex-row">
       {/* Dropdown DJs */}
-      <div className="w-full relative">
+      <div className="w-full md:w-1/3 relative">
         <button
           onClick={() => toggleDropdown('djs')}
           className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
@@ -185,7 +185,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Danseurs */}
-      <div className="w-full relative">
+      <div className="w-full md:w-1/3 relative">
         <button
           onClick={() => toggleDropdown('danseurs')}
           className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
@@ -222,7 +222,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Collab */}
-      <div className="w-full relative">
+      <div className="w-full md:w-1/3 relative">
         <button
           onClick={() => toggleDropdown('collab')}
           className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}

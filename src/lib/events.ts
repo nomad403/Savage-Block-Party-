@@ -3,6 +3,7 @@ export type EventItem = {
     source: "shotgun" | "dice";
     title: string;
     description?: string;
+    location?: string;
     url?: string;
     image?: string;
     startsAt?: string; // ISO
@@ -244,6 +245,7 @@ export async function getAllEvents(): Promise<EventItem[]> {
                 source: (e.source === 'shotgun' || e.source === 'dice') ? e.source : 'shotgun',
                 title: e.title || '',
                 description: e.description || undefined,
+                location: e.location || undefined,
                 url: e.url || undefined,
                 image: e.image || undefined,
                 startsAt: toIsoDate(e.startsAt),

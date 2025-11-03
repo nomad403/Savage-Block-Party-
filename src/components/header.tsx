@@ -45,47 +45,49 @@ export default function Header() {
 
 	return (
 		<>
-            <header className={`container-px h-20 flex items-center justify-between z-[60] relative ${headerBg} pt-8`}>
-                <div className="min-w-10">
+            <header className={`container-px h-32 flex items-center z-[60] relative ${headerBg} ${isAgenda ? 'shadow-lg' : ''}`}>
+                <div className="w-1/3 flex items-center">
                     {!isHome && (
                         <span className={`font-title uppercase tracking-wide text-sm ${isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isPresse ? "text-purple-500" : "text-black")))}`}>
                             {pageLabel}
                         </span>
                     )}
                 </div>
-                <div className="flex-1 flex justify-center">
+                <div className="w-1/3 flex justify-center">
                     <Image className={logoClass} src="/home/images/logo_orange.png" alt="Savage Block Party" width={240} height={60} priority />
                 </div>
-                <button 
-					aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} 
-					className="flex items-center gap-2" 
-					onClick={() => setOpen(!open)}
-				>
-					<span className="sr-only">{open ? "Fermer le menu" : "Ouvrir le menu"}</span>
-                    <div className="relative w-7 h-7">
-						{/* Barre du haut */}
-						<span 
-							className={`absolute left-0 right-0 top-1 block h-[2px] transition-all duration-300 ease-in-out ${
-								open ? 'rotate-45 translate-y-[10px]' : 'rotate-0 translate-y-0'
-							}`}
-							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
-						/>
-						{/* Barre du milieu */}
-						<span 
-							className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] transition-all duration-300 ease-in-out ${
-								open ? 'opacity-0' : 'opacity-100'
-							}`}
-							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
-						/>
-						{/* Barre du bas */}
-						<span 
-							className={`absolute left-0 right-0 bottom-1 block h-[2px] transition-all duration-300 ease-in-out ${
-								open ? '-rotate-45 -translate-y-[10px]' : 'rotate-0 translate-y-0'
-							}`}
-							style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
-						/>
-					</div>
-				</button>
+                <div className="w-1/3 flex justify-end">
+                    <button 
+                        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} 
+                        className="flex items-center gap-2" 
+                        onClick={() => setOpen(!open)}
+                    >
+                        <span className="sr-only">{open ? "Fermer le menu" : "Ouvrir le menu"}</span>
+                        <div className="relative w-7 h-7">
+                            {/* Barre du haut */}
+                            <span 
+                                className={`absolute left-0 right-0 top-1 block h-[2px] transition-all duration-300 ease-in-out ${
+                                    open ? 'rotate-45 translate-y-[10px]' : 'rotate-0 translate-y-0'
+                                }`}
+                                style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
+                            />
+                            {/* Barre du milieu */}
+                            <span 
+                                className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] transition-all duration-300 ease-in-out ${
+                                    open ? 'opacity-0' : 'opacity-100'
+                                }`}
+                                style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
+                            />
+                            {/* Barre du bas */}
+                            <span 
+                                className={`absolute left-0 right-0 bottom-1 block h-[2px] transition-all duration-300 ease-in-out ${
+                                    open ? '-rotate-45 -translate-y-[10px]' : 'rotate-0 translate-y-0'
+                                }`}
+                                style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
+                            />
+                        </div>
+                    </button>
+                </div>
 			</header>
 
 			<AnimatePresence>

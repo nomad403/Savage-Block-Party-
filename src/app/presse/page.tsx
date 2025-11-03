@@ -81,7 +81,7 @@ export default function PressePage() {
   };
 
   return (
-    <main id="presse-root" className="w-full -mt-20 relative">
+    <main id="presse-root" className="w-full -mt-32 md:-mt-20 relative">
       {/* Image de fond fullscreen fixe */}
       <div className="fixed inset-0 w-full h-full z-0">
         <Image

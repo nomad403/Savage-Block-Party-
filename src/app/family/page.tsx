@@ -18,7 +18,7 @@ const scrollTextStyle = `
   }
   
   .animate-scroll-text {
-    animation: scroll-text 30s linear infinite;
+    animation: scroll-text 15s linear infinite;
   }
   
   @keyframes bounce {
@@ -139,7 +139,7 @@ export default function FamilyPage() {
   };
 
   return (
-    <main id="family-root" className="w-full -mt-20">
+    <main id="family-root" className="w-full -mt-32 md:-mt-20">
       {/* Section hero avec image de fond fullscreen */}
       <section className="h-screen w-full relative overflow-hidden">
         {/* Image de fond qui commence dès le top */}
@@ -147,8 +147,8 @@ export default function FamilyPage() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: "url('/family/images/SAVAGE-74.jpg')",
-            top: '-80px',
-            height: 'calc(100vh + 80px)'
+            top: 0,
+            height: '100vh'
           }}
         />
         
@@ -176,10 +176,11 @@ export default function FamilyPage() {
         {!selectedItem && (
           <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden' }}>
             <iframe
-              className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2"
-              src={`https://www.youtube.com/embed/${defaultVideoId}?start=${defaultStartTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=${defaultVideoId}`}
-              allow="autoplay; encrypted-media; fullscreen"
+              className="absolute top-[55%] md:top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              src={`https://www.youtube.com/embed/${defaultVideoId}?start=${defaultStartTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=${defaultVideoId}&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1`}
+              allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
               allowFullScreen={true}
+              loading="eager"
               style={{ border: 'none', width: '120vw', height: '67.5vw', minWidth: '213.33vh', minHeight: '120vh', pointerEvents: 'none' }}
             />
           </div>
@@ -190,10 +191,11 @@ export default function FamilyPage() {
           <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden' }}>
             <iframe
               key={selectedItem}
-              className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2"
-              src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=${media.videoId}`}
-              allow="autoplay; encrypted-media; fullscreen"
+              className="absolute top-[55%] md:top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=${media.videoId}&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1`}
+              allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
               allowFullScreen={true}
+              loading="eager"
               style={{ border: 'none', width: '120vw', height: '67.5vw', minWidth: '213.33vh', minHeight: '120vh', pointerEvents: 'none' }}
             />
           </div>

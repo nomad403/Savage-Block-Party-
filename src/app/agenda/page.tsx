@@ -3,6 +3,7 @@ import { getAllEvents, pickUpcoming, eventsByDate, type EventItem } from "@/lib/
 import AgendaGrid from "@/components/agenda-grid";
 import GalleryFlash from "@/components/gallery-flash";
 import MenuAwareSection from "@/components/menu-aware-section";
+import AgendaEventsList from "./agenda-events-list";
 
 export const metadata: Metadata = {
   title: "Agenda — Savage Block Party",
@@ -37,20 +38,23 @@ export default async function AgendaPage() {
 
   return (
     <main className="bg-yellow-400 text-black">
-      <div className="container-px pt-16 pb-20">
-        <div className="relative w-full min-h-[70vh]">
-          <div className="absolute inset-0 grid-lines-13x7 pointer-events-none" aria-hidden />
-          <AgendaGrid
-            todayIso={today.toISOString()}
-            weekDays={weekDays}
-            byDate={byDate}
-            featuredTitle={featured?.title}
-            featuredImage={featured?.image}
-            featuredDesc={featuredDesc}
+      {/* Section liste d'événements avec image */}
+      <section className="w-full min-h-screen flex flex-col md:flex-row">
+        {/* Image à gauche - 2/3 (masquée sur mobile) */}
+        <div className="hidden md:block w-full md:w-2/3 bg-cover bg-center relative h-screen">
+          <img 
+            src="/agenda/photo/vignette.jpeg" 
+            alt="Agenda" 
+            className="w-full h-full object-cover"
           />
         </div>
-      </div>
-      
+        
+        {/* Liste à droite - 1/3 */}
+        <div className="w-full md:w-1/3 bg-yellow-400 overflow-y-auto h-screen">
+          <AgendaEventsList events={events} />
+        </div>
+      </section>
+
       {/* Bannière de séparation 1 */}
       <section className="w-full bg-cyan-400 text-black py-4 relative overflow-hidden">
         <MenuAwareSection>

@@ -16,7 +16,7 @@ const scrollTextStyle = `
   }
   
   .animate-scroll-text {
-    animation: scroll-text 30s linear infinite;
+    animation: scroll-text 15s linear infinite;
   }
 `;
 
@@ -51,7 +51,7 @@ export default function StoryPage() {
   ];
 
   return (
-    <main id="story-root" className="w-full -mt-20">
+    <main id="story-root" className="w-full -mt-32 md:-mt-20">
       {/* Section 1: Accroche */}
       <section className="h-screen w-full relative">
         <Image

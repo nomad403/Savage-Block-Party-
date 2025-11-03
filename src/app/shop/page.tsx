@@ -96,9 +96,10 @@ export default function ShopPage() {
             <iframe
               ref={videoRef}
               className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/7FMyAz38qdg?start=10&end=20&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&frameborder=0&playlist=7FMyAz38qdg"
-              allow="autoplay; encrypted-media; fullscreen"
+              src="https://www.youtube.com/embed/7FMyAz38qdg?start=10&end=20&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=7FMyAz38qdg&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1"
+              allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
               allowFullScreen={true}
+              loading="eager"
               style={{ 
                 border: 'none',
                 transform: 'scale(1.4)',
@@ -115,7 +116,7 @@ export default function ShopPage() {
             style={{ 
               overflowY: 'auto',
               height: '100vh',
-              paddingBottom: '180px',
+              paddingBottom: '20px',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               WebkitOverflowScrolling: 'touch'

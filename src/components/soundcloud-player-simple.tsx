@@ -59,7 +59,7 @@ export default function SoundCloudPlayer() {
 			return {
 				waveformColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isFamily ? "bg-green-500" : (isShop ? "bg-black" : (isPresse ? "bg-purple-500" : "bg-yellow-400")))),
 				waveformColorFaded: isAgenda ? "bg-black/30" : (isStory ? "bg-cyan-400/50" : (isFamily ? "bg-green-500/50" : (isShop ? "bg-black/30" : (isPresse ? "bg-purple-500/50" : "bg-yellow-400/30")))),
-				playerColor: isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isShop ? "text-red-500" : (isPresse ? "text-purple-500" : "text-yellow-400")))),
+				playerColor: isAgenda ? "text-cyan-400" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isShop ? "text-red-500" : (isPresse ? "text-purple-500" : "text-yellow-400")))),
 				playerBgColor: isAgenda ? "bg-black" : (isStory ? "bg-cyan-400" : (isFamily ? "bg-green-500" : (isShop ? "bg-red-500" : (isPresse ? "bg-purple-500" : "bg-yellow-400"))))
 			};
 		}
@@ -1987,12 +1987,12 @@ return (
 			<div className="flex flex-col gap-2 h-20">
 				{/* Titre et artiste */}
 				<div className="w-64">
-					<div className={`font-title text-sm leading-tight truncate ${playerColor}`}>
+					<div className={`font-title text-sm leading-tight truncate ${isShop ? 'md:text-red-500 text-black' : playerColor}`}>
 						{trackTitle || "Savage Block Party"}
 					</div>
 					<AutoScrollText 
 						text={artistName || "Latest tracks"} 
-						className={`font-text text-xs mt-1 ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))}`}
+						className={`font-text text-xs mt-1 ${isShop ? 'md:text-red-500/80 text-black/80' : (isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))}`}
 					/>
 					</div>
 
@@ -2444,10 +2444,10 @@ return (
 				</div>
 
 					{/* Title left bottom above waveform (mobile only) */}
-					<div className={`fixed bottom-28 left-4 z-[25] md:hidden ${playerColor}`}>
+					<div className={`fixed bottom-28 left-4 z-[25] md:hidden ${isShop ? 'text-black' : playerColor}`}>
 						<div className="max-w-[200px]">
 							<div className="font-title text-sm leading-tight truncate">{trackTitle || ""}</div>
-							<AutoScrollText text={artistName || ""} className={`font-text text-xs ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
+							<AutoScrollText text={artistName || ""} className={`font-text text-xs ${isShop ? 'text-black/80' : (isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
 			</div>
 		</div>
 				</>
