@@ -139,7 +139,7 @@ export default function FamilyPage() {
   };
 
   return (
-    <main id="family-root" className="w-full -mt-32 md:-mt-20">
+    <main id="family-root" className="w-full -mt-32">
       {/* Section hero avec image de fond fullscreen */}
       <section className="h-screen w-full relative overflow-hidden">
         {/* Image de fond qui commence dès le top */}
@@ -264,7 +264,7 @@ export default function FamilyPage() {
       </section>
       
       {/* Troisième section "Join the family" */}
-      <section className="h-screen w-full relative overflow-hidden text-black">
+      <section className="min-h-screen w-full relative overflow-hidden text-black pb-56">
         {/* Image de fond */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"

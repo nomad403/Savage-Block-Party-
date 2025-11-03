@@ -1156,6 +1156,13 @@ useEffect(() => {
 		};
 	}, []);
 
+	// Mettre à jour document.title pour le player natif mobile
+	useEffect(() => {
+		if (trackTitle && artistName) {
+			document.title = `${trackTitle} — ${artistName} • Savage Block Party`;
+		}
+	}, [trackTitle, artistName]);
+
 	// Réduire le player sur les autres pages que la home
 	useEffect(() => {
 		const newExpanded = pathname === "/";
@@ -2306,12 +2313,20 @@ return (
 							style={{ display: "grid", gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))`, columnGap: 1 }}
 						>
 							{Array.from({ length: barCount }).map((_, i) => {
-								const sampleIndex = Math.floor(((barCount - 1 - i) / Math.max(1, barCount - 1)) * (waveformSamples!.length - 1));
+								// Inverser l'index pour afficher de gauche à droite
+								const reversedI = barCount - 1 - i;
+								// Calculer l'index du sample avec interpolation
+								const sampleRatio = reversedI / Math.max(1, barCount - 1);
+								const sampleIndex = Math.floor(sampleRatio * (waveformSamples!.length - 1));
 								const v = waveformSamples![sampleIndex] ?? 0;
 								// Normaliser les valeurs: SoundCloud retourne des valeurs 0-1, mais certaines APIs retournent 0-255
 								const normalizedV = v > 1 ? v / 255 : v;
-								const h = Math.max(1, Math.round(normalizedV * 80));
-								const played = i / Math.max(1, barCount) <= progress;
+								// Clamper la valeur normalisée entre 0 et 1 pour éviter les hauteurs inattendues
+								const clampedV = Math.max(0, Math.min(1, normalizedV));
+								const h = Math.max(1, Math.round(clampedV * 80));
+								// Valider et clamper progress entre 0 et 1
+								const validProgress = Math.max(0, Math.min(1, progress ?? 0));
+								const played = i / Math.max(1, barCount) <= validProgress;
 								return (
 									<div key={i} style={{ height: h, width: '2px' }} className={played ? waveformColor : waveformColorFaded} />
 								);

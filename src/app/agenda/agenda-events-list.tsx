@@ -18,8 +18,8 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
   };
 
   return (
-    <div className={`pt-8 md:pt-12 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      {events.map((event) => {
+    <div className={`transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      {events.map((event, index) => {
         const eventDate = event.startsAt ? new Date(event.startsAt).toLocaleDateString("fr-FR", { 
           day: "numeric", 
           month: "long", 

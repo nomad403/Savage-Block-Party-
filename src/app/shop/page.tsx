@@ -91,8 +91,8 @@ export default function ShopPage() {
       <div id="shop-root" ref={shopRootRef}>
       <main className="h-screen w-full overflow-hidden">
         <div className="flex h-full">
-          {/* Section vidéo YouTube - masquée */}
-          <div className="hidden">
+          {/* Section vidéo YouTube - affichée sur desktop */}
+          <div className="hidden md:block w-2/3 relative overflow-hidden bg-black">
             <iframe
               ref={videoRef}
               className="absolute inset-0 w-full h-full"
@@ -108,10 +108,10 @@ export default function ShopPage() {
             />
           </div>
 
-          {/* Section produits - pleine largeur */}
+          {/* Section produits - pleine largeur mobile, 1/3 desktop */}
           <div 
             ref={productColumnRef}
-            className="w-full bg-black product-column" 
+            className="w-full md:w-1/3 bg-black product-column" 
             id="product-column"
             style={{ 
               overflowY: 'auto',

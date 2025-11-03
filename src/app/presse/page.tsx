@@ -81,7 +81,7 @@ export default function PressePage() {
   };
 
   return (
-    <main id="presse-root" className="w-full -mt-32 md:-mt-20 relative">
+    <main id="presse-root" className="w-full -mt-32 relative">
       {/* Image de fond fullscreen fixe */}
       <div className="fixed inset-0 w-full h-full z-0">
         <Image
@@ -97,7 +97,7 @@ export default function PressePage() {
       </div>
 
       {/* Formulaire avec fond couleur uni par-dessus */}
-      <section className={`relative z-10 pt-56 pb-32 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
+      <section className={`relative z-10 pt-56 pb-64 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
         <div className="container-px w-full max-w-6xl mx-auto">
             <div className="w-full lg:w-[80%] lg:mx-auto">
               <div className="mb-8 text-left">

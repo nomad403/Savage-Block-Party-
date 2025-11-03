@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getAllEvents, pickUpcoming, eventsByDate, type EventItem } from "@/lib/events";
-import AgendaGrid from "@/components/agenda-grid";
 import GalleryFlash from "@/components/gallery-flash";
 import MenuAwareSection from "@/components/menu-aware-section";
 import AgendaEventsList from "./agenda-events-list";
