@@ -162,7 +162,7 @@ export default function FamilyPage() {
               <TextRevealLines 
                 text={"Une famille"} 
                 color="#22C55E" 
-                className="font-title uppercase text-6xl md:text-7xl text-black leading-tight" 
+                className="font-title uppercase text-5xl md:text-7xl text-black leading-tight" 
                 delayStep={0.12}
               />
             </div>
@@ -233,7 +233,7 @@ export default function FamilyPage() {
               <TextRevealLines 
                 text={selectedItem || ""} 
                 color="#22C55E" 
-                className="font-title text-6xl md:text-7xl text-black uppercase leading-tight" 
+                className="font-title text-4xl md:text-6xl text-black uppercase leading-tight" 
                 delayStep={0.1}
               />
             </div>
@@ -283,7 +283,7 @@ export default function FamilyPage() {
               <TextRevealLines 
                 text={"Join the family"} 
                 color="#22C55E" 
-                className="font-title uppercase text-6xl sm:text-7xl md:text-8xl leading-tight text-black" 
+                className="font-title uppercase text-4xl sm:text-5xl md:text-7xl leading-tight text-black" 
                 delayStep={0.1}
               />
             </div>

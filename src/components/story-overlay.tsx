@@ -165,7 +165,7 @@ export function AccrocheText({ text }: { text: string }) {
     <div className={`text-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       <LineByLineText 
         text={text}
-        className="font-title text-6xl md:text-7xl text-black leading-tight"
+        className="font-title text-4xl md:text-6xl text-black leading-tight"
       />
     </div>
   );

@@ -228,7 +228,7 @@ export default function GalleryFlash() {
                 <TextRevealLines 
                   text="Rejoins le collectif" 
                   color="#22D3EE"
-                  className="text-5xl md:text-7xl font-title uppercase leading-tight text-black"
+                  className="text-4xl md:text-6xl font-title uppercase leading-tight text-black"
                   delayStep={0.12}
                 />
               </div>

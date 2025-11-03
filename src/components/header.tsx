@@ -9,6 +9,8 @@ import { useGlobalDynamicColors } from "../hooks/useGlobalDynamicColors";
 
 export default function Header() {
     const [open, setOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
     const pathname = usePathname();
     const isHome = pathname === "/";
     const isAgenda = pathname?.startsWith("/agenda");
@@ -34,6 +36,33 @@ export default function Header() {
         window.dispatchEvent(event);
     }, [open]);
 
+    // Gérer la visibilité du header au scroll sur mobile
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            
+            // Seulement sur mobile (écrans < 768px)
+            if (window.innerWidth >= 768) {
+                setIsVisible(true);
+                return;
+            }
+
+            // Masquer quand on scroll vers le bas, montrer quand on scroll vers le haut ou au top
+            if (currentScrollY < 10) {
+                setIsVisible(true);
+            } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                setIsVisible(false);
+            } else if (currentScrollY < lastScrollY) {
+                setIsVisible(true);
+            }
+            
+            setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
     // Nom de la page affiché à gauche (non-home)
     const pageLabel = (() => {
         if (isHome) return "";
@@ -45,7 +74,12 @@ export default function Header() {
 
 	return (
 		<>
-            <header className={`container-px h-24 flex items-center z-[60] relative ${headerBg} ${isAgenda ? 'shadow-lg' : ''}`}>
+            <motion.header 
+                className={`container-px h-24 flex items-center z-[60] relative ${headerBg} ${isAgenda ? 'shadow-lg' : ''}`}
+                initial={{ y: 0 }}
+                animate={{ y: isVisible ? 0 : -96 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
                 <div className="w-1/3 flex items-center">
                     {!isHome && (
                         <span className={`font-title uppercase tracking-wide text-sm ${isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isPresse ? "text-purple-500" : "text-black")))}`}>
@@ -88,7 +122,7 @@ export default function Header() {
                         </div>
                     </button>
                 </div>
-			</header>
+			</motion.header>
 
 			<AnimatePresence>
 				{open && (
