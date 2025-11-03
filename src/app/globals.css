@@ -635,8 +635,8 @@ body:has(#shop-root).scrollable-page .custom-scrollbar {
 	display: block !important;
 	pointer-events: auto !important;
 	/* Positionner entre le header et le footer */
-	top: 140px !important; /* Hauteur du header */
-	height: calc(100vh - 140px - 200px) !important; /* 100vh - header - footer approximatif */
+	top: 96px !important; /* Hauteur du header */
+	height: calc(100vh - 96px - 200px) !important; /* 100vh - header - footer approximatif */
 	bottom: auto !important;
 	right: 0 !important;
 }
@@ -672,10 +672,10 @@ body:has(#shop-root) .product-column::-webkit-scrollbar {
 /* Page shop - header avec fond rouge */
 body:has(#shop-root) header {
 	background-color: #EF4444 !important;
-	padding-top: 40px !important;
-	padding-bottom: 20px !important;
-	min-height: 140px !important;
-	height: 140px !important;
+	padding-top: 0px !important;
+	padding-bottom: 0px !important;
+	min-height: 96px !important;
+	height: 96px !important;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 

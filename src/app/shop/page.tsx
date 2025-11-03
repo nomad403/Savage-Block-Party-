@@ -125,7 +125,7 @@ export default function ShopPage() {
             {products.map((product, index) => (
               <div key={product.id} className={`relative ${index < products.length - 1 ? 'border-b-2' : ''}`} style={{ height: 'calc(100vh - 140px - 200px)', borderColor: '#000000', backgroundColor: '#EF4444' }}>
                 {/* Prix en haut à droite */}
-                <div className={`absolute top-8 right-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`absolute top-8 right-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} flex justify-end`}>
                   <span className="font-title text-black text-xl md:text-2xl">{product.price}</span>
                 </div>
 
@@ -154,10 +154,12 @@ export default function ShopPage() {
                 )}
 
                 {/* Bouton plus pour achat en bas à droite */}
-                <div className={`absolute bottom-16 right-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`absolute bottom-8 right-6 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                   <button className="w-20 h-20 rounded-full flex items-center justify-center transition-colors">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 5v14M5 12h14"/>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="square" strokeLinejoin="miter">
+                      {/* Lignes plus longues et droites pour un plus étiré */}
+                      <line x1="12" y1="2.5" x2="12" y2="21.5" />
+                      <line x1="2.5" y1="12" x2="21.5" y2="12" />
                     </svg>
                   </button>
                 </div>

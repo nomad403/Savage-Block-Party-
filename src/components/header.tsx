@@ -45,7 +45,7 @@ export default function Header() {
 
 	return (
 		<>
-            <header className={`container-px h-32 flex items-center z-[60] relative ${headerBg} ${isAgenda ? 'shadow-lg' : ''}`}>
+            <header className={`container-px h-24 flex items-center z-[60] relative ${headerBg} ${isAgenda ? 'shadow-lg' : ''}`}>
                 <div className="w-1/3 flex items-center">
                     {!isHome && (
                         <span className={`font-title uppercase tracking-wide text-sm ${isAgenda ? "text-black" : (isStory ? "text-cyan-400" : (isFamily ? "text-green-500" : (isPresse ? "text-purple-500" : "text-black")))}`}>
@@ -54,7 +54,7 @@ export default function Header() {
                     )}
                 </div>
                 <div className="w-1/3 flex justify-center">
-                    <Image className={logoClass} src="/home/images/logo_orange.png" alt="Savage Block Party" width={240} height={60} priority />
+                    <Image className={logoClass} src="/home/images/logo_orange.png" alt="Savage Block Party" width={180} height={45} priority />
                 </div>
                 <div className="w-1/3 flex justify-end">
                     <button 
