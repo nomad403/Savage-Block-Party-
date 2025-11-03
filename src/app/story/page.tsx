@@ -72,13 +72,13 @@ export default function StoryPage() {
           {/* Texte défilant */}
           <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
             {commandments.map((commandment, i) => (
-              <span key={`banner1-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{commandment}</span>
+              <span key={`banner1-${i}`} className="font-title uppercase text-4xl md:text-5xl text-black">{commandment}</span>
             ))}
             {commandments.map((commandment, i) => (
-              <span key={`banner1-repeat-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{commandment}</span>
+              <span key={`banner1-repeat-${i}`} className="font-title uppercase text-4xl md:text-5xl text-black">{commandment}</span>
             ))}
             {commandments.map((commandment, i) => (
-              <span key={`banner1-repeat2-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{commandment}</span>
+              <span key={`banner1-repeat2-${i}`} className="font-title uppercase text-4xl md:text-5xl text-black">{commandment}</span>
             ))}
           </div>
         </div>
@@ -113,13 +113,13 @@ export default function StoryPage() {
           {/* Texte défilant */}
           <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
             {allTalents.map((talent, i) => (
-              <span key={i} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{talent}</span>
+              <span key={i} className="font-title uppercase text-4xl md:text-5xl text-black">{talent}</span>
             ))}
             {allTalents.map((talent, i) => (
-              <span key={`repeat-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{talent}</span>
+              <span key={`repeat-${i}`} className="font-title uppercase text-4xl md:text-5xl text-black">{talent}</span>
             ))}
             {allTalents.map((talent, i) => (
-              <span key={`repeat2-${i}`} className="font-title uppercase text-4xl sm:text-5xl md:text-6xl text-black">{talent}</span>
+              <span key={`repeat2-${i}`} className="font-title uppercase text-4xl md:text-5xl text-black">{talent}</span>
             ))}
           </div>
         </div>

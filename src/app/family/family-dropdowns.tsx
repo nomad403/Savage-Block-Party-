@@ -151,7 +151,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       <div className="w-full md:w-1/3 relative">
         <button
           onClick={() => toggleDropdown('djs')}
-          className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-base md:text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           DJs
         </button>
@@ -188,7 +188,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       <div className="w-full md:w-1/3 relative">
         <button
           onClick={() => toggleDropdown('danseurs')}
-          className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-base md:text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           Danseurs
         </button>
@@ -225,7 +225,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       <div className="w-full md:w-1/3 relative">
         <button
           onClick={() => toggleDropdown('collab')}
-          className={`w-full text-black font-title uppercase text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-base md:text-lg py-4 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
         >
           Collab
         </button>

@@ -144,7 +144,7 @@ export default function GalleryFlash() {
   return (
     <div className={`w-full transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       {/* Galerie photos avec défilement flash */}
-      <div className="relative w-full aspect-video overflow-hidden">
+      <div className="relative w-full aspect-[9/16] md:aspect-video overflow-hidden">
         {/* Galerie photos avec défilement flash */}
         <div className="absolute inset-0">
           {galleryImages.map((image, index) => (
@@ -163,51 +163,6 @@ export default function GalleryFlash() {
           ))}
         </div>
 
-        {/* Vidéo dancer.webm centrée au-dessus */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <video
-            src="/general/dancer.webm"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full max-w-none max-h-none object-contain"
-            style={{ minWidth: '600px', minHeight: '600px' }}
-          />
-          {/* Titre "join the family" avec flèche */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '40px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#FACC15',
-              fontSize: '64px',
-              fontWeight: 'bold',
-              fontFamily: 'Hanson, sans-serif',
-              textTransform: 'uppercase',
-              letterSpacing: '4px',
-              zIndex: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              gap: '16px'
-            }}
-          >
-            <span>join the</span>
-            <span>family</span>
-            <div
-              style={{
-                width: '0',
-                height: '0',
-                borderLeft: '24px solid transparent',
-                borderRight: '24px solid transparent',
-                borderTop: '32px solid #FACC15',
-                marginTop: '16px'
-              }}
-            />
-          </div>
-        </div>
       </div>
 
       {/* Bannière de séparation */}
@@ -216,7 +171,7 @@ export default function GalleryFlash() {
           {/* Texte défilant */}
           <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
             {Array.from({ length: 10 }).map((_, i) => (
-              <span key={i} className="font-title uppercase text-2xl sm:text-3xl md:text-4xl">
+              <span key={i} className="font-title uppercase text-4xl md:text-5xl">
                 LE LIEU TU RESPECTERAS, DANS UNE POUBELLE TES DÉCHETS TU JETTERAS
               </span>
             ))}
@@ -225,37 +180,37 @@ export default function GalleryFlash() {
       </section>
 
       {/* Section formulaire de candidature */}
-      <div className="w-full bg-yellow-400 py-20 px-8 pb-68">
+      <div className="w-full bg-yellow-400 py-20 px-8 pb-68 agenda-form-section">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[400px]">
             {/* Formulaire à gauche */}
             <div className="flex flex-col justify-center">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="instagram" className="block text-black text-lg font-title leading-none mb-0 relative z-[2]">
+                  <label htmlFor="instagram" className="block text-black text-base md:text-lg font-title leading-none mb-0 relative z-[2]">
                     <TextRevealLines 
                       text={"Votre Instagram"}
                       color="#22D3EE"
-                      className="font-title text-lg text-black"
+                      className="font-title text-base md:text-lg text-black"
                       delayStep={0.06}
                     />
                   </label>
                   <div className="reveal-focus flex w-full -mt-1">
-                    <span className="bg-cyan-400 text-black px-4 py-3 text-lg font-title relative z-[1]">@</span>
+                    <span className="bg-cyan-400 text-black px-4 py-3 text-base md:text-lg font-title relative z-[1]">@</span>
                     <input
                       type="text"
                       id="instagram"
                       value={instagramHandle}
                       onChange={(e) => setInstagramHandle(e.target.value)}
                       placeholder="votre_pseudo"
-                      className="flex-1 bg-transparent border-2 border-cyan-400 text-cyan-400 focus:text-black placeholder:text-cyan-400 placeholder:opacity-100 placeholder:font-text caret-cyan-400 focus:caret-black text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 relative z-[1]"
+                      className="flex-1 bg-transparent border-2 border-cyan-400 text-cyan-400 focus:text-black placeholder:text-cyan-400 placeholder:opacity-100 placeholder:font-text caret-cyan-400 focus:caret-black text-base md:text-lg font-title px-4 py-3 focus:outline-none relative z-[1]"
                       required
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-cyan-400 text-black py-3 px-8 text-lg font-title uppercase tracking-wider hover:bg-cyan-500 transition-colors duration-200"
+                  className="w-full bg-cyan-400 text-black py-3 px-8 text-base md:text-lg font-title uppercase tracking-wider hover:bg-cyan-500 transition-colors duration-200"
                 >
                   Candidater
                 </button>
@@ -273,16 +228,16 @@ export default function GalleryFlash() {
                 <TextRevealLines 
                   text="Rejoins le collectif" 
                   color="#22D3EE"
-                  className="text-5xl font-title uppercase leading-tight text-black"
+                  className="text-5xl md:text-7xl font-title uppercase leading-tight text-black"
                   delayStep={0.12}
                 />
               </div>
-              <div className="space-y-6 text-xl font-text leading-relaxed">
+              <div className="space-y-6 text-lg md:text-xl font-text leading-relaxed">
                 <div>
                   <TextRevealLines 
                     text="Tu es artiste, créateur, ou simplement passionné par la culture urbaine ? Savage Block Party cherche de nouveaux talents pour enrichir sa communauté." 
                     color="#22D3EE"
-                    className="text-xl font-text leading-relaxed text-black"
+                    className="text-lg md:text-xl font-text leading-relaxed text-black"
                     delayStep={0.12}
                   />
                 </div>
@@ -290,7 +245,7 @@ export default function GalleryFlash() {
                   <TextRevealLines 
                     text="Partage ton Instagram et montre-nous ton univers. Nous étudions chaque candidature avec attention pour découvrir les prochaines pépites du collectif." 
                     color="#22D3EE"
-                    className="text-xl font-text leading-relaxed text-black"
+                    className="text-lg md:text-xl font-text leading-relaxed text-black"
                     delayStep={0.12}
                   />
                 </div>
@@ -298,7 +253,7 @@ export default function GalleryFlash() {
                   <TextRevealLines 
                     text="Prêt à faire partie de l'aventure ?" 
                     color="#22D3EE"
-                    className="font-title text-2xl text-black"
+                    className="font-title text-xl md:text-2xl text-black"
                     delayStep={0.12}
                   />
                 </div>

@@ -496,6 +496,13 @@ body.scrollable-page {
     transform: scaleX(1);
 }
 
+/* Variante verte sur la page family */
+body:has(#family-root) .reveal-focus::before {
+    background: #22C55E; /* Green-500 */
+    left: -2px; /* compense la bordure 2px côté gauche */
+    right: -2px; /* compense la bordure 2px côté droit */
+}
+
 /* Variante violette sur la page presse */
 body:has(#presse-root) .reveal-focus::before {
     background: #A855F7; /* Purple-500 */
@@ -504,7 +511,7 @@ body:has(#presse-root) .reveal-focus::before {
 }
 
 /* Variante cyan sur la page agenda */
-body:has(.bg-yellow-400) .reveal-focus::before {
+body:has(#agenda-root) .reveal-focus::before {
     background: #22D3EE; /* Cyan-400 */
     left: -2px; /* compense la bordure 2px côté gauche */
     right: -2px; /* compense la bordure 2px côté droit */
@@ -565,14 +572,28 @@ body.scrollable-page *::-webkit-scrollbar {
 
 /* Effet gooey vertical au scroll */
 .custom-scrollbar-thumb.scrolling {
-	transform: scaleY(1.5);
-	border-radius: 50% 50% 20% 20%;
+	transform: scaleY(1.3);
+}
+
+.custom-scrollbar-thumb.scrolling.scrolling-down {
+	border-radius: 30% 30% 15% 15%; /* Gooey en bas */
+}
+
+.custom-scrollbar-thumb.scrolling.scrolling-up {
+	border-radius: 15% 15% 30% 30%; /* Gooey en haut */
 }
 
 .custom-scrollbar-thumb.scrolling-fast {
-	transform: scaleY(2.2);
-	border-radius: 60% 60% 10% 10%;
-	background: rgba(0, 0, 0, 0.8);
+	transform: scaleY(1.8);
+	opacity: 0.9;
+}
+
+.custom-scrollbar-thumb.scrolling-fast.scrolling-down {
+	border-radius: 40% 40% 10% 10%; /* Gooey en bas, plus prononcé */
+}
+
+.custom-scrollbar-thumb.scrolling-fast.scrolling-up {
+	border-radius: 10% 10% 40% 40%; /* Gooey en haut, plus prononcé */
 }
 
 .custom-scrollbar-thumb:hover {

@@ -34,7 +34,7 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="font-title text-sm md:text-base mb-2">{capitalizedDate}</div>
-                  <h3 className="font-title uppercase text-xl md:text-2xl mb-2">{event.title}</h3>
+                  <h3 className="font-title uppercase text-lg md:text-xl mb-2">{event.title}</h3>
                   {event.location && (
                     <div className="font-text text-base md:text-lg">{event.location}</div>
                   )}
@@ -53,18 +53,30 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="transition-transform duration-300"
                   >
-                    {isExpanded ? (
-                      <>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                      </>
-                    ) : (
-                      <>
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                      </>
-                    )}
+                    <motion.line 
+                      x1="12" 
+                      y1="5" 
+                      x2="12" 
+                      y2="19"
+                      initial={false}
+                      animate={{ 
+                        scaleY: isExpanded ? 0 : 1,
+                        opacity: isExpanded ? 0 : 1
+                      }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    />
+                    <motion.line 
+                      x1="5" 
+                      y1="12" 
+                      x2="19" 
+                      y2="12"
+                      animate={{ 
+                        scaleX: 1,
+                        opacity: 1
+                      }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    />
                   </svg>
                 </button>
               </div>
@@ -78,7 +90,7 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="overflow-hidden pt-4"
                   >
-                    <div className="font-text text-base md:text-lg">
+                    <div className="font-text text-sm md:text-base">
                       {event.description}
                     </div>
                   </motion.div>

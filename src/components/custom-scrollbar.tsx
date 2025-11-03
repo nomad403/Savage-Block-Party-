@@ -11,6 +11,7 @@ export default function CustomScrollbar() {
   const [windowHeight, setWindowHeight] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [scrollVelocity, setScrollVelocity] = useState(0);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
   const [lastScrollTime, setLastScrollTime] = useState(0);
   const [lastScrollTop, setLastScrollTop] = useState(0);
   const [isReady, setIsReady] = useState(false);
@@ -144,12 +145,14 @@ export default function CustomScrollbar() {
         setScrollProgress(newProgress);
       }
 
-      // Calculer la vélocité de scroll
+      // Calculer la vélocité de scroll et la direction
       const timeDiff = currentTime - currentLastScrollTime;
       const scrollDiff = Math.abs(currentScrollTop - currentLastScrollTop);
       const velocity = timeDiff > 0 ? scrollDiff / timeDiff : 0;
+      const direction = currentScrollTop > currentLastScrollTop ? 'down' : 'up';
 
       setScrollVelocity(velocity);
+      setScrollDirection(direction);
       setLastScrollTime(currentTime);
       setLastScrollTop(currentScrollTop);
       
@@ -311,7 +314,8 @@ export default function CustomScrollbar() {
   const thumbClasses = [
     'custom-scrollbar-thumb',
     isScrolling && scrollVelocity > 0.3 ? 'scrolling-fast' : '',
-    isScrolling && scrollVelocity <= 0.3 && scrollVelocity > 0.1 ? 'scrolling' : ''
+    isScrolling && scrollVelocity <= 0.3 && scrollVelocity > 0.1 ? 'scrolling' : '',
+    scrollDirection === 'down' ? 'scrolling-down' : 'scrolling-up'
   ].filter(Boolean).join(' ');
 
   return (

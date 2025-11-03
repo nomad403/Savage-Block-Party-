@@ -67,7 +67,7 @@ export default function Header() {
                             {/* Barre du haut */}
                             <span 
                                 className={`absolute left-0 right-0 top-1 block h-[2px] transition-all duration-300 ease-in-out ${
-                                    open ? 'rotate-45 translate-y-[10px]' : 'rotate-0 translate-y-0'
+                                    open ? 'top-1/2 -translate-y-1/2 rotate-45' : ''
                                 }`}
                                 style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
                             />
@@ -81,7 +81,7 @@ export default function Header() {
                             {/* Barre du bas */}
                             <span 
                                 className={`absolute left-0 right-0 bottom-1 block h-[2px] transition-all duration-300 ease-in-out ${
-                                    open ? '-rotate-45 -translate-y-[10px]' : 'rotate-0 translate-y-0'
+                                    open ? 'top-1/2 -translate-y-1/2 -rotate-45' : ''
                                 }`}
                                 style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
                             />

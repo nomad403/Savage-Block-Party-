@@ -96,7 +96,7 @@ export default function ShopPage() {
             <iframe
               ref={videoRef}
               className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/7FMyAz38qdg?start=10&end=20&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=7FMyAz38qdg&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1"
+              src={`https://www.youtube.com/embed/7FMyAz38qdg?start=10&end=20&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=7FMyAz38qdg&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1${typeof window !== 'undefined' ? `&origin=${window.location.origin}` : ''}`}
               allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
               allowFullScreen={true}
               loading="eager"
@@ -125,13 +125,13 @@ export default function ShopPage() {
             {products.map((product, index) => (
               <div key={product.id} className={`relative ${index < products.length - 1 ? 'border-b-2' : ''}`} style={{ height: 'calc(100vh - 140px - 200px)', borderColor: '#000000', backgroundColor: '#EF4444' }}>
                 {/* Prix en haut à droite */}
-                <div className={`absolute top-6 right-6 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                  <span className="font-title text-black text-2xl">{product.price}</span>
+                <div className={`absolute top-8 right-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                  <span className="font-title text-black text-xl md:text-2xl">{product.price}</span>
                 </div>
 
                 {/* Titre en haut à gauche */}
-                <div className={`absolute top-6 left-6 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                  <h3 className="font-title text-black text-2xl uppercase">{product.title}</h3>
+                <div className={`absolute top-8 left-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                  <h3 className="font-title text-black text-xl md:text-2xl uppercase">{product.title}</h3>
                 </div>
 
                 {/* Photo fullscreen */}
@@ -155,8 +155,8 @@ export default function ShopPage() {
 
                 {/* Bouton plus pour achat en bas à droite */}
                 <div className={`absolute bottom-16 right-8 z-10 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                  <button className="w-16 h-16 rounded-full flex items-center justify-center transition-colors">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round">
+                  <button className="w-20 h-20 rounded-full flex items-center justify-center transition-colors">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 5v14M5 12h14"/>
                     </svg>
                   </button>

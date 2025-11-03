@@ -2361,19 +2361,19 @@ return (
 				<>
 					{/* Controls centered (mobile) / Play centered (desktop) */}
 					<div className="fixed inset-0 z-[30] pointer-events-none">
-						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex items-center gap-4">
+						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex items-center gap-8 md:gap-4">
 							{/* Mute button (mobile only, to the left of play) */}
 							<button 
 								onClick={handleMuteToggle}
-								className="w-20 h-20 md:hidden flex items-center justify-center hover:opacity-80 transition-opacity"
+								className="w-14 h-14 md:hidden flex items-center justify-center hover:opacity-80 transition-opacity"
 								title={isMuted ? "Activer le son" : "Couper le son"}
 							>
 								{isMuted ? (
-									<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+									<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 										<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
 									</svg>
 								) : (
-									<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+									<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 										<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
 									</svg>
 								)}
@@ -2382,17 +2382,17 @@ return (
 					<button 
 						onClick={handlePlayPause}
 								disabled={isLoadingRandomTrack}
-								className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center hover:opacity-80 transition-opacity disabled:cursor-not-allowed"
+								className="w-24 h-24 md:w-40 md:h-40 flex items-center justify-center hover:opacity-80 transition-opacity disabled:cursor-not-allowed"
 							>
 								{isLoadingRandomTrack ? (
-									<div className={`w-16 h-16 border-4 border-t-transparent border-r-transparent ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'border-black' : 'border-yellow-400'} rounded-full animate-spin`}></div>
+									<div className={`w-12 h-12 md:w-16 md:h-16 border-4 border-t-transparent border-r-transparent ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'border-black' : 'border-yellow-400'} rounded-full animate-spin`}></div>
 								) : isPlaying ? (
 									<div className="flex gap-1">
-										<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
-										<div className={`w-2 h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+										<div className={`w-1.5 h-10 md:w-2 md:h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
+										<div className={`w-1.5 h-10 md:w-2 md:h-12 ${(isStory || isFamily || isShop || isAgenda || isPresse) ? 'bg-black' : playerBgColor}`}></div>
 							</div>
 						) : (
-									<svg width="64" height="48" viewBox="0 0 64 48" fill="none" className="ml-2">
+									<svg width="48" height="36" viewBox="0 0 64 48" fill="none" className="ml-2">
 										<path d="M16 0L52 24L16 48V0Z" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "#FACC15"}/>
 									</svg>
 						)}
@@ -2400,10 +2400,10 @@ return (
 							{/* Skip button (mobile only, to the right of play) */}
 					<button
 						onClick={() => { try { widgetRef.current?.next(); } catch {} }}
-								className="w-20 h-20 md:hidden flex items-center justify-center hover:opacity-80 transition-opacity"
+								className="w-14 h-14 md:hidden flex items-center justify-center hover:opacity-80 transition-opacity"
 						title="Suivant"
 					>
-								<svg width="48" height="48" viewBox="0 0 24 24" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "currentColor"} className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
+								<svg width="32" height="32" viewBox="0 0 24 24" fill={(isStory || isFamily || isShop || isAgenda || isPresse) ? "#000000" : "currentColor"} className={(isStory || isFamily || isShop || isAgenda || isPresse) ? 'text-black' : playerColor}>
 							<path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
 						</svg>
 					</button>
@@ -2431,7 +2431,7 @@ return (
 						{/* Title */}
 						<div className={`${playerColor}`}>
 							<div className="font-title text-base leading-tight">{trackTitle || ""}</div>
-							<AutoScrollText text={artistName || ""} className={`font-text text-sm ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
+							<AutoScrollText text={artistName || ""} className={`font-text text-sm ${isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isShop ? 'text-red-500/80' : (isPresse ? 'text-purple-500/80' : playerColor)))} mt-0.5`} />
 						</div>
 						{/* Reduce button */}
 						<button 
@@ -2462,7 +2462,7 @@ return (
 					<div className={`fixed bottom-28 left-4 z-[25] md:hidden ${isShop ? 'text-black' : playerColor}`}>
 						<div className="max-w-[200px]">
 							<div className="font-title text-sm leading-tight truncate">{trackTitle || ""}</div>
-							<AutoScrollText text={artistName || ""} className={`font-text text-xs ${isShop ? 'text-black/80' : (isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isPresse ? 'text-purple-500/80' : playerColor + '/80')))} mt-0.5`} />
+							<AutoScrollText text={artistName || ""} className={`font-text text-xs ${isShop ? 'text-black/80' : (isStory ? 'text-cyan-400/80' : (isFamily ? 'text-green-500/80' : (isPresse ? 'text-purple-500/80' : playerColor)))} mt-0.5`} />
 			</div>
 		</div>
 				</>

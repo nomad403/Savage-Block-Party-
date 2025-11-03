@@ -36,7 +36,7 @@ export default async function AgendaPage() {
   ];
 
   return (
-    <main className="bg-yellow-400 text-black">
+    <main id="agenda-root" className="bg-yellow-400 text-black">
       {/* Section liste d'événements avec image */}
       <section className="w-full min-h-screen flex flex-col md:flex-row">
         {/* Image à gauche - 2/3 (masquée sur mobile) */}
@@ -48,8 +48,8 @@ export default async function AgendaPage() {
           />
         </div>
         
-        {/* Liste à droite - 1/3 */}
-        <div className="w-full md:w-1/3 bg-yellow-400 overflow-y-auto h-screen">
+        {/* Liste à droite - 1/3 (limiter la hauteur pour garder le scroll de page) */}
+        <div className="w-full md:w-1/3 bg-yellow-400 overflow-y-auto max-h-[75vh] md:max-h-[85vh]">
           <AgendaEventsList events={events} />
         </div>
       </section>
@@ -61,7 +61,7 @@ export default async function AgendaPage() {
             {/* Texte défilant */}
             <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
               {Array.from({ length: 10 }).map((_, i) => (
-                <span key={i} className="font-title uppercase text-2xl sm:text-3xl md:text-4xl">
+                <span key={i} className="font-title uppercase text-4xl md:text-5xl">
                   {commandmentBanners[0]}
                 </span>
               ))}

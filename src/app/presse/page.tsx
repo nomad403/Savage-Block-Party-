@@ -104,7 +104,7 @@ export default function PressePage() {
                 <TextRevealLines 
                   text={"Collaboration"} 
                   color="#A855F7" 
-                  className="font-title uppercase text-3xl sm:text-4xl md:text-5xl text-black" 
+                  className="font-title uppercase text-4xl md:text-6xl text-black" 
                   delayStep={0.12}
                 />
               </div>
@@ -113,7 +113,7 @@ export default function PressePage() {
                   text={"Soutenez la culture indépendante : musique, danse, graffiti et médias urbains. Co-créons des formats exigeants, roots et inclusifs, ancrés dans le réel. Rejoignez un réseau d’artistes, lieux et labels pour faire rayonner l’underground."}
                   color="#A855F7"
                   delayStep={0.12}
-                  className="font-text font-semibold text-xl md:text-2xl leading-[1.18] text-black max-w-[48ch] md:max-w-[54ch] tracking-tight"
+                  className="font-text font-semibold text-lg md:text-xl leading-[1.18] text-black max-w-[48ch] md:max-w-[54ch] tracking-tight"
                 />
               </div>
             {/* Formulaire à droite */}

@@ -140,7 +140,7 @@ export function TextBlock({ title, description, className = "" }: TextBlockProps
       {title && (
         <LineByLineText 
           text={title} 
-          className="font-title text-4xl md:text-5xl lg:text-6xl text-black mb-6 leading-tight text-justify break-words"
+          className="font-title text-5xl md:text-6xl text-black mb-6 leading-tight text-justify break-words"
         />
       )}
       {descriptions.length > 0 && (
@@ -165,7 +165,7 @@ export function AccrocheText({ text }: { text: string }) {
     <div className={`text-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       <LineByLineText 
         text={text}
-        className="font-title text-5xl md:text-6xl lg:text-7xl text-black leading-tight"
+        className="font-title text-6xl md:text-7xl text-black leading-tight"
       />
     </div>
   );

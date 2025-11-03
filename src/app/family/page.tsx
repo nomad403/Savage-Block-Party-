@@ -162,7 +162,7 @@ export default function FamilyPage() {
               <TextRevealLines 
                 text={"Une famille"} 
                 color="#22C55E" 
-                className="font-title uppercase text-6xl sm:text-7xl md:text-8xl text-black leading-tight" 
+                className="font-title uppercase text-6xl md:text-7xl text-black leading-tight" 
                 delayStep={0.12}
               />
             </div>
@@ -177,7 +177,7 @@ export default function FamilyPage() {
           <div className="absolute inset-0 w-full h-full" style={{ overflow: 'hidden' }}>
             <iframe
               className="absolute top-[55%] md:top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              src={`https://www.youtube.com/embed/${defaultVideoId}?start=${defaultStartTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=${defaultVideoId}&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1`}
+              src={`https://www.youtube.com/embed/${defaultVideoId}?start=${defaultStartTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=${defaultVideoId}&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1${typeof window !== 'undefined' ? `&origin=${window.location.origin}` : ''}`}
               allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
               allowFullScreen={true}
               loading="eager"
@@ -192,7 +192,7 @@ export default function FamilyPage() {
             <iframe
               key={selectedItem}
               className="absolute top-[55%] md:top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=${media.videoId}&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1`}
+              src={`https://www.youtube.com/embed/${media.videoId}?start=${media.startTime}&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&playlist=${media.videoId}&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1${typeof window !== 'undefined' ? `&origin=${window.location.origin}` : ''}`}
               allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
               allowFullScreen={true}
               loading="eager"
@@ -233,7 +233,7 @@ export default function FamilyPage() {
               <TextRevealLines 
                 text={selectedItem || ""} 
                 color="#22C55E" 
-                className="font-title text-6xl sm:text-7xl md:text-8xl text-black uppercase leading-tight" 
+                className="font-title text-6xl md:text-7xl text-black uppercase leading-tight" 
                 delayStep={0.1}
               />
             </div>
@@ -242,16 +242,16 @@ export default function FamilyPage() {
       </section>
       
       {/* Barre de séparation avec texte défilant */}
-      <section className="w-full bg-green-500 text-black py-4 relative overflow-hidden">
-        <div className={`flex flex-col items-center justify-center h-full gap-12 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <section className={`w-full bg-green-500 text-black py-4 relative overflow-hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className="flex flex-col items-center justify-center h-full gap-12">
           {/* Texte défilant */}
           <div className="flex items-center gap-8 whitespace-nowrap animate-scroll-text w-full">
-            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
-            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
-            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
-            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
-            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
-            <span className="font-title uppercase text-4xl sm:text-5xl md:text-6xl">Join the family</span>
+              <span className="font-title uppercase text-4xl md:text-5xl">Join the family</span>
+              <span className="font-title uppercase text-4xl md:text-5xl">Join the family</span>
+              <span className="font-title uppercase text-4xl md:text-5xl">Join the family</span>
+              <span className="font-title uppercase text-4xl md:text-5xl">Join the family</span>
+              <span className="font-title uppercase text-4xl md:text-5xl">Join the family</span>
+              <span className="font-title uppercase text-4xl md:text-5xl">Join the family</span>
           </div>
           
           {/* Indication vers le bas */}
@@ -295,50 +295,44 @@ export default function FamilyPage() {
                 <TextRevealLines
                   text={"Tu es artiste, créateur, beatmaker, danseur, DJ, photographe ou média indépendant ? Rejoins une communauté qui fait vibrer la ville hors des circuits, entre friches, parkings et lieux improbables."}
                   color="#22C55E"
-                  className="font-text font-semibold text-xl md:text-2xl leading-[1.12] tracking-tight text-black text-justify"
+                  className="font-text font-semibold text-lg md:text-xl leading-[1.12] tracking-tight text-black text-justify"
                   delayStep={0.07}
                 />
                 <TextRevealLines
                   text={"Ensemble, on fabrique des formats roots, exigeants et inclusifs, où la musique et le mouvement parlent plus fort que les discours."}
                   color="#22C55E"
-                  className="font-text font-semibold text-xl md:text-2xl leading-[1.12] tracking-tight text-black text-justify"
+                  className="font-text font-semibold text-lg md:text-xl leading-[1.12] tracking-tight text-black text-justify"
                   delayStep={0.07}
-                />
-                <TextRevealLines
-                  text={"Prêt à faire partie de l’aventure ?"}
-                  color="#22C55E"
-                  className="font-title text-2xl md:text-3xl leading-[1.12] tracking-tight text-black"
-                  delayStep={0.06}
                 />
               </div>
 
               {/* Formulaire Instagram */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="instagram" className="block text-black text-lg font-title leading-none mb-0 relative z-[2]">
+                  <label htmlFor="instagram" className="block text-black text-base md:text-lg font-title leading-none mb-0 relative z-[2]">
                     <TextRevealLines 
                       text={"Votre Instagram"}
                       color="#22C55E"
-                      className="font-title text-lg text-black"
+                      className="font-title text-base md:text-lg text-black"
                       delayStep={0.06}
                     />
                   </label>
                   <div className="reveal-focus flex w-full -mt-1">
-                    <span className="bg-green-500 text-black px-4 py-3 text-lg font-title relative z-[1]">@</span>
+                    <span className="bg-green-500 text-black px-4 py-3 text-base md:text-lg font-title relative z-[1]">@</span>
                     <input
                       type="text"
                       id="instagram"
                       value={instagramHandle}
                       onChange={(e) => setInstagramHandle(e.target.value)}
                       placeholder="votre_pseudo"
-                      className="flex-1 bg-transparent border-2 border-green-500 text-green-500 focus:text-black placeholder:text-green-500 placeholder:opacity-100 placeholder:font-text caret-green-500 focus:caret-black text-lg font-title px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 relative z-[1]"
+                      className="flex-1 bg-transparent border-2 border-green-500 text-green-500 focus:text-black placeholder:text-green-500 placeholder:opacity-100 placeholder:font-text caret-green-500 focus:caret-black text-base md:text-lg font-title px-4 py-3 focus:outline-none relative z-[1]"
                       required
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-500 text-black py-3 px-8 text-lg font-title uppercase tracking-wider hover:bg-green-600 transition-colors duration-200"
+                  className="w-full bg-green-500 text-black py-3 px-8 text-base md:text-lg font-title uppercase tracking-wider hover:bg-green-600 transition-colors duration-200"
                 >
                   Candidater
                 </button>
