@@ -169,7 +169,7 @@ export default function ShopPage() {
             ))}
           </div>
         </div>
-      </main>
+    </main>
       </div>
     </>
   );

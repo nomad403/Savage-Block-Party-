@@ -163,7 +163,7 @@ export default function GalleryFlash() {
           ))}
         </div>
 
-      </div>
+          </div>
 
       {/* Bannière de séparation */}
       <section className="w-full bg-cyan-400 text-black py-4 relative overflow-hidden">
@@ -175,8 +175,8 @@ export default function GalleryFlash() {
                 LE LIEU TU RESPECTERAS, DANS UNE POUBELLE TES DÉCHETS TU JETTERAS
               </span>
             ))}
-          </div>
         </div>
+      </div>
       </section>
 
       {/* Section formulaire de candidature */}
@@ -256,8 +256,8 @@ export default function GalleryFlash() {
                     className="font-title text-xl md:text-2xl text-black"
                     delayStep={0.12}
                   />
-                </div>
               </div>
+            </div>
             </motion.div>
           </div>
         </div>

@@ -46,8 +46,8 @@ export default async function AgendaPage() {
             alt="Agenda" 
             className="w-full h-full object-cover"
           />
-        </div>
-        
+          </div>
+
         {/* Liste à droite - 1/3 (limiter la hauteur pour garder le scroll de page) */}
         <div className="w-full md:w-1/3 bg-yellow-400 overflow-y-auto max-h-[75vh] md:max-h-[85vh]">
           <AgendaEventsList events={events} />

@@ -119,8 +119,8 @@ export default function Header() {
                                 }`}
                                 style={{ backgroundColor: isHome ? colors.primary : (isStory ? '#22D3EE' : (isFamily ? '#22C55E' : (isPresse ? '#A855F7' : '#000000'))) }}
                             />
-                        </div>
-                    </button>
+					</div>
+				</button>
                 </div>
 			</motion.header>
 

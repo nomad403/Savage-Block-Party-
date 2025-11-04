@@ -3,38 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useBPMDetection } from "../hooks/useBPMDetection";
-import { useDMXControl } from "../hooks/useDMXControl";
-import BPMVisualizer from "./bpm-visualizer";
-
-declare global {
-	interface Window {
-		SC: {
-			Widget: {
-				Events: {
-					READY: string;
-					PLAY: string;
-					PAUSE: string;
-					PLAY_PROGRESS: string;
-					SEEK: string;
-					FINISH: string;
-					ERROR: string;
-				};
-			} & ((iframe: HTMLIFrameElement) => {
-				bind: (event: string, callback: (data: unknown) => void) => void;
-				unbind: (event: string) => void;
-				getPosition: (callback: (position: number) => void) => void;
-				getDuration: (callback: (duration: number) => void) => void;
-				seekTo: (position: number) => void;
-				play: () => void;
-				pause: () => void;
-				toggle: () => void;
-			});
-		};
-		onSoundCloudReady: () => void;
-	}
-}
-
+/// <reference path="../types/soundcloud.d.ts" />
 export default function SoundCloudPlayer() {
 	const pathname = usePathname();
 	const isHome = pathname === "/";
@@ -43,7 +12,7 @@ export default function SoundCloudPlayer() {
 	const isShop = pathname?.startsWith("/shop");
 	const isFamily = pathname?.startsWith("/family");
 	const isPresse = pathname?.startsWith("/presse");
-	// Désactiver temporairement les couleurs dynamiques (BPM/son)
+	// Désactiver temporairement les couleurs dynamiques (/son)
 	const enableDynamicColors = false;
 	
 	// États pour couleurs dynamiques au rythme de la musique (déclarés en premier)
@@ -111,186 +80,18 @@ export default function SoundCloudPlayer() {
 		});
 		return result;
 	}, [isHome, isAgenda, isStory, isShop, isFamily, isPresse, dynamicColorTheme, pathname]);
-	const waveformColor = colors.waveformColor;
+		const waveformColor = colors.waveformColor;
 	const waveformColorFaded = colors.waveformColorFaded;
 	const playerColor = colors.playerColor;
 	const playerBgColor = colors.playerBgColor;
-	
-	// Hook BPM Detection réactivé pour DMX
-	const { bpm, audioFeatures, isAnalyzing, error: bpmError, analyzeSoundCloudAudio } = useBPMDetection();
-	
-	// Hook DMX Control moderne
-	const {
-		dmxEnabled,
-		dmxConnection,
-		dmxUniverse,
-		dmxFixtures,
-		dmxScenes,
-		audioMapping,
-		connectDMX,
-		disconnectDMX,
-		addDMXFixture,
-		createDMXScene,
-		triggerDMXScene,
-		mapAudioToDMX,
-		getDMXStatus
-	} = useDMXControl();
-	
-	// Ref pour l'élément audio HTML5 (pour l'analyse Meyda)
-	const audioElementRef = useRef<HTMLAudioElement>(null);
 	
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [isMuted, setIsMuted] = useState(false);
 	const [trackTitle, setTrackTitle] = useState<string>("Savage Block Party");
 	const [artistName, setArtistName] = useState<string>("Latest tracks");
 	const [isApiLoaded, setIsApiLoaded] = useState(false);
-	const [isLoadingRandomTrack, setIsLoadingRandomTrack] = useState(false);
-	
-	// Générer un signal audio de test pour Meyda (version simplifiée)
-	const generateTestAudioSignal = useCallback(async () => {
-		if (!audioElementRef.current) return;
-		
-		try {
-			// Créer un signal audio simple avec Web Audio API
-			const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-			const sampleRate = audioContext.sampleRate;
-			const duration = 5; // 5 secondes de signal
-			const bufferSize = sampleRate * duration;
-			
-			// Créer un buffer audio mono
-			const audioBuffer = audioContext.createBuffer(1, bufferSize, sampleRate);
-			const channelData = audioBuffer.getChannelData(0);
-			
-			// Générer un signal de test simple mais efficace
-			for (let i = 0; i < bufferSize; i++) {
-				const time = i / sampleRate;
-				// Signal principal avec modulation pour simuler des beats
-				const frequency = 220 + 50 * Math.sin(2 * Math.PI * 0.5 * time); // Fréquence variable
-				const amplitude = 0.2 + 0.1 * Math.sin(2 * Math.PI * 2 * time); // Amplitude variable (2 BPM)
-				const signal = Math.sin(2 * Math.PI * frequency * time) * amplitude;
-				
-				channelData[i] = signal;
-			}
-			
-			// Créer un blob WAV simple
-			const wavData = createSimpleWav(audioBuffer);
-			const blob = new Blob([wavData], { type: 'audio/wav' });
-			const url = URL.createObjectURL(blob);
-			
-			// Assigner l'URL à l'élément audio
-			audioElementRef.current.src = url;
-			audioElementRef.current.loop = true;
-			audioElementRef.current.volume = 0.1; // Volume très bas
-			
-			console.log('🎵 Signal audio de test généré');
-			
-		} catch (error) {
-			console.error('🎵 Erreur génération signal audio:', error);
-			// Fallback : utiliser un data URL simple
-			audioElementRef.current.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
-		}
-	}, []);
-	
-	// Fonction simplifiée pour créer un WAV
-	const createSimpleWav = (audioBuffer: AudioBuffer): ArrayBuffer => {
-		const length = audioBuffer.length;
-		const sampleRate = audioBuffer.sampleRate;
-		const arrayBuffer = new ArrayBuffer(44 + length * 2);
-		const view = new DataView(arrayBuffer);
-		
-		// En-tête WAV simplifié
-		view.setUint32(0, 0x46464952, false); // "RIFF"
-		view.setUint32(4, 36 + length * 2, true); // File size
-		view.setUint32(8, 0x45564157, false); // "WAVE"
-		view.setUint32(12, 0x20746d66, false); // "fmt "
-		view.setUint32(16, 16, true); // Format chunk size
-		view.setUint16(20, 1, true); // Audio format (PCM)
-		view.setUint16(22, 1, true); // Number of channels
-		view.setUint32(24, sampleRate, true); // Sample rate
-		view.setUint32(28, sampleRate * 2, true); // Byte rate
-		view.setUint16(32, 2, true); // Block align
-		view.setUint16(34, 16, true); // Bits per sample
-		view.setUint32(36, 0x61746164, false); // "data"
-		view.setUint32(40, length * 2, true); // Data size
-		
-		// Données audio
-		const channelData = audioBuffer.getChannelData(0);
-		let offset = 44;
-		for (let i = 0; i < length; i++) {
-			const sample = Math.max(-1, Math.min(1, channelData[i]));
-			view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-			offset += 2;
-		}
-		
-		return arrayBuffer;
-	};
-	
-	// Démarrer l'analyse audio après interaction utilisateur
-	const startAudioAnalysisAfterInteraction = useCallback(async () => {
-		if (!audioElementRef.current || typeof window === 'undefined') return;
-		
-		try {
-			// Vérifier que l'élément audio est prêt
-			if (audioElementRef.current.readyState >= 2) {
-				// Essayer de démarrer l'audio (nécessite une interaction utilisateur)
-				await audioElementRef.current.play();
-				console.log('🎵 Analyse audio démarrée après interaction utilisateur');
-			} else {
-				console.log('🎵 Élément audio pas encore prêt');
-			}
-		} catch (error) {
-			console.log('🎵 Analyse audio non démarrée:', error instanceof Error ? error.message : String(error));
-		}
-	}, []);
-	
-	// Écouter les interactions utilisateur pour démarrer l'analyse audio
-	useEffect(() => {
-		if (typeof window === 'undefined') return;
-		
-		const handleUserInteraction = () => {
-			startAudioAnalysisAfterInteraction();
-			// Supprimer les listeners après la première interaction
-			document.removeEventListener('click', handleUserInteraction);
-			document.removeEventListener('keydown', handleUserInteraction);
-			document.removeEventListener('touchstart', handleUserInteraction);
-		};
-		
-		// Écouter différents types d'interactions
-		document.addEventListener('click', handleUserInteraction);
-		document.addEventListener('keydown', handleUserInteraction);
-		document.addEventListener('touchstart', handleUserInteraction);
-		
-		return () => {
-			document.removeEventListener('click', handleUserInteraction);
-			document.removeEventListener('keydown', handleUserInteraction);
-			document.removeEventListener('touchstart', handleUserInteraction);
-		};
-	}, [startAudioAnalysisAfterInteraction]);
-	
-	// Démarrer l'analyse audio Meyda avec génération de signal de test
-	useEffect(() => {
-		const initializeAudioAnalysis = async () => {
-			if (audioElementRef.current) {
-				// Générer d'abord le signal audio de test
-				await generateTestAudioSignal();
-				
-				// Attendre que l'audio soit prêt, mais ne pas jouer automatiquement
-				audioElementRef.current.addEventListener('canplaythrough', () => {
-					analyzeSoundCloudAudio(audioElementRef.current!);
-				}, { once: true });
-				
-				// Fallback si l'événement ne se déclenche pas
-				setTimeout(() => {
-					if (audioElementRef.current && audioElementRef.current.src) {
-						analyzeSoundCloudAudio(audioElementRef.current);
-					}
-				}, 1000);
-			}
-		};
-		
-		initializeAudioAnalysis();
-	}, [analyzeSoundCloudAudio, generateTestAudioSignal]);
-	const [artworkUrl, setArtworkUrl] = useState<string>("/home/images/logo_orange.png");
+	        const [isLoadingRandomTrack, setIsLoadingRandomTrack] = useState(false);
+        const [artworkUrl, setArtworkUrl] = useState<string>("/home/images/logo_orange.png");
 	const [permalinkUrl, setPermalinkUrl] = useState<string>("https://soundcloud.com/savageblockpartys");
 	const [waveformImageUrl, setWaveformImageUrl] = useState<string>("");
 	const [waveformSamples, setWaveformSamples] = useState<number[] | null>(null);
@@ -1018,50 +819,25 @@ useEffect(() => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// Synchroniser les données audio avec le système DMX moderne
-	useEffect(() => {
-		if (audioFeatures && dmxEnabled) {
-			console.log('🎵 Synchronisation audio-DMX:', {
-				rms: audioFeatures.rms,
-				spectralCentroid: audioFeatures.spectralCentroid,
-				spectralFlux: audioFeatures.spectralFlux,
-				bpm: bpm
-			});
 
-			// Mapper les données audio vers DMX
-			mapAudioToDMX(audioFeatures);
-		}
-	}, [audioFeatures, bpm, dmxEnabled, mapAudioToDMX]);
 
-	// Système optimisé de détection de beats avec listeners
-	const detectBeatAndChangeColors = useCallback(() => {
-		if (!enableDynamicColors) return; // blocage global
-		if (!isPlaying) return;
+	        // Système optimisé de détection de beats avec listeners
+        const detectBeatAndChangeColors = useCallback(() => {
+                if (!enableDynamicColors) return; // blocage global
+                if (!isPlaying) return;
 
-		const currentTime = Date.now();
-		const estimatedBPM = bpm || 120;
-		const beatInterval = 60000 / estimatedBPM;
-		
-		// Vérifier si assez de temps s'est écoulé depuis le dernier beat
-		if ((currentTime - lastBeatTime) < beatInterval * 0.8) return;
-		
-		let shouldChangeColor = false;
-		let intensity = 0;
-		let source = '';
-		
-		// Méthode 1: Données audio réelles de Meyda
-		if (audioFeatures && audioFeatures.rms > 0) {
-			const volumeThreshold = 0.1;
-			const spectralThreshold = 0.2;
-			
-			if (audioFeatures.rms > volumeThreshold && audioFeatures.spectralCentroid > spectralThreshold) {
-				shouldChangeColor = true;
-				intensity = Math.min(1, audioFeatures.rms / 0.3);
-				source = 'meyda';
-			}
-		}
-		
-		// Méthode 2: Données waveform SoundCloud
+                const currentTime = Date.now();
+                const estimatedBPM = 120;
+                const beatInterval = 60000 / estimatedBPM;
+
+                // Vérifier si assez de temps s'est écoulé depuis le dernier beat                                                                            
+                if ((currentTime - lastBeatTime) < beatInterval * 0.8) return;  
+
+                let shouldChangeColor = false;
+                let intensity = 0;
+                let source = '';
+
+                // Méthode: Données waveform SoundCloud
 		if (!shouldChangeColor && waveformSamples && waveformSamples.length > 0 && durationMs > 0) {
 			const currentSampleIndex = Math.floor((progress / 100) * waveformSamples.length);
 			const currentAmplitudeRaw = Math.abs(waveformSamples[currentSampleIndex] || 0);
@@ -1088,7 +864,7 @@ useEffect(() => {
 			const progressFactor = progress / 100;
 			const timeFactor = (currentTime % 8000) / 8000; // Cycle de 8 secondes
 			intensity = (progressFactor + timeFactor) / 2;
-			source = 'bpm-simulation';
+			source = '-simulation';
 		}
 		
 		// Changer la couleur si nécessaire
@@ -1114,33 +890,24 @@ useEffect(() => {
 				detail: { theme: newTheme, beatCount: beatCount + 1, intensity, source }
 			}));
 		}
-	}, [enableDynamicColors, isPlaying, bpm, audioFeatures, waveformSamples, progress, durationMs, lastBeatTime, beatCount]);
+	        }, [enableDynamicColors, isPlaying, waveformSamples, progress, durationMs, lastBeatTime, beatCount]);
 
-	// Système de listeners pour détecter les changements en temps réel
-	useEffect(() => {
-		if (!enableDynamicColors) return;
-		if (!isPlaying) return;
+        // Système de listeners pour détecter les changements en temps réel  
+        useEffect(() => {
+                if (!enableDynamicColors) return;
+                if (!isPlaying) return;
 
-		// Listener pour les changements de progression SoundCloud
-		const handleProgressChange = () => {
-			detectBeatAndChangeColors();
-		};
+                // Listener pour les changements de progression SoundCloud      
+                const handleProgressChange = () => {
+                        detectBeatAndChangeColors();
+                };
 
-		// Listener pour les événements audio Meyda
-		const handleAudioFeatures = (event: CustomEvent) => {
-			detectBeatAndChangeColors();
-		};
+		                // Écouter les changements de progression (toutes les 200ms max)                                                                               
+                const progressInterval = setInterval(handleProgressChange, 200);
 
-		// Écouter les changements de progression (toutes les 200ms max)
-		const progressInterval = setInterval(handleProgressChange, 200);
-		
-		// Écouter les événements audio Meyda
-		window.addEventListener('audioFeatures', handleAudioFeatures as EventListener);
-
-		return () => {
-			clearInterval(progressInterval);
-			window.removeEventListener('audioFeatures', handleAudioFeatures as EventListener);
-		};
+                return () => {
+                        clearInterval(progressInterval);
+                };
 	}, [enableDynamicColors, isPlaying, detectBeatAndChangeColors]);
 
 	// Écouter l'état du menu
@@ -1507,19 +1274,10 @@ useEffect(() => {
 					widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
 						setIsPlaying(true);
 						updateFromCurrentSound();
-				// Synchroniser l'audio HTML5 avec le widget SoundCloud (avec gestion d'erreur autoplay)
-				if (audioElementRef.current) {
-					audioElementRef.current.play().catch(error => {
-						console.log('🎵 Autoplay bloqué par le navigateur (normal):', error instanceof Error ? error.message : String(error));
-						// L'utilisateur devra interagir pour démarrer l'analyse audio
 					});
-				}
-			});
 			
 					widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
 						setIsPlaying(false);
-				// Synchroniser l'audio HTML5 avec le widget SoundCloud
-				audioElementRef.current?.pause();
 					});
 			
 			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
@@ -1714,7 +1472,7 @@ useEffect(() => {
 		}
 	}, [isWidgetHealthy, executeWithRetry]);
 
-	// API robuste pour l'intégration BPM et autres fonctionnalités
+	// API robuste pour l'intégrationet autres fonctionnalités
 	const getPlayerAPI = useCallback(() => {
 		return {
 			// État du player
@@ -1768,37 +1526,10 @@ useEffect(() => {
 				window.dispatchEvent(new CustomEvent('soundcloud-reinitialize'));
 			},
 			
-			// Système DMX
-			getDmxStatus: () => getDMXStatus(),
-			
-			// Données BPM en temps réel
-			getBpmData: () => ({
-				bpm: bpm,
-				audioFeatures: audioFeatures,
-				isAnalyzing: isAnalyzing,
-				error: bpmError,
+			// Donnéesen temps réel
+			getData: () => ({
 				waveformSamples: waveformSamples
 			}),
-			
-			// Analyser l'audio SoundCloud
-			analyzeAudio: (audioElement?: HTMLAudioElement) => {
-				console.log('🎵 Démarrage de l\'analyse audio...');
-				if (analyzeSoundCloudAudio && audioElement) {
-					analyzeSoundCloudAudio(audioElement);
-				} else {
-					console.warn('⚠️ Élément audio requis pour l\'analyse');
-				}
-			},
-			
-			enableDmx: () => {
-				console.log('🎛️ Activation du système DMX...');
-				connectDMX();
-			},
-			
-			disableDmx: () => {
-				console.log('🎛️ Désactivation du système DMX...');
-				disconnectDMX();
-			},
 			
 			// Contrôle des couleurs dynamiques
 			getColorTheme: () => dynamicColorTheme,
@@ -1830,7 +1561,6 @@ useEffect(() => {
 						detail: {
 							theme: theme,
 							beatCount: index + 1,
-							bpm: 120,
 							timestamp: Date.now(),
 							test: true,
 							method: 'immediate-test'
@@ -1843,28 +1573,6 @@ useEffect(() => {
 						console.log('🎨 Test immédiat terminé');
 					}
 				}, 1000);
-			},
-			
-			// Test de l'analyse audio Meyda
-			testAudioAnalysis: () => {
-				console.log('🎵 Test de l\'analyse audio Meyda...');
-				console.log('🎵 État audioElementRef:', !!audioElementRef.current);
-				console.log('🎵 État analyzeSoundCloudAudio:', typeof analyzeSoundCloudAudio);
-				console.log('🎵 État audioFeatures:', !!audioFeatures);
-				console.log('🎵 État BPM:', bpm);
-				
-				if (audioElementRef.current) {
-					console.log('🎵 Démarrage de l\'audio de test...');
-					audioElementRef.current.play().catch(error => {
-						console.log('🎵 Erreur lecture audio:', error);
-					});
-				} else {
-					console.log('🎵 Aucun élément audio trouvé');
-				}
-				
-				// Test de la détection de beats
-				console.log('🎵 Test de détection de beats...');
-				detectBeatAndChangeColors();
 			},
 			
 			getColorTransitionStatus: () => ({
@@ -1880,14 +1588,11 @@ useEffect(() => {
 			onHealthChange: (callback: (health: string) => void) => {
 				window.addEventListener('soundcloud-health-changed', (e: any) => callback(e.detail));
 			},
-			onDmxDataChange: (callback: (data: any) => void) => {
-				window.addEventListener('soundcloud-dmx-data', (e: any) => callback(e.detail));
-			},
 			onColorChange: (callback: (data: any) => void) => {
 				window.addEventListener('soundcloud-color-change', (e: any) => callback(e.detail));
 			}
 		};
-	}, [isPlaying, isMuted, isWidgetHealthy, widgetHealth, trackTitle, artistName, artworkUrl, permalinkUrl, durationMs, progress, handlePlayPause, forceRandomSelection, waveformSamples, waveformImageUrl, barCount, consecutiveFailures, retryCount, lastSuccessfulOperation, isRecovering, recoveryAttempts, lastReinitialization, dmxEnabled, dmxConnection, dmxUniverse, dmxFixtures, audioMapping, bpm, audioFeatures, isAnalyzing, bpmError, analyzeSoundCloudAudio, dynamicColorTheme, colorTransitionActive, beatCount, lastBeatTime]);
+	}, [isPlaying, isMuted, isWidgetHealthy, widgetHealth, trackTitle, artistName, artworkUrl, permalinkUrl, durationMs, progress, handlePlayPause, forceRandomSelection, waveformSamples, waveformImageUrl, barCount, consecutiveFailures, retryCount, lastSuccessfulOperation, isRecovering, recoveryAttempts, lastReinitialization, dynamicColorTheme, colorTransitionActive, beatCount, lastBeatTime]);
 
 	// Exposer l'API après sa définition
 	useEffect(() => {
@@ -2155,15 +1860,7 @@ return (
 					/>
 				)}
 				
-				{/* BPM Visualizer */}
-				{isMounted && createPortal(
-					<BPMVisualizer 
-						bpm={bpm}
-						audioFeatures={audioFeatures}
-						isAnalyzing={isAnalyzing}
-					/>,
-					document.body
-				)}
+		
 				
 				{/* Waveform toujours visible */}
 				{isMounted && createPortal(
@@ -2238,12 +1935,7 @@ return (
 
 	return (
 		<>
-			{/* BPM Visualizer (désactivé temporairement) */}
-			{/* <BPMVisualizer 
-				bpm={bpm} 
-				audioFeatures={audioFeatures} 
-				isAnalyzing={isAnalyzing}
-			/> */}
+			
 			
 			{/* Widget SoundCloud toujours actif */}
 			{soundcloudUrl && (
@@ -2272,8 +1964,7 @@ return (
 			{/* Élément audio HTML5 caché pour l'analyse Meyda en continu */}
 			<audio 
 				id="live-analyzer-audio"
-				ref={audioElementRef}
-				crossOrigin="anonymous"
+								crossOrigin="anonymous"
 				preload="auto"
 				style={{ display: "none" }}
 			/>
