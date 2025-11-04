@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
+
 /// <reference path="../types/soundcloud.d.ts" />
 export default function SoundCloudPlayer() {
 	const pathname = usePathname();
@@ -80,9 +81,9 @@ export default function SoundCloudPlayer() {
 		});
 		return result;
 	}, [isHome, isAgenda, isStory, isShop, isFamily, isPresse, dynamicColorTheme, pathname]);
-		const waveformColor = colors.waveformColor;
+	const waveformColor = colors.waveformColor;
 	const waveformColorFaded = colors.waveformColorFaded;
-	const playerColor = colors.playerColor;
+		const playerColor = colors.playerColor;
 	const playerBgColor = colors.playerBgColor;
 	
 	const [isPlaying, setIsPlaying] = useState(false);

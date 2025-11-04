@@ -12,7 +12,7 @@ export async function fetchAllTracks(userId: string): Promise<SoundCloudTrack[]>
     while (nextHref) {
       console.log(`📥 Récupération des tracks depuis: ${nextHref}`);
       
-      const response = await fetch(nextHref, {
+      const response: Response = await fetch(nextHref, {
         headers: {
           'Accept': 'application/json',
           // Ajouter client_id si nécessaire
