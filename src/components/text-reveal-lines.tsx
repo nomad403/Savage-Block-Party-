@@ -111,7 +111,7 @@ export default function TextRevealLines({ text, color = "#22D3EE", className = "
 						requestAnimationFrame(() => setActive(true));
 					}, totalDelay * 1000);
 				} else {
-					requestAnimationFrame(() => setActive(true));
+			requestAnimationFrame(() => setActive(true));
 				}
 			}
 		};

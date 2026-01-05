@@ -173,7 +173,13 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 				}
 			}
 
-			console.error(`❌ Échec définitif pour ${operationName} après ${maxAttempts} tentatives`);
+			// Pour les opérations de polling, utiliser un niveau de log moins sévère
+			if (operationName.includes('polling')) {
+				// Le polling peut échouer de manière non critique si le widget n'est pas prêt
+				console.warn(`⚠️ Polling ${operationName} échoué après ${maxAttempts} tentative(s) - ce n'est pas critique`);
+			} else {
+				console.error(`❌ Échec définitif pour ${operationName} après ${maxAttempts} tentatives`);
+			}
 			setRetryCount(prev => prev + 1);
 			setWidgetHealth(retryCount >= maxRetries ? 'failed' : 'degraded');
 			resolve(null);
@@ -1093,25 +1099,38 @@ useEffect(() => {
 			}
 			
 			// Vérifier périodiquement les infos du track avec retry
+			// Vérifier d'abord que le widget est vraiment disponible
+			if (!widgetRef.current || typeof widgetRef.current.getCurrentSound !== 'function') {
+				return; // Sortir silencieusement si le widget n'est pas prêt
+			}
+
 			const trackInfo = await executeWithRetry(() => {
 				return new Promise<{
 					title: string;
 					artist: string;
 					artwork: string;
 					waveform?: string;
-				} | null>((resolve) => {
-					widgetRef.current.getCurrentSound((sound: any) => {
-						if (sound && sound.title) {
-							resolve({
-								title: sound.title,
-								artist: sound.user?.username || "Latest tracks",
-								artwork: (sound.artwork_url || sound.user?.avatar_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"),
-								waveform: sound.waveform_url || sound.visual_waveform_url
-							});
-						} else {
-							resolve(null);
+				} | null>((resolve, reject) => {
+					try {
+						if (!widgetRef.current || typeof widgetRef.current.getCurrentSound !== 'function') {
+							reject(new Error('Widget non disponible'));
+							return;
 						}
-					});
+						widgetRef.current.getCurrentSound((sound: any) => {
+							if (sound && sound.title) {
+								resolve({
+									title: sound.title,
+									artist: sound.user?.username || "Latest tracks",
+									artwork: (sound.artwork_url || sound.user?.avatar_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"),
+									waveform: sound.waveform_url || sound.visual_waveform_url
+								});
+							} else {
+								resolve(null);
+							}
+						});
+					} catch (error) {
+						reject(error);
+					}
 				});
 			}, 'polling-track-info', 1);
 

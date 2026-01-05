@@ -748,6 +748,13 @@ body:has(#shop-root) header nav a * {
 	color: #FF1744 !important;
 }
 
+/* Page shop - bouton menu actif en noir */
+body:has(#shop-root) header nav a[style*="color: rgb(0, 0, 0)"],
+body:has(#shop-root) header nav a[style*="color:#000000"],
+body:has(#shop-root) header nav a[style*="color: #000000"] {
+	color: #000000 !important;
+}
+
 /* Page shop - boutons menu en noir au hover (logique globale) */
 body:has(#shop-root) header.text-black nav a,
 body:has(#shop-root) header.text-black nav a * {

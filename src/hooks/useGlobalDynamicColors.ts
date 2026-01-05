@@ -48,6 +48,7 @@ export function useGlobalDynamicColors() {
   
   const [currentTheme, setCurrentTheme] = useState<ColorTheme>('red');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isShopItemSelected, setIsShopItemSelected] = useState(false);
 
   useEffect(() => {
     if (!isHome) {
@@ -126,17 +127,31 @@ export function useGlobalDynamicColors() {
     };
   }, [isHome, currentTheme]);
 
+  // Écouter l'événement de sélection d'un item dans le shop
+  useEffect(() => {
+    const handleShopItemSelected = (event: CustomEvent) => {
+      setIsShopItemSelected(event.detail.isSelected);
+    };
+
+    window.addEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+
+    return () => {
+      window.removeEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+    };
+  }, []);
+
   // Fonction pour obtenir les couleurs globales
   const getGlobalColors = (): GlobalColors => {
-    // LOGIQUE GLOBALE : Si un menu est survolé, tous les éléments permanents deviennent noirs
-    const logoColor = isMenuHovered ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
-    const menuColor = isMenuHovered ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
-    const playerBgColorValue = isMenuHovered ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
+    // LOGIQUE GLOBALE : Si un menu est survolé OU un item shop est sélectionné, tous les éléments permanents deviennent noirs
+    const shouldBeBlack = isMenuHovered || isShopItemSelected;
+    const logoColor = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
+    const menuColor = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
+    const playerBgColorValue = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
     
     // Pour waveform, retourner les valeurs hex pour styles inline
     let waveformColorHex: string;
     let waveformColorFadedHex: string;
-    if (isMenuHovered) {
+    if (shouldBeBlack) {
       waveformColorHex = "#000000";
       waveformColorFadedHex = "rgba(0, 0, 0, 0.3)";
     } else if (isHome) {
@@ -177,7 +192,7 @@ export function useGlobalDynamicColors() {
         scrollbarColor: "#000000", // Toujours noir pour les éléments permanents
         scrollbarHover: "#333333",
         
-        playerColor: isMenuHovered ? "text-white" : (isAgenda ? "text-white" : "text-black"),
+        playerColor: shouldBeBlack ? "text-white" : (isAgenda ? "text-white" : "text-black"),
         playerBgColor: playerBgColorValue,
         waveformColor: waveformColorHex,
         waveformColorFaded: waveformColorFadedHex,
@@ -205,7 +220,7 @@ export function useGlobalDynamicColors() {
       scrollbarColor: "#000000", // Toujours noir pour les éléments permanents
       scrollbarHover: "#333333",
       
-      playerColor: isMenuHovered ? "text-white" : "text-black",
+      playerColor: shouldBeBlack ? "text-white" : "text-black",
       playerBgColor: playerBgColorValue,
       waveformColor: waveformColorHex,
       waveformColorFaded: waveformColorFadedHex,
@@ -217,7 +232,7 @@ export function useGlobalDynamicColors() {
 
   // Mémoriser les couleurs pour éviter les re-renders inutiles
   // Inclure toutes les dépendances nécessaires pour que les couleurs se mettent à jour
-  const colors = useMemo(() => getGlobalColors(), [isHome, isAgenda, isFamily, isShop, isPresse, currentTheme, pagePrimaryColor, isMenuHovered]);
+  const colors = useMemo(() => getGlobalColors(), [isHome, isAgenda, isFamily, isShop, isPresse, currentTheme, pagePrimaryColor, isMenuHovered, isShopItemSelected]);
 
   return {
     colors,

@@ -167,10 +167,10 @@ export default function Header() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`font-title uppercase text-xs lg:text-sm tracking-wide transition-colors duration-200 ${
-                                            isActive ? 'opacity-100' : 'opacity-70 hover:opacity-100'
-                                        }`}
-                                        style={{ color: menuTextColor }}
+                                        className={`font-title uppercase text-xs lg:text-sm tracking-wide transition-colors duration-200 opacity-100 ${isActive ? 'menu-item-active' : ''}`}
+                                        style={{ 
+                                            color: isActive ? '#000000' : menuTextColor 
+                                        }}
                                         onMouseEnter={() => setHoveredMenuItem(item.href)}
                                         onMouseLeave={() => setHoveredMenuItem(null)}
                                     >
