@@ -4,7 +4,7 @@
  */
 
 import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
-import { ShaderMaterial } from 'three';
+import { ShaderMaterial, WebGLRenderer, WebGLRenderTarget } from 'three';
 
 // Import des shaders GLSL
 // @ts-ignore - Next.js webpack loader
@@ -98,9 +98,9 @@ export class InfraredPass extends Pass {
     }
 
     render(
-        renderer: THREE.WebGLRenderer,
-        writeBuffer: THREE.WebGLRenderTarget,
-        readBuffer: THREE.WebGLRenderTarget
+        renderer: WebGLRenderer,
+        writeBuffer: WebGLRenderTarget,
+        readBuffer: WebGLRenderTarget
     ): void {
         this.material.uniforms.tDiffuse.value = readBuffer.texture;
         if (this.renderToScreen) {
