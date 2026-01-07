@@ -54,6 +54,26 @@ export default function PressePage() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const { isMenuOpen } = useMenu();
 
+  // Nettoyer les éléments injectés par les extensions de navigateur (ex: NordPass)
+  useEffect(() => {
+    const cleanupExtensionElements = () => {
+      // Supprimer les éléments nordpass-icon injectés dans les champs de formulaire
+      const nordpassIcons = document.querySelectorAll('nordpass-icon');
+      nordpassIcons.forEach(icon => {
+        const parent = icon.parentElement;
+        if (parent && parent.classList.contains('reveal-focus')) {
+          icon.remove();
+        }
+      });
+    };
+
+    // Nettoyer immédiatement et après un court délai pour gérer les injections tardives
+    cleanupExtensionElements();
+    const timeoutId = setTimeout(cleanupExtensionElements, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -81,31 +101,39 @@ export default function PressePage() {
   };
 
   return (
-    <main id="presse-root" className="w-full -mt-32 relative">
+    <main id="presse-root" className="w-full relative">
       {/* Fond gris comme sur la page shop */}
       <div className="fixed inset-0 w-full h-full z-0 bg-[#e5e5e5]" />
 
       {/* Formulaire avec fond couleur uni par-dessus */}
-      <section className={`relative z-10 pt-56 pb-64 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
-        <div className="container-px w-full max-w-6xl mx-auto">
+      <section className={`relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7", paddingTop: '96px', minHeight: '100vh' } as React.CSSProperties}>
+        <div className="w-full max-w-6xl mx-auto" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', paddingRight: 'clamp(16px, 4vw, 24px)' }}>
             <div className="w-full lg:w-[40%] lg:mx-auto">
-              <div className="space-y-0 text-left w-full mb-4">
+              <div className="space-y-0 text-left mb-4" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
                 <TextRevealLines 
-                  text={"Soutenez la culture indépendante : musique, danse, graffiti et médias urbains. Co-créons des formats exigeants, roots et inclusifs, ancrés dans le réel. Rejoignez un réseau d'artistes, lieux et labels pour faire rayonner l'underground."}
+                  lines={[
+                    "Soutenez la culture indépendante : musique, danse, graffiti",
+                    "et médias urbains. Co-créons des formats exigeants, roots",
+                    "et inclusifs, ancrés dans le réel.",
+                    "Rejoignez un réseau d'artistes, lieux et labels",
+                    "pour faire rayonner l'underground."
+                  ]}
                   color="#A855F7"
                   delayStep={0.12}
-                  className="font-text font-semibold text-sm md:text-base leading-[1.18] text-black max-w-[48ch] md:max-w-[54ch] tracking-tight"
+                  horizontalPadding={8}
+                  density="normal"
+                  className="font-text font-semibold text-sm md:text-base leading-[1.18] text-black tracking-tight"
                 />
               </div>
             {/* Formulaire à droite */}
             <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-3 items-stretch w-full mt-4" suppressHydrationWarning>
                 {/* Nom de l'organisme */}
-                <div>
-                  <label htmlFor="organisme" className="block font-text font-bold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Nom de l'organisme"} color={focusedField === "organisme" ? "#000000" : "#A855F7"} className={`font-text font-bold text-sm md:text-base transition-colors ${focusedField === "organisme" ? "text-white !important" : "text-[#A855F7]"}`} delayStep={0.06} horizontalPadding={8} />
+                <div suppressHydrationWarning>
+                  <label htmlFor="organisme" className="block font-text font-extrabold leading-none mb-0 relative z-[2]">
+                    <TextRevealLines text={"Nom de l'organisme"} color={focusedField === "organisme" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "organisme" ? "text-white !important" : "text-[#A855F7]"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
-                    <div className="absolute inset-0 bg-[#A855F7] -z-10" />
+                    <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
                     <input
                       type="text"
                       id="organisme"
@@ -115,19 +143,19 @@ export default function PressePage() {
                       onFocus={() => setFocusedField("organisme")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="Nom officiel"
-                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "organisme" ? "placeholder:opacity-0 caret-white" : "placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
+                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "organisme" ? "text-white placeholder:opacity-0 caret-white" : "text-black placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
                       suppressHydrationWarning
                     />
                   </div>
                 </div>
 
                 {/* Email de contact */}
-                <div>
-                  <label htmlFor="email" className="block font-text font-bold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Email de contact"} color={focusedField === "email" ? "#000000" : "#A855F7"} className={`font-text font-bold text-sm md:text-base transition-colors ${focusedField === "email" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                <div suppressHydrationWarning>
+                  <label htmlFor="email" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
+                    <TextRevealLines text={"Email de contact"} color={focusedField === "email" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "email" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
-                    <div className="absolute inset-0 bg-[#A855F7] -z-10" />
+                    <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
                     <input
                       type="email"
                       id="email"
@@ -137,19 +165,19 @@ export default function PressePage() {
                       onFocus={() => setFocusedField("email")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="contact@organisme.com"
-                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "email" ? "placeholder:opacity-0 caret-white" : "placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
+                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "email" ? "text-white placeholder:opacity-0 caret-white" : "text-black placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
                       suppressHydrationWarning
                     />
                   </div>
                 </div>
 
                 {/* Téléphone */}
-                <div>
-                  <label htmlFor="phone" className="block font-text font-bold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Téléphone"} color={focusedField === "phone" ? "#000000" : "#A855F7"} className={`font-text font-bold text-sm md:text-base transition-colors ${focusedField === "phone" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                <div suppressHydrationWarning>
+                  <label htmlFor="phone" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
+                    <TextRevealLines text={"Téléphone"} color={focusedField === "phone" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "phone" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
-                    <div className="absolute inset-0 bg-[#A855F7] -z-10" />
+                    <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
                     <input
                       type="tel"
                       id="phone"
@@ -159,19 +187,19 @@ export default function PressePage() {
                       onFocus={() => setFocusedField("phone")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="+33 6 12 34 56 78"
-                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "phone" ? "placeholder:opacity-0 caret-white" : "placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
+                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "phone" ? "text-white placeholder:opacity-0 caret-white" : "text-black placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
                       suppressHydrationWarning
                     />
                   </div>
                 </div>
 
                 {/* Site / Réseaux */}
-                <div>
-                  <label htmlFor="website" className="block font-text font-bold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Site / Réseaux"} color={focusedField === "website" ? "#000000" : "#A855F7"} className={`font-text font-bold text-sm md:text-base transition-colors ${focusedField === "website" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                <div suppressHydrationWarning>
+                  <label htmlFor="website" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
+                    <TextRevealLines text={"Site / Réseaux"} color={focusedField === "website" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "website" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
-                    <div className="absolute inset-0 bg-[#A855F7] -z-10" />
+                    <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
                     <input
                       type="text"
                       id="website"
@@ -181,19 +209,19 @@ export default function PressePage() {
                       onFocus={() => setFocusedField("website")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="site ou @compte"
-                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "website" ? "placeholder:opacity-0 caret-white" : "placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
+                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "website" ? "text-white placeholder:opacity-0 caret-white" : "text-black placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
                       suppressHydrationWarning
                     />
                   </div>
                 </div>
 
                 {/* Objet */}
-                <div>
-                  <label htmlFor="subject" className="block font-text font-bold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Objet"} color={focusedField === "subject" ? "#000000" : "#A855F7"} className={`font-text font-bold text-sm md:text-base transition-colors ${focusedField === "subject" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                <div suppressHydrationWarning>
+                  <label htmlFor="subject" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
+                    <TextRevealLines text={"Objet"} color={focusedField === "subject" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "subject" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
-                    <div className="absolute inset-0 bg-[#A855F7] -z-10" />
+                    <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
                     <input
                       type="text"
                       id="subject"
@@ -203,19 +231,19 @@ export default function PressePage() {
                       onFocus={() => setFocusedField("subject")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="Sujet de la collaboration"
-                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "subject" ? "placeholder:opacity-0 caret-white" : "placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
+                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none placeholder:font-semibold placeholder-title font-title transition-colors text-sm ${focusedField === "subject" ? "text-white placeholder:opacity-0 caret-white" : "text-black placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
                       suppressHydrationWarning
                     />
                   </div>
                 </div>
 
                 {/* Message */}
-                <div>
-                  <label htmlFor="message" className="block font-text font-bold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Votre message"} color={focusedField === "message" ? "#000000" : "#A855F7"} className={`font-text font-bold text-sm md:text-base transition-colors ${focusedField === "message" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                <div suppressHydrationWarning>
+                  <label htmlFor="message" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
+                    <TextRevealLines text={"Votre message"} color={focusedField === "message" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "message" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
-                    <div className="absolute inset-0 bg-[#A855F7] -z-10" />
+                    <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
                     <textarea
                       id="message"
                       name="message"
@@ -225,7 +253,7 @@ export default function PressePage() {
                       onFocus={() => setFocusedField("message")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="Décrivez votre projet"
-                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none text-[var(--presse-accent)] focus:text-black placeholder:font-semibold placeholder-title font-title transition-colors resize-none text-sm ${focusedField === "message" ? "placeholder:opacity-0 caret-white" : "placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
+                      className={`relative z-10 w-full px-2 py-1.5 bg-transparent border-0 focus:outline-none placeholder:font-semibold placeholder-title font-title transition-colors resize-none text-sm ${focusedField === "message" ? "text-white placeholder:opacity-0 caret-white" : "text-black placeholder:opacity-100 placeholder:text-black caret-[var(--presse-accent)]"}`}
                       suppressHydrationWarning
                     />
                   </div>
@@ -233,13 +261,14 @@ export default function PressePage() {
                 
 
               {/* Submit button */}
-              <div>
+              <div className="w-full relative">
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   onFocus={() => setFocusedField("submit")}
                   onBlur={() => setFocusedField(null)}
                   className={`w-full px-3 py-2 bg-black font-title uppercase tracking-wider hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black text-sm ${focusedField === "submit" ? "text-[#A855F7]" : "text-white"}`}
+                  style={{ marginLeft: '-8px', marginRight: '-8px', width: 'calc(100% + 16px)' }}
                 >
                   {isSubmitting ? "Envoi en cours..." : "Envoyer"}
                 </button>

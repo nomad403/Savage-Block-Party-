@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenu } from "@/hooks/useMenu";
 import TextRevealLines from "@/components/text-reveal-lines";
+
+// Padding horizontal du bouton dropdown (doit correspondre au px-6 = 24px)
+const DROPDOWN_PADDING_X = 2;
 
 interface FamilyDropdownsProps {
   onItemSelect: (item: string) => void;
@@ -13,6 +16,7 @@ interface FamilyDropdownsProps {
 export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDropdownsProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { isMenuOpen } = useMenu();
+  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   
   // Sur la page family, les dropdowns ont toujours un z-index plus élevé que la waveform
   // La waveform a un z-index max de 10002, donc on met 10003 pour les dropdowns
@@ -27,6 +31,30 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
     onItemSelect(item);
     setActiveDropdown(null); // Fermer le dropdown après sélection
   };
+
+  // Fermer le dropdown quand il perd le focus ou quand on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeDropdown) {
+        const dropdownElement = dropdownRefs.current[activeDropdown];
+        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+          setActiveDropdown(null);
+        }
+      }
+    };
+
+    if (activeDropdown) {
+      // Petit délai pour éviter de fermer immédiatement après l'ouverture
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 10);
+
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [activeDropdown]);
 
   const djs = [
     "Niel",
@@ -67,10 +95,24 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       style={{ zIndex: finalZIndex }}
     >
       {/* Dropdown DJs */}
-      <div className="w-full md:w-1/3 relative">
+      <div 
+        className="w-full md:w-1/3 relative"
+        ref={(el) => { dropdownRefs.current['djs'] = el; }}
+        onBlur={(e) => {
+          // Ne fermer que si le focus va vraiment en dehors (pas vers un enfant)
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setTimeout(() => {
+              if (activeDropdown === 'djs' && !e.currentTarget.contains(document.activeElement)) {
+                setActiveDropdown(null);
+              }
+            }, 100);
+          }
+        }}
+      >
         <button
           onClick={() => toggleDropdown('djs')}
-          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
           DJs
         </button>
@@ -93,7 +135,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                     style={{ 
                       margin: 0,
                       padding: 0,
-                      overflow: 'hidden',
+                      overflow: 'visible',
                       flexShrink: 0,
                       width: '100%'
                     }}
@@ -101,10 +143,12 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                     <TextRevealLines
                       text={dj}
                       color="#22C55E"
-                      className="font-text font-semibold tracking-tight leading-none text-4xl text-black whitespace-nowrap"
+                      className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
                       delayStep={0.1}
-                      noPadding={true}
-                      horizontalPadding={24}
+                      density="tight"
+                      horizontalPadding={12}
+                      startInset={DROPDOWN_PADDING_X - 12}
+                      endInset={1}
                       itemIndex={index}
                       itemDelay={0.05}
                     />
@@ -117,10 +161,23 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Danseurs */}
-      <div className="w-full md:w-1/3 relative">
+      <div 
+        className="w-full md:w-1/3 relative"
+        ref={(el) => { dropdownRefs.current['danseurs'] = el; }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setTimeout(() => {
+              if (activeDropdown === 'danseurs' && !e.currentTarget.contains(document.activeElement)) {
+                setActiveDropdown(null);
+              }
+            }, 100);
+          }
+        }}
+      >
         <button
           onClick={() => toggleDropdown('danseurs')}
-          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
           Danseurs
         </button>
@@ -143,7 +200,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                     style={{ 
                       margin: 0,
                       padding: 0,
-                      overflow: 'hidden',
+                      overflow: 'visible',
                       flexShrink: 0,
                       width: '100%'
                     }}
@@ -151,10 +208,12 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                     <TextRevealLines
                       text={danseur}
                       color="#22C55E"
-                      className="font-text font-semibold tracking-tight leading-none text-4xl text-black whitespace-nowrap"
+                      className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
                       delayStep={0.1}
-                      noPadding={true}
-                      horizontalPadding={24}
+                      density="tight"
+                      horizontalPadding={12}
+                      startInset={DROPDOWN_PADDING_X - 12}
+                      endInset={1}
                       itemIndex={index}
                       itemDelay={0.05}
                     />
@@ -167,10 +226,23 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       </div>
       
       {/* Dropdown Collab */}
-      <div className="w-full md:w-1/3 relative">
+      <div 
+        className="w-full md:w-1/3 relative"
+        ref={(el) => { dropdownRefs.current['collab'] = el; }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setTimeout(() => {
+              if (activeDropdown === 'collab' && !e.currentTarget.contains(document.activeElement)) {
+                setActiveDropdown(null);
+              }
+            }, 100);
+          }
+        }}
+      >
         <button
           onClick={() => toggleDropdown('collab')}
-          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 px-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
           Collab
         </button>
@@ -193,7 +265,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                     style={{ 
                       margin: 0,
                       padding: 0,
-                      overflow: 'hidden',
+                      overflow: 'visible',
                       flexShrink: 0,
                       width: '100%'
                     }}
@@ -201,10 +273,12 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
                     <TextRevealLines
                       text={collab}
                       color="#22C55E"
-                      className="font-text font-semibold tracking-tight leading-none text-4xl text-black whitespace-nowrap"
+                      className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
                       delayStep={0.1}
-                      noPadding={true}
-                      horizontalPadding={24}
+                      density="tight"
+                      horizontalPadding={12}
+                      startInset={DROPDOWN_PADDING_X - 12}
+                      endInset={1}
                       itemIndex={index}
                       itemDelay={0.05}
                     />

@@ -131,7 +131,7 @@ export default function Header() {
             </AnimatePresence>
 
             <motion.header 
-                className={`h-20 md:h-24 w-full z-[60] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
+                className={`h-20 md:h-24 w-full z-[10005] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
                 initial={{ y: 0 }}
                 animate={{ y: isVisible ? 0 : -96 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}

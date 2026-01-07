@@ -151,7 +151,7 @@ html.no-scroll {
 .font-text { 
 	font-family: var(--font-text);
 	font-feature-settings: "kern" 1;
-	text-rendering: geometricPrecision;
+	text-rendering: optimizeLegibility;
 }
 
 /* Justification améliorée sans césures */
@@ -231,6 +231,7 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	transition: transform 0.35s ease;
 	pointer-events: none;
 	will-change: transform;
+	z-index: 0; /* Au-dessus du contenu mais en dessous du texte */
 }
 .menu-link:hover::before,
 .menu-link:focus-visible::before,
@@ -342,6 +343,7 @@ body:has(#presse-root) .player-compact-agenda::before {
 /* Page presse - reveal line en violet */
 body:has(#presse-root) .text-reveal-line::before {
 	background: #A855F7 !important;
+	left: -8px; 
 }
 
 .text-reveal-line::before {
@@ -487,8 +489,8 @@ body:has(#family-root) {
 /* Variante violette sur la page presse */
 body:has(#presse-root) .reveal-focus::before {
     background: #000000;
-    left: -2px; /* compense la bordure 2px côté gauche */
-    right: -2px; /* compense la bordure 2px côté droit */
+    left: -8px; /* aligné avec le fond du label (horizontalPadding={8}) */
+    right: -8px; /* symétrie à droite pour garder l'alignement */
 }
 
 /* Variante cyan sur la page agenda */
@@ -498,9 +500,10 @@ body:has(#agenda-root) .reveal-focus::before {
     right: -2px; /* compense la bordure 2px côté droit */
 }
 
-/* Utilitaire: placeholder en Hanson (font-title) */
+/* Utilitaire: placeholder en Cy bold (font-text) */
 .placeholder-title::placeholder {
-    font-family: var(--font-title);
+    font-family: var(--font-text);
+    font-weight: bold;
 }
 
 /* Masquer la scrollbar WebKit (Chrome/Safari/Edge) sur html et body */
@@ -636,6 +639,26 @@ body:has(#presse-root) .custom-scrollbar-thumb {
 
 body:has(#presse-root) .custom-scrollbar-thumb:hover {
 	background: #333333 !important; /* Gris foncé au hover */
+}
+
+/* Page presse - player en blanc au hover du menu (logique globale) */
+body:has(#presse-root) header.text-black .header-player,
+body:has(#presse-root) header.text-black .header-player *,
+body:has(#presse-root) header.text-black .header-player button,
+body:has(#presse-root) header.text-black .header-player button *,
+body:has(#presse-root) header.text-black .header-player button svg,
+body:has(#presse-root) header.text-black .header-player span,
+body:has(#presse-root) header.text-black .header-player div {
+	color: #FFFFFF !important;
+}
+
+/* Page presse - désactiver le scroll */
+body:has(#presse-root) {
+	overflow: hidden !important;
+}
+
+html:has(#presse-root) {
+	overflow: hidden !important;
 }
 
 /* Page shop - Supprimer la scrollbar de la colonne de produits */
@@ -885,7 +908,7 @@ iframe[src*="youtube.com"]::after {
 	backface-visibility: hidden;
 }
 
-/* Application automatique aux médias */
+/* Application automatique aux médias UNIQUEMENT - l'effet thermal reste pour les médias */
 img.filter-infrared,
 video.filter-infrared,
 iframe.filter-infrared,
@@ -899,32 +922,31 @@ iframe.filter-infrared,
 		hue-rotate(-45deg) 
 		saturate(60%) 
 		contrast(150%);
+	/* Force l'accélération GPU pour meilleures performances */
+	will-change: filter;
+	transform: translateZ(0);
+	backface-visibility: hidden;
 }
 
-/* Amélioration de la lisibilité du texte sur l'effet thermique */
-/* Texte rouge avec ombre pour contraste sur fond thermique */
+/* Suppression de l'effet thermal sur le texte - le texte est maintenant normal */
+/* L'effet thermal est conservé uniquement pour les médias via .filter-infrared */
 .text-on-thermal,
 .text-on-thermal * {
-	color: #FF6A00 !important; /* Orange vif harmonieux avec l'effet infrarouge */
-	text-shadow: 
-		0 0 10px rgba(0, 0, 0, 0.9),
-		0 0 20px rgba(0, 0, 0, 0.8),
-		0 2px 4px rgba(0, 0, 0, 0.95),
-		0 4px 8px rgba(0, 0, 0, 0.9),
-		0 0 5px rgba(255, 106, 0, 0.5); /* Lueur orange légère */
-	/* Force le texte à être au-dessus */
+	/* Texte normal sans effet thermal */
+	color: inherit;
+	text-shadow: none;
 	position: relative;
 	z-index: 10;
 }
 
-/* Page family - texte noir pour les listes (surcharge text-on-thermal) */
+/* Page family - texte noir pour les listes */
 body:has(#family-root) .text-on-thermal.text-black,
 body:has(#family-root) .text-on-thermal.text-black * {
 	color: #000000 !important;
 	text-shadow: none !important;
 }
 
-/* Page presse - texte noir pour tous les textes (surcharge text-on-thermal) */
+/* Page presse - texte noir pour tous les textes */
 body:has(#presse-root) .text-on-thermal.text-black,
 body:has(#presse-root) .text-on-thermal.text-black *,
 body:has(#presse-root) .text-black,
@@ -935,33 +957,81 @@ body:has(#presse-root) .text-on-thermal * {
 	text-shadow: none !important;
 }
 
-/* Page presse - texte blanc au focus (surcharge text-on-thermal) */
+/* Page presse - texte blanc au focus */
 body:has(#presse-root) .text-on-thermal.text-white,
 body:has(#presse-root) .text-on-thermal.text-white * {
 	color: #FFFFFF !important;
 	text-shadow: none !important;
 }
 
+/* Stabilisation du rendu pour text reveal lines - correction des problèmes de découpe */
+/* Applique des styles stables pour éviter les problèmes de rendu CSS */
+.text-on-thermal {
+	text-rendering: optimizeLegibility !important;
+	vertical-align: baseline !important;
+	/* S'assurer que le texte n'est pas coupé par overflow */
+	overflow: visible !important;
+}
+
+/* Nouveau système TextRevealLines basé sur ::before (robuste avec transforms, filters, Framer Motion) */
+/* Wrapper pour gérer la verticalité - chaque ligne est sur sa propre ligne */
+.reveal-line-row {
+	display: block;
+	margin: 0;
+	padding: 0;
+	overflow: visible; /* Permettre aux fonds de dépasser */
+}
+
+/* Chaque ligne est shrink-to-fit pour que le fond corresponde à la largeur réelle du texte */
+.reveal-line {
+	position: relative;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	vertical-align: baseline;
+	/* inline-block permet shrink-to-fit tout en permettant le wrapping si nécessaire */
+	white-space: normal; /* Permet le wrapping du texte */
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.reveal-line::before {
+	content: "";
+	position: absolute;
+	top: calc(var(--reveal-height-adjustment, 0px) / 2);
+	bottom: calc(var(--reveal-height-adjustment, 0px) / 2);
+	left: calc(-1 * var(--reveal-padding-left, 0px));
+	width: calc(100% + var(--reveal-padding-left, 0px) + var(--reveal-padding-right, 0px));
+	background: var(--reveal-color, #22D3EE);
+	transform: scaleX(0);
+	transform-origin: left center;
+	transition: transform 700ms ease-out;
+	z-index: -1;
+}
+
+.reveal-line.is-active::before {
+	transform: scaleX(1);
+}
+
+/* S'assurer que les containers de text reveal ne coupent pas les fonds */
+/* Les fonds doivent pouvoir dépasser du container */
+.text-on-thermal,
+[class*="text-reveal"],
+div[style*="overflow"]:has(.text-on-thermal) {
+	overflow: visible !important;
+}
+
+/* S'assurer que les parents ne coupent pas les fonds reveal */
+.text-on-thermal,
+.text-on-thermal * {
+	position: relative;
+	/* Permettre aux fonds de dépasser si nécessaire - désactiver contain */
+	contain: none;
+}
+
 /* Page family - supprimer tout espacement vertical entre les items des dropdowns */
-body:has(#family-root) .flex.flex-col-reverse > div {
-	margin: 0 !important;
-	padding: 0 !important;
-	line-height: 1 !important;
-}
-
-body:has(#family-root) .flex.flex-col-reverse > div > div {
-	margin: 0 !important;
-	padding: 0 !important;
-	line-height: 1 !important;
-}
-
-body:has(#family-root) .flex.flex-col-reverse > div > div > span {
-	margin: 0 !important;
-	padding: 0 !important;
-	padding-bottom: 0 !important;
-	line-height: 1 !important;
-	vertical-align: top !important;
-}
+/* Règles supprimées : le composant TextRevealLines contrôle maintenant le layout via density */
+/* La compacité est gérée par les ratios JS, pas par des overrides CSS globaux */
 
 /* Backdrop blur léger pour créer un effet de "vitre" derrière le texte */
 .text-on-thermal-backdrop {
