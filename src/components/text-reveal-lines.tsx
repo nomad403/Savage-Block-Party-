@@ -39,8 +39,9 @@ export default function TextRevealLines({ text, color = "#22D3EE", className = "
 
 			// Ajustement: arrondis pixel + pont entre lignes pour supprimer tout interligne
 			// +1px sur height pour éliminer les hairline gaps (technique pro)
+			// On soustrait horizontalPadding pour que les fonds commencent au même endroit que le texte du champ de saisie
 			const adjusted = mapped.map((r) => ({
-				left: Math.floor(r.left),
+				left: Math.floor(r.left) - horizontalPadding,
 				top: Math.floor(r.top),
 				width: Math.ceil(r.width),
 				height: Math.ceil(r.height) + 1, // Pont anti-trou
@@ -163,7 +164,7 @@ export default function TextRevealLines({ text, color = "#22D3EE", className = "
 				paddingBottom: 0,
 				height: totalHeight ?? 'auto', // Forcer la hauteur = somme exacte des rects
 				display: 'block', // Important : block au lieu de inline-block
-				textAlign: 'center' // Centrer le texte horizontalement
+				textAlign: 'left' // Aligner le texte à gauche
 			}}
 		>
 			<span 

@@ -486,7 +486,7 @@ body:has(#family-root) {
 
 /* Variante violette sur la page presse */
 body:has(#presse-root) .reveal-focus::before {
-    background: #A855F7; /* Purple-500 */
+    background: #000000;
     left: -2px; /* compense la bordure 2px côté gauche */
     right: -2px; /* compense la bordure 2px côté droit */
 }
@@ -921,6 +921,24 @@ iframe.filter-infrared,
 body:has(#family-root) .text-on-thermal.text-black,
 body:has(#family-root) .text-on-thermal.text-black * {
 	color: #000000 !important;
+	text-shadow: none !important;
+}
+
+/* Page presse - texte noir pour tous les textes (surcharge text-on-thermal) */
+body:has(#presse-root) .text-on-thermal.text-black,
+body:has(#presse-root) .text-on-thermal.text-black *,
+body:has(#presse-root) .text-black,
+body:has(#presse-root) .text-black *,
+body:has(#presse-root) .text-on-thermal,
+body:has(#presse-root) .text-on-thermal * {
+	color: #000000 !important;
+	text-shadow: none !important;
+}
+
+/* Page presse - texte blanc au focus (surcharge text-on-thermal) */
+body:has(#presse-root) .text-on-thermal.text-white,
+body:has(#presse-root) .text-on-thermal.text-white * {
+	color: #FFFFFF !important;
 	text-shadow: none !important;
 }
 
