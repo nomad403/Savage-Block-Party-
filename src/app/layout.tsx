@@ -9,6 +9,7 @@ import BgVideoHome from "@/components/bg-video-home";
 import SoundCloudPlayer from "@/components/soundcloud-player-simple";
 import CustomScrollbar from "@/components/custom-scrollbar";
 import DynamicColorProvider from "@/components/dynamic-color-provider";
+import MenuOverlay from "@/components/menu-overlay";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -49,18 +50,20 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="fr">
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				<DynamicColorProvider />
-				<div className="noise-overlay" aria-hidden />
-				<BgVideoHome />
-					<Header />
-					{children}
-					<SoundCloudPlayer />
-				<CustomScrollbar />
-					<Footer />
-				<Analytics />
-				<SpeedInsights />
-			</body>
+		<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+			<DynamicColorProvider />
+			<div className="noise-overlay" aria-hidden />
+			<BgVideoHome />
+			{/* Overlay global au plus haut niveau pour être au-dessus de tous les stacking contexts */}
+			<MenuOverlay />
+			<Header />
+			{children}
+			<SoundCloudPlayer />
+			<CustomScrollbar />
+			<Footer />
+			<Analytics />
+			<SpeedInsights />
+		</body>
 		</html>
 	);
 }

@@ -174,6 +174,7 @@ export default function FamilyPage() {
         <ScrollHint 
           text="scroll to see our family" 
           color="#22C55E"
+          className="scroll-hint-family"
         />
         
       </section>

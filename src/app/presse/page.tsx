@@ -108,25 +108,11 @@ export default function PressePage() {
       {/* Formulaire avec fond couleur uni par-dessus */}
       <section className={`relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7", paddingTop: '96px', minHeight: '100vh' } as React.CSSProperties}>
         <div className="w-full max-w-6xl mx-auto" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', paddingRight: 'clamp(16px, 4vw, 24px)' }}>
-            <div className="w-full lg:w-[40%] lg:mx-auto">
-              <div className="space-y-0 text-left mb-4" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
-                <TextRevealLines 
-                  lines={[
-                    "Soutenez la culture indépendante : musique, danse, graffiti",
-                    "et médias urbains. Co-créons des formats exigeants, roots",
-                    "et inclusifs, ancrés dans le réel.",
-                    "Rejoignez un réseau d'artistes, lieux et labels",
-                    "pour faire rayonner l'underground."
-                  ]}
-                  color="#A855F7"
-                  delayStep={0.12}
-                  horizontalPadding={8}
-                  density="normal"
-                  className="font-text font-semibold text-sm md:text-base leading-[1.18] text-black tracking-tight"
-                />
-              </div>
-            {/* Formulaire à droite */}
-            <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-3 items-stretch w-full mt-4" suppressHydrationWarning>
+          {/* Container flex : vertical sur mobile, horizontal à partir de md */}
+          <div className="w-full flex flex-col md:flex-row md:items-start md:gap-8 lg:gap-12">
+            {/* Formulaire à gauche (sur mobile il est en bas) */}
+            <div className="w-full md:w-1/2 md:order-1">
+              <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-3 items-stretch w-full" suppressHydrationWarning>
                 {/* Nom de l'organisme */}
                 <div suppressHydrationWarning>
                   <label htmlFor="organisme" className="block font-text font-extrabold leading-none mb-0 relative z-[2]">
@@ -287,6 +273,27 @@ export default function PressePage() {
               )}
             </form>
             </div>
+
+            {/* Description à droite (sur mobile elle est en haut) */}
+            <div className="w-full md:w-1/2 md:order-2 mt-4 md:mt-0">
+              <div className="space-y-0 text-left" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
+                <TextRevealLines 
+                  lines={[
+                    "Soutenez la culture indépendante : musique, danse, graffiti",
+                    "et médias urbains. Co-créons des formats exigeants, roots",
+                    "et inclusifs, ancrés dans le réel.",
+                    "Rejoignez un réseau d'artistes, lieux et labels",
+                    "pour faire rayonner l'underground."
+                  ]}
+                  color="#A855F7"
+                  delayStep={0.12}
+                  horizontalPadding={8}
+                  density="normal"
+                  className="font-text font-semibold text-sm md:text-base leading-[1.18] text-black tracking-tight"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>

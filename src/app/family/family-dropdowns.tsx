@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenu } from "@/hooks/useMenu";
+import { useMenuHover } from "@/hooks/useMenuHover";
 import TextRevealLines from "@/components/text-reveal-lines";
 
 // Padding horizontal du bouton dropdown (doit correspondre au px-6 = 24px)
@@ -16,11 +17,15 @@ interface FamilyDropdownsProps {
 export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDropdownsProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { isMenuOpen } = useMenu();
+  const { isMenuHovered } = useMenuHover();
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   
   // Sur la page family, les dropdowns ont toujours un z-index plus élevé que la waveform
   // La waveform a un z-index max de 10002, donc on met 10003 pour les dropdowns
   // Si un dropdown est ouvert, on augmente encore pour garantir la priorité
+  // MAIS ils doivent être en dessous du header (z-[20000]) et des fonds des boutons menu
+  // Le z-index est maintenant géré par CSS via la classe .family-dropdowns-container
+  // On garde une valeur par défaut pour les autres pages
   const finalZIndex = activeDropdown ? 10004 : 10003;
 
   const toggleDropdown = (dropdown: string) => {
@@ -91,8 +96,8 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
 
   return (
     <div 
-      className="relative w-full flex flex-col md:flex-row"
-      style={{ zIndex: finalZIndex }}
+      className={`relative w-full flex flex-col md:flex-row family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      style={{ zIndex: finalZIndex }} // Gardé pour compatibilité avec autres pages
     >
       {/* Dropdown DJs */}
       <div 

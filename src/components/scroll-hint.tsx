@@ -49,7 +49,9 @@ export default function ScrollHint({
   return (
     <div 
       className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-500 ${className}`}
-      style={{ opacity: isVisible ? 1 : 0 }}
+      style={{ 
+        opacity: isVisible ? 1 : 0
+      } as React.CSSProperties}
     >
       <span 
         className="font-text text-sm uppercase tracking-wider"

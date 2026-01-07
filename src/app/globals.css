@@ -84,8 +84,8 @@
 	--font-text: 'Cy', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 	
 	/* Variables pour couleurs dynamiques */
-	--dynamic-primary: #FF6A00;        /* Orange vif pour la page home */
-	--dynamic-primary-hover: #E55A00;  /* Orange plus foncé au hover */
+	--dynamic-primary: #FF6A00;     
+	--dynamic-primary-hover: #E55A00; 
 	--dynamic-primary-faded: rgba(255,106,0,0.3);
 	--dynamic-menu-color: #FF6A00;
 	--dynamic-menu-hover-bg: #079fce;
@@ -221,6 +221,7 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	color: var(--dynamic-menu-color);
 	overflow: hidden;
 	transition: color 0.35s ease;
+	z-index: 20001; /* Créer un contexte de stacking au-dessus de tout */
 }
 .menu-link::before {
 	content: '';
@@ -231,14 +232,35 @@ iframe[src*="youtube.com"]::-webkit-media-controls {
 	transition: transform 0.35s ease;
 	pointer-events: none;
 	will-change: transform;
-	z-index: 0; /* Au-dessus du contenu mais en dessous du texte */
+	z-index: 20002; /* Au-dessus des dropdowns (10003-10004) et scroll hint (50) */
+}
+
+/* Sur la page family, les fonds des boutons menu doivent être au-dessus des dropdowns et scroll hint */
+body:has(#family-root) header .menu-link::before {
+	z-index: 20010 !important; /* Forcer au-dessus des dropdowns (10003-10004) sur la page family */
+}
+
+/* Les dropdowns doivent être au-dessus de la waveform (max 10002) mais en dessous des fonds des boutons menu (20010) */
+body:has(#family-root) .family-dropdowns-container {
+	z-index: 10003 !important; /* Au-dessus de la waveform (max 10002) mais en dessous des fonds des boutons menu (20010) */
+}
+
+/* S'assurer que les dropdowns ouverts sont aussi au-dessus de la waveform mais en dessous des fonds des boutons menu */
+body:has(#family-root) .family-dropdowns-container[style*="zIndex: 10004"],
+body:has(#family-root) .family-dropdowns-container[style*="z-index: 10004"] {
+	z-index: 10004 !important; /* Dropdown ouvert : au-dessus de la waveform mais toujours en dessous des fonds des boutons menu (20010) */
+}
+
+/* Réduire le z-index du scroll hint sur la page family */
+body:has(#family-root) .scroll-hint-family {
+	z-index: 9998 !important; /* En dessous du header (20000) et des dropdowns (9999) */
 }
 .menu-link:hover::before,
 .menu-link:focus-visible::before,
 .menu-link:active::before {
 	transform: translateX(0);
 }
-.menu-link > span { position: relative; z-index: 1; display: inline-block; }
+.menu-link > span { position: relative; z-index: 20003; display: inline-block; } /* Au-dessus du fond (20002) */
 .menu-link:hover > span,
 .menu-link:focus-visible > span { color: var(--dynamic-menu-hover-text); }
 
@@ -653,13 +675,7 @@ body:has(#presse-root) header.text-black .header-player div {
 }
 
 /* Page presse - désactiver le scroll */
-body:has(#presse-root) {
-	overflow: hidden !important;
-}
-
-html:has(#presse-root) {
-	overflow: hidden !important;
-}
+/* Page presse - scrollable */
 
 /* Page shop - Supprimer la scrollbar de la colonne de produits */
 body:has(#shop-root) .product-column {

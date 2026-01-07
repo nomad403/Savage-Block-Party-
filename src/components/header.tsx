@@ -102,36 +102,15 @@ export default function Header() {
     const logoColor = hoveredMenuItem ? "#000000" : pagePrimaryColor;
     const menuTextColor = hoveredMenuItem ? "#000000" : pagePrimaryColor;
     
-    // Couleur de l'overlay selon l'item survolé (couleur primaire de la page survolée)
-    const getOverlayColor = (href: string | null): string | null => {
-        if (!href) return null;
-        if (href === "/") return "#FF6A00";
-        if (href.startsWith("/agenda")) return "#0080FF";
-        if (href.startsWith("/family")) return "#22C55E";
-        if (href.startsWith("/shop")) return "#FF1744";
-        if (href.startsWith("/presse")) return "#A855F7";
-        return null;
-    };
-    const overlayColor = getOverlayColor(hoveredMenuItem);
+    // La logique de l'overlay est maintenant dans MenuOverlay (layout.tsx)
+    // Le hook useMenuHover gère déjà la couleur via getPagePrimaryColor
 
 	return (
 		<>
-            {/* Overlay au hover du menu */}
-            <AnimatePresence>
-                {hoveredMenuItem && overlayColor && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="fixed inset-0 z-[50] pointer-events-none"
-                        style={{ backgroundColor: overlayColor }}
-                    />
-                )}
-            </AnimatePresence>
+            {/* Overlay déplacé dans layout.tsx (MenuOverlay) pour être au-dessus de tous les stacking contexts */}
 
             <motion.header 
-                className={`h-20 md:h-24 w-full z-[10005] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
+                className={`h-20 md:h-24 w-full z-[20000] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
                 initial={{ y: 0 }}
                 animate={{ y: isVisible ? 0 : -96 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
