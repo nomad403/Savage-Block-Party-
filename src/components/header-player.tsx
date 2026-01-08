@@ -75,25 +75,10 @@ export default function HeaderPlayer() {
     };
 
     return (
-        <div className="flex items-center gap-3">
-            {/* Icône shop - visible sur toutes les pages */}
-            <Link 
-                href="/shop"
-                className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
-                style={{ 
-                    color: isMenuHovered ? '#000000' : pagePrimaryColor,
-                    width: '58px',
-                    height: '58px'
-                }}
-                title="Shop"
-            >
-                <svg width="29" height="29" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-9.5-14H1v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H7.5z"/>
-                </svg>
-            </Link>
-
+        <div className="flex items-center gap-1.5 md:gap-3">
+            {/* Icône shop retirée - maintenant dans le header à côté du burger */}
             <div
-                className="header-player flex items-center gap-3 relative rounded-full px-4 py-2 transition-all duration-200"
+                className="header-player flex items-center gap-1.5 md:gap-3 relative rounded-full px-2 py-1.5 md:px-4 md:py-2 transition-all duration-200"
                 style={{ 
                     backgroundColor: backgroundColor,
                     opacity: 0.9
@@ -102,8 +87,8 @@ export default function HeaderPlayer() {
                 onMouseLeave={() => setIsHovered(false)}
             >
                 {/* Contrôles */}
-                <div className="flex items-center gap-2">
-                {/* Bouton précédent - révélé au hover */}
+                <div className="flex items-center gap-1 md:gap-2">
+                {/* Bouton précédent - révélé au hover sur desktop, toujours visible sur mobile */}
                 <motion.button
                     initial={{ opacity: 0, width: 0 }}
                     animate={{
@@ -112,7 +97,7 @@ export default function HeaderPlayer() {
                     }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     onClick={handlePrevious}
-                    className="h-6 flex items-center justify-center hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0"
+                    className="hidden md:flex h-6 items-center justify-center hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0"
                     style={{ color: textColor, pointerEvents: isHovered ? 'auto' : 'none' }}
                     title="Précédent"
                 >
@@ -120,8 +105,20 @@ export default function HeaderPlayer() {
                         <path d="M6 6h2v12H6V6zm11 6l-7-6v12l7-6z" />
                     </svg>
                 </motion.button>
+                
+                {/* Bouton précédent mobile - toujours visible */}
+                <button
+                    onClick={handlePrevious}
+                    className="md:hidden h-5 w-5 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
+                    style={{ color: textColor }}
+                    title="Précédent"
+                >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 6h2v12H6V6zm11 6l-7-6v12l7-6z" />
+                    </svg>
+                </button>
 
-                {/* Bouton play - change de taille au hover */}
+                {/* Bouton play - change de taille au hover sur desktop, taille fixe sur mobile */}
                 <motion.button
                     animate={{
                         width: isHovered ? 24 : 32,
@@ -129,7 +126,7 @@ export default function HeaderPlayer() {
                     }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     onClick={handlePlayPause}
-                    className="flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0 rounded-full"
+                    className="hidden md:flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0 rounded-full"
                     style={{ 
                         backgroundColor: '#FFFFFF',
                         color: '#000000'
@@ -174,8 +171,28 @@ export default function HeaderPlayer() {
                         />
                     )}
                 </motion.button>
+                
+                {/* Bouton play mobile - taille fixe compacte */}
+                <button
+                    onClick={handlePlayPause}
+                    className="md:hidden w-7 h-7 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0 rounded-full"
+                    style={{ 
+                        backgroundColor: '#FFFFFF',
+                        color: '#000000'
+                    }}
+                    title={isPlaying ? "Pause" : "Play"}
+                >
+                    {isPlaying ? (
+                        <div className="flex items-center gap-1">
+                            <div className="bg-black w-1.5 h-2.5" />
+                            <div className="bg-black w-1.5 h-2.5" />
+                        </div>
+                    ) : (
+                        <div className="w-0 h-0 border-t-transparent border-b-transparent border-l-[6px] border-t-[4px] border-b-[4px] border-l-black ml-0.5" />
+                    )}
+                </button>
 
-                {/* Bouton suivant - révélé au hover */}
+                {/* Bouton suivant - révélé au hover sur desktop, toujours visible sur mobile */}
                 <motion.button
                     initial={{ opacity: 0, width: 0 }}
                     animate={{
@@ -184,7 +201,7 @@ export default function HeaderPlayer() {
                     }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     onClick={handleNext}
-                    className="h-6 flex items-center justify-center hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0"
+                    className="hidden md:flex h-6 items-center justify-center hover:opacity-80 transition-opacity overflow-hidden flex-shrink-0"
                     style={{ color: textColor, pointerEvents: isHovered ? 'auto' : 'none' }}
                     title="Suivant"
                 >
@@ -192,18 +209,30 @@ export default function HeaderPlayer() {
                         <path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
                     </svg>
                 </motion.button>
+                
+                {/* Bouton suivant mobile - toujours visible */}
+                <button
+                    onClick={handleNext}
+                    className="md:hidden h-5 w-5 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
+                    style={{ color: textColor }}
+                    title="Suivant"
+                >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7 6l7 6-7 6V6zm9 0h2v12h-2V6z" />
+                    </svg>
+                </button>
                 </div>
 
-                {/* Infos titre/artiste - toujours visibles */}
-                <div className="flex flex-col min-w-0 max-w-[200px]">
+                {/* Infos titre/artiste - visibles sur mobile maintenant qu'on est en bas */}
+                <div className="flex flex-col min-w-0 max-w-[140px] md:max-w-[200px]">
                     <div 
-                        className="font-title text-xs leading-tight truncate"
+                        className="font-title text-[10px] md:text-xs leading-tight truncate"
                         style={{ color: textColor }}
                     >
                         {trackTitle}
                     </div>
                     <div 
-                        className="font-text text-[10px] mt-0.5 truncate opacity-70"
+                        className="font-text text-[9px] md:text-[10px] mt-0.5 truncate opacity-70"
                         style={{ color: textColor }}
                     >
                         {artistName}

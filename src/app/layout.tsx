@@ -50,20 +50,20 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="fr">
-		<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-			<DynamicColorProvider />
-			<div className="noise-overlay" aria-hidden />
-			<BgVideoHome />
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+				<DynamicColorProvider />
+				<div className="noise-overlay" aria-hidden />
+				<BgVideoHome />
 			{/* Overlay global au plus haut niveau pour être au-dessus de tous les stacking contexts */}
 			<MenuOverlay />
-			<Header />
-			{children}
-			<SoundCloudPlayer />
-			<CustomScrollbar />
-			<Footer />
-			<Analytics />
-			<SpeedInsights />
-		</body>
+					<Header />
+					{children}
+					<SoundCloudPlayer />
+				<CustomScrollbar />
+					<Footer />
+				<Analytics />
+				<SpeedInsights />
+			</body>
 		</html>
 	);
 }

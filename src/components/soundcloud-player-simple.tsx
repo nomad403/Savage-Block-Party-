@@ -1798,7 +1798,7 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 			{isMounted && createPortal(
 					<div
 						ref={waveformRef}
-						className="w-full h-24 select-none cursor-pointer bg-transparent relative"
+						className="w-full h-[72px] select-none cursor-pointer bg-transparent relative"
 						style={{ zIndex: waveformZIndex }}
 						onClick={(e) => {
 						console.log('🎯 Clic sur waveform (compact):', {
@@ -1834,7 +1834,7 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 									const v = waveformSamples![sampleIndex] ?? 0;
 									// Normaliser les valeurs: SoundCloud retourne des valeurs 0-1, mais certaines APIs retournent 0-255
 									const normalizedV = v > 1 ? v / 255 : v;
-									const h = Math.max(1, Math.round(normalizedV * 80));
+									const h = Math.max(1, Math.round(normalizedV * 60)); // Réduit de 80 à 60 pour cohérence avec header minimaliste
 									const played = i / Math.max(1, barCount) <= progress;
 									return (
 										<div key={i} style={{ height: h, width: '2px', backgroundColor: played ? waveformColor : waveformColorFaded }} />
@@ -1849,10 +1849,10 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 								</div>
 							</div>
 						) : (
-						<div className="flex items-end gap-[0.5px] h-full w-full">
+							<div className="flex items-end gap-[0.5px] h-full w-full">
 								{Array.from({ length: barCount }).map((_, i) => {
 									const sin = Math.sin((i / Math.max(1, barCount)) * Math.PI);
-								const h = Math.max(1, Math.round(sin * 80));
+								const h = Math.max(1, Math.round(sin * 60)); // Réduit de 80 à 60 pour cohérence avec header minimaliste
 								return <div key={i} style={{ height: h, width: '1px', backgroundColor: waveformColorFaded }} />;
 								})}
 							</div>

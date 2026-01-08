@@ -293,7 +293,7 @@ export default function PressePage() {
                 />
               </div>
             </div>
-          </div>
+            </div>
         </div>
       </section>
     </main>

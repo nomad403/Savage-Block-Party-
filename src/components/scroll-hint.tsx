@@ -7,18 +7,29 @@ interface ScrollHintProps {
   text?: string;
   color?: string;
   className?: string;
+  hideWhenDropdownsVisible?: boolean; // Si true, masque quand les dropdowns sont visibles
+  dropdownsVisible?: boolean; // État de visibilité des dropdowns (pour la page family)
 }
 
 export default function ScrollHint({ 
   text = "scroll to see our family", 
   color = "#22C55E",
-  className = "" 
+  className = "",
+  hideWhenDropdownsVisible = false,
+  dropdownsVisible = false
 }: ScrollHintProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false);
   const { isMenuOpen } = useMenu();
 
   useEffect(() => {
+    // Si hideWhenDropdownsVisible est activé, la visibilité dépend de dropdownsVisible
+    if (hideWhenDropdownsVisible) {
+      setIsVisible(!dropdownsVisible);
+      return;
+    }
+
+    // Sinon, logique de scroll normale
     const handleScroll = () => {
       const scrollY = window.scrollY || window.pageYOffset;
       const windowHeight = window.innerHeight;
@@ -42,13 +53,13 @@ export default function ScrollHint({
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasScrolled]);
+  }, [hasScrolled, hideWhenDropdownsVisible, dropdownsVisible]);
 
   if (isMenuOpen || !isVisible) return null;
 
   return (
     <div 
-      className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-500 ${className}`}
+      className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-500 ${className}`}
       style={{ 
         opacity: isVisible ? 1 : 0
       } as React.CSSProperties}

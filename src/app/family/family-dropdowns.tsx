@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenu } from "@/hooks/useMenu";
 import { useMenuHover } from "@/hooks/useMenuHover";
+import { useDropdown } from "@/hooks/useDropdown";
 import TextRevealLines from "@/components/text-reveal-lines";
 
-// Padding horizontal du bouton dropdown (doit correspondre au px-6 = 24px)
-const DROPDOWN_PADDING_X = 2;
+// Padding horizontal du bouton dropdown - ajusté pour respiration du texte
+const DROPDOWN_PADDING_X = 16; // 16px pour une meilleure respiration, proportionnel au header
 
 interface FamilyDropdownsProps {
   onItemSelect: (item: string) => void;
@@ -15,51 +16,20 @@ interface FamilyDropdownsProps {
 }
 
 export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDropdownsProps) {
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  // Logique d'ouverture/fermeture extraite dans hook
+  const { activeDropdown, toggleDropdown, closeDropdown, dropdownRefs } = useDropdown();
   const { isMenuOpen } = useMenu();
   const { isMenuHovered } = useMenuHover();
-  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  
-  // Sur la page family, les dropdowns ont toujours un z-index plus élevé que la waveform
-  // La waveform a un z-index max de 10002, donc on met 10003 pour les dropdowns
-  // Si un dropdown est ouvert, on augmente encore pour garantir la priorité
-  // MAIS ils doivent être en dessous du header (z-[20000]) et des fonds des boutons menu
-  // Le z-index est maintenant géré par CSS via la classe .family-dropdowns-container
-  // On garde une valeur par défaut pour les autres pages
-  const finalZIndex = activeDropdown ? 10004 : 10003;
 
-  const toggleDropdown = (dropdown: string) => {
-    setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
-  };
+  // Z-index géré par CSS via .family-dropdowns-container
+  // Base: var(--z-dropdowns) = 10003
+  // Ouvert: var(--z-dropdowns-open) = 10004
+  const finalZIndex = activeDropdown ? 10004 : 10003; // Gardé pour compatibilité
 
   const selectItem = (item: string) => {
     onItemSelect(item);
-    setActiveDropdown(null); // Fermer le dropdown après sélection
+    closeDropdown(); // Fermer le dropdown après sélection
   };
-
-  // Fermer le dropdown quand il perd le focus ou quand on clique en dehors
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (activeDropdown) {
-        const dropdownElement = dropdownRefs.current[activeDropdown];
-        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
-          setActiveDropdown(null);
-        }
-      }
-    };
-
-    if (activeDropdown) {
-      // Petit délai pour éviter de fermer immédiatement après l'ouverture
-      const timeoutId = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-      }, 10);
-
-      return () => {
-        clearTimeout(timeoutId);
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [activeDropdown]);
 
   const djs = [
     "Niel",
@@ -96,19 +66,32 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
 
   return (
     <div 
-      className={`relative w-full flex flex-col md:flex-row family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      className={`w-full flex ${activeDropdown ? 'flex-col md:flex-row' : 'flex-row'} family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}
       style={{ zIndex: finalZIndex }} // Gardé pour compatibilité avec autres pages
     >
       {/* Dropdown DJs */}
-      <div 
-        className="w-full md:w-1/3 relative"
+      <motion.div 
+        className={`relative ${activeDropdown && activeDropdown !== 'djs' ? 'hidden md:flex' : 'flex'} md:flex-1`}
         ref={(el) => { dropdownRefs.current['djs'] = el; }}
-        onBlur={(e) => {
+        initial={false}
+        animate={{
+          flex: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
+          width: activeDropdown === 'djs' ? '100%' : activeDropdown ? '0%' : undefined,
+          opacity: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
+        }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        style={{
+          overflow: 'hidden',
+        }}
+        onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
           // Ne fermer que si le focus va vraiment en dehors (pas vers un enfant)
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          const currentTarget = e.currentTarget;
+          if (!currentTarget) return;
+          
+          if (!currentTarget.contains(e.relatedTarget as Node)) {
             setTimeout(() => {
-              if (activeDropdown === 'djs' && !e.currentTarget.contains(document.activeElement)) {
-                setActiveDropdown(null);
+              if (activeDropdown === 'djs' && currentTarget && !currentTarget.contains(document.activeElement)) {
+                closeDropdown();
               }
             }, 100);
           }
@@ -116,7 +99,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       >
         <button
           onClick={() => toggleDropdown('djs')}
-          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
           style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
           DJs
@@ -163,17 +146,30 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
       
       {/* Dropdown Danseurs */}
-      <div 
-        className="w-full md:w-1/3 relative"
+      <motion.div 
+        className={`relative ${activeDropdown && activeDropdown !== 'danseurs' ? 'hidden md:flex' : 'flex'} md:flex-1`}
         ref={(el) => { dropdownRefs.current['danseurs'] = el; }}
-        onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        initial={false}
+        animate={{
+          flex: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
+          width: activeDropdown === 'danseurs' ? '100%' : activeDropdown ? '0%' : undefined,
+          opacity: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
+        }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        style={{
+          overflow: 'hidden',
+        }}
+        onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
+          const currentTarget = e.currentTarget;
+          if (!currentTarget) return;
+          
+          if (!currentTarget.contains(e.relatedTarget as Node)) {
             setTimeout(() => {
-              if (activeDropdown === 'danseurs' && !e.currentTarget.contains(document.activeElement)) {
-                setActiveDropdown(null);
+              if (activeDropdown === 'danseurs' && currentTarget && !currentTarget.contains(document.activeElement)) {
+                closeDropdown();
               }
             }, 100);
           }
@@ -181,7 +177,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       >
         <button
           onClick={() => toggleDropdown('danseurs')}
-          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
           style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
           Danseurs
@@ -228,17 +224,30 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
       
       {/* Dropdown Collab */}
-      <div 
-        className="w-full md:w-1/3 relative"
+      <motion.div 
+        className={`relative ${activeDropdown && activeDropdown !== 'collab' ? 'hidden md:flex' : 'flex'} md:flex-1`}
         ref={(el) => { dropdownRefs.current['collab'] = el; }}
-        onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        initial={false}
+        animate={{
+          flex: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+          width: activeDropdown === 'collab' ? '100%' : activeDropdown ? '0%' : undefined,
+          opacity: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+        }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        style={{
+          overflow: 'hidden',
+        }}
+        onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
+          const currentTarget = e.currentTarget;
+          if (!currentTarget) return;
+          
+          if (!currentTarget.contains(e.relatedTarget as Node)) {
             setTimeout(() => {
-              if (activeDropdown === 'collab' && !e.currentTarget.contains(document.activeElement)) {
-                setActiveDropdown(null);
+              if (activeDropdown === 'collab' && currentTarget && !currentTarget.contains(document.activeElement)) {
+                closeDropdown();
               }
             }, 100);
           }
@@ -246,7 +255,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
       >
         <button
           onClick={() => toggleDropdown('collab')}
-          className={`w-full text-black font-title uppercase text-base md:text-lg py-6 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
           style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
           Collab
@@ -293,7 +302,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDr
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </div>
   );
 }

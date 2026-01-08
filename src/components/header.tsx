@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useGlobalDynamicColors } from "../hooks/useGlobalDynamicColors";
-import { usePagePrimaryColor } from "../hooks/usePagePrimaryColor";
+import { usePagePrimaryColor, getPagePrimaryColor } from "../hooks/usePagePrimaryColor";
 import HeaderPlayer from "./header-player";
 
 export default function Header() {
@@ -97,13 +97,46 @@ export default function Header() {
         { href: "/presse", label: "presse" },
     ];
 
-    // LOGIQUE GLOBALE : Si un menu est survolé, tous les éléments deviennent noirs
-    // Sinon, ils prennent la couleur primaire de la page
+    /**
+     * ========================================
+     * GESTION CENTRALISÉE DES COULEURS AU HOVER
+     * ========================================
+     * 
+     * SOURCE UNIQUE DE VÉRITÉ : hoveredMenuItem (état local du header)
+     * 
+     * RÈGLES :
+     * 1. Quand un bouton menu est survolé (hoveredMenuItem !== null) :
+     *    - Logo → noir (#000000)
+     *    - Texte menu → noir (#000000)
+     *    - Overlay global → couleur primaire de la page survolée (via MenuOverlay)
+     *    - Fond menu mobile → couleur primaire de la page survolée
+     * 
+     * 2. Quand aucun bouton n'est survolé (hoveredMenuItem === null) :
+     *    - Logo → couleur primaire de la page actuelle
+     *    - Texte menu → couleur primaire de la page actuelle
+     *    - Overlay global → transparent (via MenuOverlay)
+     *    - Fond menu mobile → transparent
+     * 
+     * COULEURS DES PAGES (source unique : getPagePrimaryColor) :
+     * - / → #FF6A00 (orange)
+     * - /agenda → #0080FF (bleu)
+     * - /family → #22C55E (vert)
+     * - /shop → #FF1744 (rouge)
+     * - /presse → #A855F7 (violet)
+     * 
+     * ARCHITECTURE :
+     * - Desktop : fonds colorés via CSS ::before (var(--dynamic-menu-hover-bg))
+     * - Mobile : fond coloré via JS inline (mobileMenuBgColor)
+     * - Overlay global : MenuOverlay (layout.tsx) écoute les événements CustomEvent
+     */
     const logoColor = hoveredMenuItem ? "#000000" : pagePrimaryColor;
     const menuTextColor = hoveredMenuItem ? "#000000" : pagePrimaryColor;
     
-    // La logique de l'overlay est maintenant dans MenuOverlay (layout.tsx)
-    // Le hook useMenuHover gère déjà la couleur via getPagePrimaryColor
+    // Couleur du fond du menu mobile au hover (utilise getPagePrimaryColor comme source unique)
+    const mobileMenuBgColor = hoveredMenuItem ? getPagePrimaryColor(hoveredMenuItem) : "transparent";
+    
+    // L'overlay global est géré par MenuOverlay (layout.tsx) qui écoute les événements CustomEvent
+    // Le hook useMenuHover utilise getPagePrimaryColor pour déterminer la couleur
 
 	return (
 		<>
@@ -112,20 +145,20 @@ export default function Header() {
             <motion.header 
                 className={`h-20 md:h-24 w-full z-[20000] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
                 initial={{ y: 0 }}
-                animate={{ y: isVisible ? 0 : -96 }}
+                animate={{ y: (isFamily ? 0 : (isVisible ? 0 : -96)) }} // Sur family, toujours visible et fixe
                 transition={{ duration: 0.3, ease: "easeInOut" }}
             >
                 <div className="h-full flex items-center justify-between px-[clamp(16px,4vw,24px)]">
                     {/* Logo + Menu groupés à gauche */}
-                    <div className="flex items-center gap-4 lg:gap-6 shrink-0">
-                        {/* Logo */}
+                    <div className="flex items-center gap-3 md:gap-4 lg:gap-6 shrink-0 relative z-[20001]">
+                        {/* Logo - Protection maximale sur mobile */}
                         <Link 
                             href="/" 
-                            className="flex items-center"
+                            className="flex items-center relative z-[20002] header-logo-mobile"
                         >
                             <svg 
                                 viewBox="0 0 1731.22 745.69" 
-                                className="w-[150px] h-[65px]"
+                                className="w-[115px] h-[50px] md:w-[120px] md:h-[52px] relative z-[20003]"
                                 style={{
                                     fill: logoColor,
                                     transition: 'fill 0.3s ease-in-out'
@@ -142,11 +175,16 @@ export default function Header() {
                         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
                             {menuItems.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+                                // NOTE : Sur desktop, les classes menu-link-* ne sont pas utilisées car les liens
+                                // n'ont pas la classe .menu-link (pas de fond ::before). L'overlay global gère les couleurs.
+                                // Ces classes sont conservées pour cohérence mais n'ont pas d'effet sur desktop.
+                                const menuLinkClass = `font-title uppercase text-xs lg:text-sm tracking-wide transition-colors duration-200 opacity-100 ${isActive ? 'menu-item-active' : ''}`;
+                                
                                 return (
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`font-title uppercase text-xs lg:text-sm tracking-wide transition-colors duration-200 opacity-100 ${isActive ? 'menu-item-active' : ''}`}
+                                        className={menuLinkClass}
                                         style={{ 
                                             color: isActive ? '#000000' : menuTextColor 
                                         }}
@@ -160,37 +198,75 @@ export default function Header() {
                         </nav>
                     </div>
 
-                    {/* Player header - desktop uniquement, à droite */}
-                    <div className="hidden md:flex items-center shrink-0">
+                    {/* Icône Panier + Player header - desktop uniquement, à droite */}
+                    <div className="hidden md:flex items-center gap-3 shrink-0">
+                        {/* Icône Panier - taille proportionnée au logo sur écrans moyens et grands */}
+                        <Link 
+                            href="/shop"
+                            className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
+                            style={{ 
+                                color: hoveredMenuItem ? '#000000' : pagePrimaryColor,
+                                width: '36px', // md: proportionné au logo 120px
+                                height: '36px'
+                            }}
+                            title="Shop"
+                            onMouseEnter={() => setHoveredMenuItem("/shop")}
+                            onMouseLeave={() => setHoveredMenuItem(null)}
+                        >
+                            <svg 
+                                className="w-[24px] h-[24px] lg:w-[30px] lg:h-[30px]" 
+                                viewBox="0 0 24 24" 
+                                fill="currentColor"
+                            >
+                                <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-9.5-14H1v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H7.5z"/>
+                            </svg>
+                        </Link>
                         <HeaderPlayer />
                     </div>
 
-                    {/* Hamburger menu - mobile uniquement, à droite */}
-                    <div className="md:hidden flex items-center shrink-0">
-                    <button 
-                        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} 
-                        className="flex items-center gap-2" 
-                        onClick={() => setOpen(!open)}
-                    >
-                        <span className="sr-only">{open ? "Fermer le menu" : "Ouvrir le menu"}</span>
-                        <div className="relative w-7 h-7">
+                    {/* Icône Panier + Hamburger menu - mobile uniquement, à droite - Protection maximale */}
+                    <div className="md:hidden flex items-center gap-5 shrink-0 relative z-[20001]">
+                        {/* Icône Panier - toujours visible sur mobile, taille agrandie pour proportionnalité avec burger */}
+                        <Link 
+                            href="/shop"
+                            className="flex items-center justify-center transition-all duration-200 hover:opacity-80 relative z-[20002]"
+                            style={{ 
+                                color: hoveredMenuItem ? '#000000' : pagePrimaryColor,
+                                width: '32px',
+                                height: '32px'
+                            }}
+                            title="Shop"
+                        >
+                            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-9.5-14H1v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H7.5z"/>
+                            </svg>
+                        </Link>
+                        
+                        {/* Bouton burger */}
+                        <button 
+                            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} 
+                            className="flex items-center gap-2 relative z-[20002] header-burger-mobile" 
+                            onClick={() => setOpen(!open)}
+                        >
+                            <span className="sr-only">{open ? "Fermer le menu" : "Ouvrir le menu"}</span>
+                            <div className="relative w-[22px] h-[22px] z-[20003]">
                             {/* Barre du haut */}
                             <span 
-                                className={`absolute left-0 right-0 top-1 block h-[2px] transition-all duration-300 ease-in-out ${
+                                className={`absolute left-0 right-0 top-0.5 block h-[1.5px] transition-all duration-300 ease-in-out ${
                                     open ? 'top-1/2 -translate-y-1/2 rotate-45' : ''
                                 }`}
                                 style={{ backgroundColor: logoColor }}
                             />
                             {/* Barre du milieu */}
                             <span 
-                                className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[2px] transition-all duration-300 ease-in-out ${
+                                className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 block h-[1.5px] transition-all duration-300 ease-in-out ${
                                     open ? 'opacity-0' : 'opacity-100'
                                 }`}
                                 style={{ backgroundColor: logoColor }}
                             />
                             {/* Barre du bas */}
                             <span 
-                                className={`absolute left-0 right-0 bottom-1 block h-[2px] transition-all duration-300 ease-in-out ${
+                                className={`absolute left-0 right-0 bottom-0.5 block h-[1.5px] transition-all duration-300 ease-in-out ${
                                     open ? 'top-1/2 -translate-y-1/2 -rotate-45' : ''
                                 }`}
                                 style={{ backgroundColor: logoColor }}
@@ -204,30 +280,69 @@ export default function Header() {
 			{/* Menu mobile fullscreen */}
 			<AnimatePresence>
 				{open && (
-					<motion.div
-						key="menu"
-						initial={{ x: "100%" }}
-						animate={{ x: 0 }}
-						exit={{ x: "100%" }}
-						transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
-						className="fixed inset-0 z-50 bg-transparent md:hidden"
-						style={{ color: colors.menuColor }}
-					>
-						<div className="h-full w-full flex">
-                            <nav className="ml-auto h-full w-full flex flex-col justify-center items-end gap-0 pr-10 sm:pr-14">
-								{menuItems.map((item) => (
-                                    <Link
-										key={item.href}
-										href={item.href}
-                                        className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl leading-none ${isAgenda ? 'menu-link-agenda' : ''} ${isFamily ? 'menu-link-family' : ''} ${isPresse ? 'menu-link-presse' : ''}`}
-										onClick={() => setOpen(false)}
-									>
-										<span>{item.label}</span>
-									</Link>
-								))}
-							</nav>
-						</div>
-					</motion.div>
+					<>
+						{/* Fond coloré - layer séparé (EN DESSOUS de tout) */}
+						<motion.div
+							key="menu-bg"
+							initial={{ x: "100%" }}
+							animate={{ x: 0 }}
+							exit={{ x: "100%" }}
+							transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
+							className="fixed inset-0 z-[30] md:hidden pointer-events-none"
+							style={{ 
+								backgroundColor: mobileMenuBgColor,
+								transition: 'background-color 0.3s ease'
+							}}
+						/>
+						
+						{/* Contenu du menu - layer séparé au-dessus du fond mais en dessous du header */}
+						<motion.div
+							key="menu-content"
+							initial={{ x: "100%" }}
+							animate={{ x: 0 }}
+							exit={{ x: "100%" }}
+							transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
+							className="fixed inset-0 z-[40] md:hidden"
+						>
+							<div className="h-full w-full flex">
+								<nav className="ml-auto h-full w-full flex flex-col justify-center items-end gap-0 pr-10 sm:pr-14 relative z-[41]">
+									{menuItems.map((item) => {
+										// Logique de couleur pour les boutons menu mobile :
+										// - Bouton survolé → noir (#000000)
+										// - Autres boutons → couleur du fond (mobileMenuBgColor) pour se fondre avec le fond
+										// - Aucun hover → couleur primaire de la page actuelle
+										let buttonColor: string;
+										if (hoveredMenuItem === item.href) {
+											// Bouton survolé : noir
+											buttonColor = "#000000";
+										} else if (hoveredMenuItem) {
+											// Autre bouton quand un bouton est survolé : couleur du fond
+											buttonColor = mobileMenuBgColor !== "transparent" ? mobileMenuBgColor : pagePrimaryColor;
+										} else {
+											// Aucun hover : couleur primaire de la page actuelle
+											buttonColor = pagePrimaryColor;
+										}
+										
+										return (
+											<Link
+												key={item.href}
+												href={item.href}
+												className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl leading-none relative z-[42] ${isAgenda ? 'menu-link-agenda' : ''} ${isFamily ? 'menu-link-family' : ''} ${isPresse ? 'menu-link-presse' : ''}`}
+												onClick={() => setOpen(false)}
+												onMouseEnter={() => setHoveredMenuItem(item.href)}
+												onMouseLeave={() => setHoveredMenuItem(null)}
+											>
+												<span className="relative z-[43]" style={{ 
+													color: buttonColor,
+													transition: 'color 0.3s ease'
+												} as React.CSSProperties}>{item.label}</span>
+											</Link>
+										);
+									})}
+								</nav>
+							</div>
+						</motion.div>
+					</>
 				)}
 			</AnimatePresence>
 		</>

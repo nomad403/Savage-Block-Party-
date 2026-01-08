@@ -137,7 +137,7 @@ export default function TextRevealLines({
 			}}
 		>
 			{textLines.map((line, index) => (
-				<div 
+				<div
 					key={index} 
 					className="reveal-line-row"
 					style={{
