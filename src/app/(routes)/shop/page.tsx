@@ -290,7 +290,8 @@ export default function ShopPage() {
           cursor: pointer;
         }
 
-        .product-item:hover:not(.selected) {
+        .product-item:hover:not(.selected),
+        .product-item.hovered:not(.selected) {
           background: #FF1744;
         }
 
@@ -389,6 +390,8 @@ export default function ShopPage() {
 
         .product-item:hover:not(.selected) h3,
         .product-item:hover:not(.selected) span,
+        .product-item.hovered:not(.selected) h3,
+        .product-item.hovered:not(.selected) span,
         .product-item.selected h3,
         .product-item.selected span {
           color: #FFFFFF;
@@ -400,7 +403,8 @@ export default function ShopPage() {
           transition: opacity 0.3s ease 0.6s;
         }
 
-        .product-item:hover:not(.selected) .product-scrolling-text {
+        .product-item:hover:not(.selected) .product-scrolling-text,
+        .product-item.hovered:not(.selected) .product-scrolling-text {
           opacity: 1;
           transition: opacity 0.3s ease;
         }
@@ -436,7 +440,8 @@ export default function ShopPage() {
           pointer-events: none;
         }
 
-        .product-item:hover .product-scrolling-text {
+        .product-item:hover .product-scrolling-text,
+        .product-item.hovered .product-scrolling-text {
           opacity: 1;
         }
 
@@ -750,7 +755,7 @@ export default function ShopPage() {
               >
                 <div className="product-item-expand">
                   <div 
-                    className={`product-item ${isSelected ? 'selected' : ''}`}
+                    className={`product-item ${isSelected ? 'selected' : ''} ${hoveredProductId === product.id ? 'hovered' : ''}`}
                     data-product-id={product.id}
                     onClick={() => setSelectedProductId(isSelected ? null : product.id)}
                     onMouseEnter={() => setHoveredProductId(product.id)}
