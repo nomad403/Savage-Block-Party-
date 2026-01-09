@@ -1,0 +1,95 @@
+/* ========================================
+   PRESSE PAGE - STYLES SPÉCIFIQUES
+   ========================================
+   
+   Ce fichier contient toutes les règles CSS spécifiques à la page Presse.
+*/
+
+/* Page presse - Player compact avec fond violet */
+body:has(#presse-root) .player-compact-agenda::before {
+	background: #A855F7; /* Purple-500 (même couleur que le footer presse) */
+}
+
+/* Page presse - text reveal line en violet */
+body:has(#presse-root) .text-reveal-line::before {
+	background: #A855F7 !important;
+	left: -8px; 
+}
+
+/* Page presse - reveal focus en noir */
+body:has(#presse-root) .reveal-focus::before {
+    background: #000000;
+    left: -8px; /* aligné avec le fond du label (horizontalPadding={8}) */
+    right: -8px; /* symétrie à droite pour garder l'alignement */
+}
+
+/* Page presse - custom scrollbar thumb */
+body:has(#presse-root) .custom-scrollbar-thumb {
+	background: #000000 !important; /* Toujours noir pour les éléments permanents */
+}
+
+body:has(#presse-root) .custom-scrollbar-thumb:hover {
+	background: #333333 !important; /* Gris foncé au hover */
+}
+
+/* Page presse - player en blanc au hover du menu (logique globale) */
+body:has(#presse-root) header.text-black .header-player,
+body:has(#presse-root) header.text-black .header-player *,
+body:has(#presse-root) header.text-black .header-player button,
+body:has(#presse-root) header.text-black .header-player button *,
+body:has(#presse-root) header.text-black .header-player button svg,
+body:has(#presse-root) header.text-black .header-player span,
+body:has(#presse-root) header.text-black .header-player div {
+	color: #FFFFFF !important;
+}
+
+/* Page presse - header toujours fixe et visible */
+body:has(#presse-root) header {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	transform: translateY(0) !important;
+	will-change: auto !important;
+}
+
+/* Désactiver toute animation du header sur presse */
+body:has(#presse-root) header * {
+	transform: none !important;
+}
+
+/* Page presse - espacement en bas sur mobile pour permettre le scroll au-dessus du player */
+@media (max-width: 767px) {
+	body:has(#presse-root) .presse-form-section {
+		padding-bottom: calc(var(--footer-total-height-mobile) + 80px) !important; /* Footer + espace supplémentaire */
+	}
+}
+
+/* Page presse - texte noir pour tous les textes */
+body:has(#presse-root) .text-on-thermal.text-black,
+body:has(#presse-root) .text-on-thermal.text-black *,
+body:has(#presse-root) .text-black,
+body:has(#presse-root) .text-black *,
+body:has(#presse-root) .text-on-thermal,
+body:has(#presse-root) .text-on-thermal * {
+	color: #000000 !important;
+	text-shadow: none !important;
+}
+
+/* Page presse - texte blanc au focus */
+body:has(#presse-root) .text-on-thermal.text-white,
+body:has(#presse-root) .text-on-thermal.text-white * {
+	color: #FFFFFF !important;
+	text-shadow: none !important;
+}
+
+/* Page presse - waveform gérée par la logique centralisée (useGlobalDynamicColors) */
+
+/* ========================================
+   MENU LINK - PRESSE SPECIFIC
+   ======================================== */
+/* Fond coloré pour le bouton menu mobile sur presse */
+.menu-link-presse::before {
+	background: #A855F7 !important; /* Violet pour presse (synchronisé avec getPagePrimaryColor) */
+}
+

@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { usePageContext } from './usePageContext';
 import { usePagePrimaryColor } from './usePagePrimaryColor';
 import { useMenuHover } from './useMenuHover';
+import { useShopItemState } from './useShopItemState';
+import { useAppEvent } from './useAppEvents';
+import { useIsMobile } from './useMediaQuery';
+import { soundCloudEvents } from '@/lib/events/app-events';
 
 type ColorTheme = 'yellow' | 'cyan' | 'red';
 
@@ -24,8 +28,9 @@ interface GlobalColors {
   scrollbarHover: string;
   
   // Couleurs pour le player
-  playerColor: string;
-  playerBgColor: string;
+  playerColor: string; // Classe CSS (text-white ou text-black)
+  playerBgColor: string; // Couleur hex du fond
+  playerTextColor: string; // Couleur hex du texte (centralisée et robuste)
   waveformColor: string; // Valeur hex pour style inline
   waveformColorFaded: string; // Valeur hex avec opacité pour style inline
   
@@ -35,40 +40,34 @@ interface GlobalColors {
 }
 
 export function useGlobalDynamicColors() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-  const isAgenda = pathname?.startsWith("/agenda");
-  const isFamily = pathname?.startsWith("/family");
-  const isShop = pathname?.startsWith("/shop");
-  const isPresse = pathname?.startsWith("/presse");
+  // Utiliser le hook centralisé pour la détection de page
+  const { isHome, isAgenda, isFamily, isShop, isPresse } = usePageContext();
   
   // Utiliser les hooks centralisés
   const pagePrimaryColor = usePagePrimaryColor();
   const { isMenuHovered } = useMenuHover();
+  const { isShopItemSelected, isShopItemHovered } = useShopItemState();
+  const isMobile = useIsMobile();
   
   const [currentTheme, setCurrentTheme] = useState<ColorTheme>('red');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isShopItemSelected, setIsShopItemSelected] = useState(false);
 
+  // Garder isHome dans un ref pour l'utiliser dans le handler
+  const isHomeRef = useRef(isHome);
   useEffect(() => {
-    if (!isHome) {
+    isHomeRef.current = isHome;
+  }, [isHome]);
+
+  useAppEvent('soundcloud-color-change', (event) => {
+    if (!isHomeRef.current) {
       // Reset to default if not on home page
       setCurrentTheme('red');
       return;
     }
-
-    const handleColorChange = (event: CustomEvent) => {
       setCurrentTheme(event.detail.theme);
       setIsTransitioning(true);
       setTimeout(() => setIsTransitioning(false), 500);
-    };
-
-    window.addEventListener('soundcloud-color-change', handleColorChange as EventListener);
-
-    return () => {
-      window.removeEventListener('soundcloud-color-change', handleColorChange as EventListener);
-    };
-  }, [isHome]);
+  });
 
   // 🟡 Nouveau : Changement de couleur dynamique basé sur le son
   useEffect(() => {
@@ -78,7 +77,7 @@ export function useGlobalDynamicColors() {
     let lastChangeTime = 0;
     const THROTTLE_MS = 150; // Réduit pour plus de réactivité
 
-    const handleAudioFeatures = (event: CustomEvent) => {
+    const handleAudioFeatures = (event: CustomEvent<{ rms: number; spectralCentroid: number; spectralFlux: number }>) => {
       const { rms, spectralCentroid, spectralFlux } = event.detail;
       
       // Vérifier le throttling
@@ -109,14 +108,12 @@ export function useGlobalDynamicColors() {
         setCurrentTheme(newTheme);
         
         // Émettre l'événement pour synchroniser le reste du site
-        window.dispatchEvent(new CustomEvent('soundcloud-color-change', { 
-          detail: { 
+        soundCloudEvents.colorChange({
             theme: newTheme,
             intensity: intensity,
             source: 'audio-analysis-live',
             timestamp: now
-          } 
-        }));
+        });
       }
     };
 
@@ -127,26 +124,27 @@ export function useGlobalDynamicColors() {
     };
   }, [isHome, currentTheme]);
 
-  // Écouter l'événement de sélection d'un item dans le shop
-  useEffect(() => {
-    const handleShopItemSelected = (event: CustomEvent) => {
-      setIsShopItemSelected(event.detail.isSelected);
-    };
-
-    window.addEventListener('shopItemSelected', handleShopItemSelected as EventListener);
-
-    return () => {
-      window.removeEventListener('shopItemSelected', handleShopItemSelected as EventListener);
-    };
-  }, []);
+  // Les états shop items sont maintenant gérés par useShopItemState()
+  // Plus besoin d'écouter les événements ici
 
   // Fonction pour obtenir les couleurs globales
   const getGlobalColors = (): GlobalColors => {
-    // LOGIQUE GLOBALE : Si un menu est survolé OU un item shop est sélectionné, tous les éléments permanents deviennent noirs
-    const shouldBeBlack = isMenuHovered || isShopItemSelected;
+    // LOGIQUE GLOBALE : Si un menu est survolé OU un item shop est sélectionné OU un item shop est survolé, tous les éléments permanents deviennent noirs
+    const shouldBeBlack = isMenuHovered || isShopItemSelected || isShopItemHovered;
     const logoColor = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
     const menuColor = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
     const playerBgColorValue = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
+    
+    // LOGIQUE CENTRALISÉE POUR LA COULEUR DU TEXTE DU PLAYER
+    // Le texte doit être blanc si :
+    // 1. Le fond est noir (peu importe la raison)
+    // 2. Page Agenda (exception : texte toujours blanc)
+    // 3. Page Shop mobile : menu hover OU item hover OU item sélectionné
+    const isBackgroundBlack = playerBgColorValue === '#000000';
+    const shouldTextBeWhite = isBackgroundBlack 
+        || isAgenda 
+        || (isShop && isMobile && (isMenuHovered || isShopItemHovered || isShopItemSelected));
+    const playerTextColorValue = shouldTextBeWhite ? '#FFFFFF' : '#000000';
     
     // Pour waveform, retourner les valeurs hex pour styles inline
     let waveformColorHex: string;
@@ -194,6 +192,7 @@ export function useGlobalDynamicColors() {
         
         playerColor: shouldBeBlack ? "text-white" : (isAgenda ? "text-white" : "text-black"),
         playerBgColor: playerBgColorValue,
+        playerTextColor: playerTextColorValue, // Couleur hex centralisée et robuste
         waveformColor: waveformColorHex,
         waveformColorFaded: waveformColorFadedHex,
         
@@ -206,15 +205,15 @@ export function useGlobalDynamicColors() {
     // Sur home, on utilise l'orange vif (#FF6A00) comme couleur primaire
     const homePrimary = "#FF6A00";
     
-    return {
+        return {
       primary: isMenuHovered ? "#000000" : homePrimary,
       primaryHover: "#E55A00",
       primaryFaded: "rgba(255, 106, 0, 0.3)",
-      
+          
       menuColor: menuColor,
       menuHoverBg: homePrimary,
-      menuHoverText: "#000000",
-      
+          menuHoverText: "#000000",
+          
       logoColor: logoColor,
       
       scrollbarColor: "#000000", // Toujours noir pour les éléments permanents
@@ -222,17 +221,18 @@ export function useGlobalDynamicColors() {
       
       playerColor: shouldBeBlack ? "text-white" : "text-black",
       playerBgColor: playerBgColorValue,
+      playerTextColor: playerTextColorValue, // Couleur hex centralisée et robuste
       waveformColor: waveformColorHex,
       waveformColorFaded: waveformColorFadedHex,
-      
+          
       noiseOverlay: "rgba(255,106,0,.035)",
       gridLines: "rgba(255,106,0,.05)"
-    };
+        };
   };
 
   // Mémoriser les couleurs pour éviter les re-renders inutiles
   // Inclure toutes les dépendances nécessaires pour que les couleurs se mettent à jour
-  const colors = useMemo(() => getGlobalColors(), [isHome, isAgenda, isFamily, isShop, isPresse, currentTheme, pagePrimaryColor, isMenuHovered, isShopItemSelected]);
+  const colors = useMemo(() => getGlobalColors(), [isHome, isAgenda, isFamily, isShop, isPresse, currentTheme, pagePrimaryColor, isMenuHovered, isShopItemSelected, isShopItemHovered, isMobile]);
 
   return {
     colors,

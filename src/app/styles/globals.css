@@ -1,0 +1,405 @@
+@import "tailwindcss";
+
+/* ========================================
+   VARIABLES GLOBALES - LAYOUT & LAYERS
+   ======================================== */
+
+:root {
+	/* Hauteurs fixes - Player & Waveform */
+	--player-height-mobile: 100px; /* Player audio sur mobile (~60px + padding) */
+	--player-height-desktop: 0px; /* Pas de player sur desktop (dans header) */
+	--waveform-height: 72px; /* Hauteur de la waveform */
+	
+	/* Calculs dérivés */
+	--footer-total-height-mobile: calc(var(--player-height-mobile) + var(--waveform-height)); /* 172px */
+	--footer-total-height-desktop: var(--waveform-height); /* 72px */
+	
+	/* Z-Index Layers - Hiérarchie documentée */
+	--z-background: -1; /* Médias de fond */
+	--z-content: 1; /* Contenu principal */
+	--z-scroll-hint: 9998; /* Indicateur de scroll */
+	--z-waveform: 10000; /* Waveform (base, peut varier avec scroll) */
+	--z-waveform-max: 10002; /* Waveform (max avec scroll) */
+	--z-dropdowns: 10003; /* Dropdowns Family (base) */
+	--z-dropdowns-open: 10004; /* Dropdowns Family (ouvert) */
+	--z-header: 20000; /* Header fixe */
+	--z-header-menu-bg: 20010; /* Fonds colorés menu (au-dessus de tout) */
+	--z-overlay-global: 10000; /* Overlay global menu hover */
+}
+
+/* ========================================
+   FAMILY DROPDOWNS WRAPPER
+   ======================================== */
+
+/* Position fixed constante - bottom via variables CSS */
+/* IMPORTANT: Les dropdowns sont alignés avec le bottom de la waveform (bottom: 0) */
+/* Le bas des boutons dropdown doit être au même niveau que le bas de la waveform */
+.family-dropdowns-wrapper {
+	bottom: 0; /* Aligné avec le bottom de la waveform */
+}
+
+/* Fonts déplacées vers fonts.css */
+
+:root {
+	--logo-color: #ff6a00;
+	--background: #0a0a0a;
+	--foreground: var(--logo-color);
+	--muted: #9a9a9a;
+	--font-title: 'Hanson', system-ui, sans-serif;
+	--font-text: 'Cy', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	
+	/* Variables pour couleurs dynamiques */
+	--dynamic-primary: #FF6A00;     
+	--dynamic-primary-hover: #E55A00; 
+	--dynamic-primary-faded: rgba(255,106,0,0.3);
+	--dynamic-menu-color: #FF6A00;
+	--dynamic-menu-hover-bg: #079fce;
+	--dynamic-menu-hover-text: #000000;
+	--dynamic-logo-color: #FF6A00;
+	--dynamic-scrollbar-color: #FF6A00;
+	--dynamic-scrollbar-hover: #E55A00;
+	--dynamic-noise-overlay: rgba(255,255,255,.035);
+	--dynamic-grid-lines: rgba(255,255,255,.05);
+}
+
+@media (prefers-color-scheme: light) {
+	:root {
+		--background: #ffffff;
+	}
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-muted: var(--muted);
+	--radius: 12px;
+}
+
+html, body {
+	height: 100%;
+	overflow-x: hidden;
+	overflow-y: auto; /* Permettre le scroll vertical */
+	/* Masquer la scrollbar native par défaut, mais permettre le scroll */
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE/Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+	display: none; /* Chrome/Safari */
+	width: 0;
+	height: 0;
+	background: transparent;
+}
+
+body {
+	background: var(--background);
+	color: var(--foreground);
+	font-family: var(--font-text);
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Désactiver le scroll sur la home */
+body.no-scroll {
+	overflow: hidden !important;
+	height: 100vh !important;
+}
+
+html.no-scroll {
+	overflow: hidden !important;
+	height: 100vh !important;
+}
+
+.font-title { font-family: var(--font-title); }
+.font-text { 
+	font-family: var(--font-text);
+	font-feature-settings: "kern" 1;
+	text-rendering: optimizeLegibility;
+}
+
+/* Justification améliorée sans césures */
+.text-justify {
+	text-align: justify;
+	hyphens: none;
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+
+/* Layout helpers */
+.container-px {
+	padding-left: clamp(16px, 5vw, 48px);
+	padding-right: clamp(16px, 5vw, 48px);
+}
+
+/* Visual textures */
+.noise-overlay {
+	position: fixed;
+	pointer-events: none;
+	inset: 0;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+	z-index: 10;
+}
+
+.grid-lines {
+	background-image: linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+	background-size: 40px 40px;
+	mask-image: radial-gradient(ellipse at center, black 35%, transparent 70%);
+}
+
+/* Règles iframe YouTube et SoundCloud déplacées vers iframes.css */
+
+/**
+ * ========================================
+ * MENU LINK HOVER EFFECT (MOBILE UNIQUEMENT)
+ * ========================================
+ * 
+ * ARCHITECTURE :
+ * - Cette classe .menu-link est utilisée UNIQUEMENT sur mobile (menu fullscreen)
+ * - Sur desktop, les liens du menu n'ont pas cette classe (pas de fond ::before)
+ * - Le fond coloré au hover est géré par ::before
+ * - La couleur par défaut est var(--dynamic-menu-hover-bg)
+ * - Les couleurs spécifiques par page sont gérées par les classes .menu-link-* ci-dessous
+ * - La logique de hover est gérée par header.tsx (hoveredMenuItem)
+ * 
+ * NOTE IMPORTANTE :
+ * - Sur desktop : pas de fond coloré sur les liens, overlay global uniquement (MenuOverlay)
+ * - Sur mobile : fond coloré via ::before avec classes spécifiques par page
+ * - L'overlay global (MenuOverlay) fonctionne pour desktop ET mobile
+ */
+.menu-link {
+	position: relative;
+	display: flex; /* permet le centrage vertical */
+	align-items: center; /* centrage vertical du texte */
+	justify-content: flex-end; /* aligné à droite */
+	padding: 0.5rem 0.75rem; /* un tout petit padding pour coller visuellement */
+	color: var(--dynamic-menu-color);
+	overflow: hidden;
+	transition: color 0.35s ease;
+	z-index: 20001; /* Créer un contexte de stacking au-dessus de tout */
+}
+.menu-link::before {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0; /* couvre toute la hauteur */
+	background: var(--dynamic-menu-hover-bg); /* Couleur par défaut (peut être surchargée par les classes spécifiques) */
+	transform: translateX(100%);
+	transition: transform 0.35s ease;
+	pointer-events: none;
+	will-change: transform;
+	z-index: 20002; /* Au-dessus des dropdowns (10003-10004) et scroll hint (50) */
+}
+
+/* ========================================
+   FAMILY PAGE RULES (DÉPLACÉES VERS family.css)
+   ======================================== */
+/* Les règles spécifiques à Family sont maintenant dans src/app/family/family.css */
+/* Cela réduit la dépendance à globals.css et body:has() */
+.menu-link:hover::before,
+.menu-link:focus-visible::before,
+.menu-link:active::before {
+	transform: translateX(0);
+}
+.menu-link > span { position: relative; z-index: 20003; display: inline-block; } /* Au-dessus du fond (20002) */
+.menu-link:hover > span,
+.menu-link:focus-visible > span { color: var(--dynamic-menu-hover-text); }
+
+/* Menu mobile : la couleur du texte est gérée uniquement par JS (styles inline) */
+@media (max-width: 767px) {
+	/* Reset sélectif : bloquer les héritages CSS indésirables tout en préservant les propriétés nécessaires */
+	.menu-link > span {
+		all: unset;
+		display: inline-block;
+		
+		/* Restaurer explicitement les propriétés nécessaires pour que le style inline React fonctionne */
+		color: currentColor; /* Utilise la couleur définie par le style inline React */
+		font-family: inherit;
+		font-weight: inherit;
+		text-transform: inherit;
+		letter-spacing: inherit;
+	}
+	
+	/* Désactiver les animations de fonds dans le menu mobile */
+	.menu-link::before {
+		display: none !important;
+	}
+	
+	/**
+	 * ORDRE DE SUPERPOSITION MOBILE (z-index) :
+	 * - Logo, Player et Burger : z-[20001] à z-[20003] (PROTECTION MAXIMALE)
+	 * - Header : z-[20000] (toujours au-dessus de tout)
+	 * - Contenu menu mobile (nav, links, spans) : z-[40] à z-[43] (au-dessus du fond)
+	 * - Fond coloré menu mobile : z-[30] (en dessous de tout)
+	 * 
+	 * Le header, le logo, le player et le burger doivent toujours être visibles et cliquables,
+	 * même quand le menu est ouvert.
+	 */
+	/* Header : protection z-index sur mobile */
+	header {
+		z-index: 20000;
+		position: relative;
+	}
+	
+	/* PROTECTION MAXIMALE : Éléments header critiques sur mobile */
+	/* Regroupement des règles z-index similaires pour réduire !important */
+	.header-logo-mobile,
+	.header-player,
+	header a[href="/shop"],
+	.header-burger-mobile {
+		position: relative;
+		z-index: 20002; /* Au-dessus du header (20000) et du menu (40-43) */
+		pointer-events: auto; /* Toujours cliquable */
+	}
+	
+	/* Protection supplémentaire pour les enfants */
+	.header-logo-mobile svg,
+	.header-player button,
+	.header-player a,
+	.header-burger-mobile > div {
+		position: relative;
+		z-index: 20003; /* Protection supplémentaire */
+		pointer-events: auto;
+	}
+	
+	/* Icône panier : utilise la couleur primaire de la page via style inline */
+	/* Les couleurs sont définies dans usePagePrimaryColor() :
+	 * - Home: #FF6A00 (orange)
+	 * - Agenda: #0080FF (bleu)
+	 * - Family: #22C55E (vert)
+	 * - Shop: #FF1744 (rouge)
+	 * - Presse: #A855F7 (violet)
+	 * La couleur est appliquée via style inline dans header.tsx
+	 */
+	header a[href="/shop"] svg {
+		color: inherit;
+		fill: currentColor;
+	}
+	
+	/* S'assurer que les éléments du menu mobile sont au-dessus du fond coloré */
+	.menu-link {
+		position: relative;
+		z-index: 42; /* Au-dessus du fond (z-[30]) */
+	}
+	
+	.menu-link > span {
+		position: relative;
+		z-index: 43; /* Au-dessus du link (z-[42]) */
+	}
+}
+
+/**
+ * ========================================
+ * COULEURS SPÉCIFIQUES PAR PAGE (MOBILE)
+ * ========================================
+ * 
+ * Les règles menu-link spécifiques par page ont été déplacées vers leurs CSS respectifs :
+ * - .menu-link-agenda → agenda.css
+ * - .menu-link-family → family.css
+ * - .menu-link-presse → presse.css
+ * - .menu-link-shop → shop.css
+ * 
+ * Les couleurs correspondent à getPagePrimaryColor() :
+ * - / → #FF6A00 (orange)
+ * - /agenda → #0080FF (bleu)
+ * - /family → #22C55E (vert)
+ * - /shop → #FF1744 (rouge)
+ * - /presse → #A855F7 (violet)
+ */
+
+
+
+/* Logo tints, text reveal, calendar lines déplacés vers utilities.css et agenda.css */
+
+/* Masquer la scrollbar (cross-browser) */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Règles scrollbar custom déplacées vers scrollbar.css */
+
+/* Effet reveal line au focus pour les champs */
+.reveal-focus {
+    position: relative;
+}
+.reveal-focus::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0px;   /* aligne visuellement avec le padding du label (≈8px) */
+    right: -8px;  /* symétrie à droite pour garder la même largeur perçue */
+    background: #22C55E; /* vert family */
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+.reveal-focus:focus-within::before {
+    transform: scaleX(1);
+}
+
+/* ========================================
+   REVEAL FOCUS - FAMILY (DÉPLACÉ VERS family.css)
+   ======================================== */
+/* Les règles body:has(#family-root) sont maintenant dans family.css */
+
+/* ========================================
+   FAMILY PAGE - HEADER (DÉPLACÉ VERS family.css)
+   ======================================== */
+/* Les règles header pour Family sont maintenant dans src/app/family/family.css */
+/* Cela réduit la dépendance à globals.css et body:has() */
+
+/* ========================================
+   FAMILY ROOT - SCROLL CONTAINER UNIQUE
+   ======================================== */
+/* IMPORTANT: Le scroll est géré UNIQUEMENT par body/html */
+/* #family-root ne doit PAS avoir d'overflow */
+/* Cela évite les conflits entre body scroll et root scroll */
+#family-root {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    /* Pas de height fixe - laisse le contenu définir la hauteur */
+    /* Pas d'overflow - le scroll est géré par body */
+    min-height: 100vh;
+}
+
+
+/* Utilitaire: placeholder en Cy bold (font-text) */
+.placeholder-title::placeholder {
+    font-family: var(--font-text);
+    font-weight: bold;
+}
+
+/* Règles scrollbar custom déplacées vers scrollbar.css */
+
+/* Toutes les pages - boutons précédent/suivant du player en blanc au hover du menu (mobile uniquement) */
+/* Le fond du player devient noir, donc les boutons doivent être blancs pour être visibles */
+/* Utilisation de classes conditionnelles au lieu de manipulation DOM */
+@media (max-width: 767px) {
+	/* Règles existantes pour compatibilité */
+	header.text-black .header-player button,
+	header.text-black .header-player button svg {
+		color: #FFFFFF;
+		fill: #FFFFFF;
+	}
+	
+	/* Nouvelles règles avec classes conditionnelles */
+	body.menu-hovered .header-player .font-title,
+	body.menu-hovered .header-player .font-text {
+		color: #FFFFFF;
+	}
+	
+	body.menu-hovered .header-player button,
+	body.menu-hovered .header-player button svg {
+		color: #FFFFFF;
+		fill: #FFFFFF;
+	}
+}
+
+
+/* Règles iframe, filter-infrared, text reveal, scroll text déplacées vers utilities.css */

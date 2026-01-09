@@ -1,0 +1,122 @@
+/* ========================================
+   SCROLLBAR CUSTOM
+   ========================================
+   
+   Ce fichier contient toutes les règles CSS pour la scrollbar custom
+   utilisée sur les pages scrollables.
+*/
+
+/* ========================================
+   SCROLLABLE PAGE - MASQUER SCROLLBAR NATIVE
+   ======================================== */
+
+/* Scrollbar custom transparente avec couleur header */
+html.scrollable-page,
+body.scrollable-page {
+	/* Masquer la scrollbar native complètement */
+	scrollbar-width: none !important; /* Firefox */
+	-ms-overflow-style: none !important; /* IE/Edge */
+	/* Permettre le scroll vertical mais masquer la scrollbar */
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
+	height: auto !important; /* Permettre à la hauteur de dépasser 100vh */
+}
+
+/* Masquer la scrollbar WebKit (Chrome/Safari/Edge) sur html et body */
+html.scrollable-page::-webkit-scrollbar,
+body.scrollable-page::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	background: transparent !important;
+}
+
+/* Masquer aussi sur les éléments de scroll potentiels */
+html.scrollable-page *::-webkit-scrollbar,
+body.scrollable-page *::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR COMPONENT
+   ======================================== */
+
+/* Scrollbar custom pour pages scrollables */
+.custom-scrollbar {
+	position: fixed;
+	top: 0;
+	right: 0;
+	width: 8px;
+	height: 100vh;
+	z-index: 9999;
+	pointer-events: none;
+}
+
+/* Masquer la scrollbar personnalisée sur mobile */
+@media (max-width: 767px) {
+	.custom-scrollbar {
+		display: none !important;
+	}
+}
+
+.custom-scrollbar-track {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+}
+
+.custom-scrollbar-thumb {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	background: #000000; /* Noir comme les éléments du header */
+	border-radius: 4px;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transform-origin: center;
+	will-change: transform, border-radius;
+}
+
+/* Effet gooey vertical au scroll */
+.custom-scrollbar-thumb.scrolling {
+	transform: scaleY(1.3);
+}
+
+.custom-scrollbar-thumb.scrolling.scrolling-down {
+	border-radius: 30% 30% 15% 15%; /* Gooey en bas */
+}
+
+.custom-scrollbar-thumb.scrolling.scrolling-up {
+	border-radius: 15% 15% 30% 30%; /* Gooey en haut */
+}
+
+.custom-scrollbar-thumb.scrolling-fast {
+	transform: scaleY(1.8);
+	opacity: 0.9;
+}
+
+.custom-scrollbar-thumb.scrolling-fast.scrolling-down {
+	border-radius: 40% 40% 10% 10%; /* Gooey en bas, plus prononcé */
+}
+
+.custom-scrollbar-thumb.scrolling-fast.scrolling-up {
+	border-radius: 10% 10% 40% 40%; /* Gooey en haut, plus prononcé */
+}
+
+.custom-scrollbar-thumb:hover {
+	background: #333333; /* Gris foncé au hover */
+}
+
+/* Couleurs spécifiques selon la page - toujours noir pour les éléments permanents */
+body.scrollable-page.home .custom-scrollbar-thumb {
+	background: #000000 !important; /* Toujours noir pour les éléments permanents */
+}
+
+body.scrollable-page.home .custom-scrollbar-thumb:hover {
+	background: #333333 !important; /* Gris foncé au hover */
+}
+

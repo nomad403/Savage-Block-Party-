@@ -1,0 +1,246 @@
+/* ========================================
+   UTILITIES CSS
+   ========================================
+   
+   Ce fichier contient toutes les classes utilitaires réutilisables
+   dans l'application (logo tints, text reveal, filters, etc.).
+*/
+
+/* ========================================
+   LOGO TINTS
+   ======================================== */
+.logo-tint-black {
+	filter: brightness(0) saturate(100%);
+}
+
+.logo-tint-cyan {
+	filter: brightness(0) saturate(100%) invert(70%) sepia(100%) saturate(2000%) hue-rotate(180deg) brightness(1.2);
+}
+
+.logo-tint-green {
+	filter: brightness(0) saturate(100%) invert(67%) sepia(100%) saturate(3000%) hue-rotate(90deg) brightness(1.1);
+}
+
+.logo-tint-purple {
+	filter: brightness(0) saturate(100%) invert(35%) sepia(100%) saturate(1000%) hue-rotate(240deg) brightness(1.2);
+}
+
+.logo-tint-orange {
+	/* Rouge pur pour correspondre à la couleur d'accentuation (#FF1744) */
+	filter: brightness(0) saturate(100%) invert(1) sepia(100%) saturate(10000%) hue-rotate(0deg) brightness(1.2);
+}
+
+/* Logo avec couleur dynamique via CSS variable */
+.logo-tint-dynamic {
+	/* Le filtre sera appliqué via JavaScript inline pour utiliser la couleur exacte */
+	filter: brightness(0) saturate(100%);
+}
+
+/* ========================================
+   TEXT REVEAL
+   ======================================== */
+/* Animation de révélation de texte ligne par ligne */
+.text-reveal-line {
+	position: absolute;
+	overflow: hidden;
+	z-index: -1;
+	padding: 0 10px 0 8px;
+}
+
+.text-reveal-line::before {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: #22D3EE;
+	transform: translateX(-100%);
+	transition: transform 0.6s ease;
+	pointer-events: none;
+	will-change: transform;
+}
+
+.text-reveal-line.animate-in::before {
+	transform: translateX(0);
+}
+
+/* ========================================
+   TEXT REVEAL LINES SYSTEM
+   ======================================== */
+/* Nouveau système TextRevealLines basé sur ::before (robuste avec transforms, filters, Framer Motion) */
+/* Wrapper pour gérer la verticalité - chaque ligne est sur sa propre ligne */
+.reveal-line-row {
+	display: block;
+	margin: 0;
+	padding: 0;
+	overflow: visible; /* Permettre aux fonds de dépasser */
+}
+
+/* Chaque ligne est shrink-to-fit pour que le fond corresponde à la largeur réelle du texte */
+.reveal-line {
+	position: relative;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	vertical-align: baseline;
+	/* inline-block permet shrink-to-fit tout en permettant le wrapping si nécessaire */
+	white-space: normal; /* Permet le wrapping du texte */
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.reveal-line::before {
+	content: "";
+	position: absolute;
+	top: calc(var(--reveal-height-adjustment, 0px) / 2);
+	bottom: calc(var(--reveal-height-adjustment, 0px) / 2);
+	left: calc(-1 * var(--reveal-padding-left, 0px));
+	width: calc(100% + var(--reveal-padding-left, 0px) + var(--reveal-padding-right, 0px));
+	background: var(--reveal-color, #22D3EE);
+	transform: scaleX(0);
+	transform-origin: left center;
+	transition: transform 700ms ease-out;
+	z-index: -1;
+}
+
+.reveal-line.is-active::before {
+	transform: scaleX(1);
+}
+
+/* ========================================
+   TEXT ON THERMAL
+   ======================================== */
+/* Suppression de l'effet thermal sur le texte - le texte est maintenant normal */
+/* L'effet thermal est conservé uniquement pour les médias via .filter-infrared */
+.text-on-thermal,
+.text-on-thermal * {
+	/* Texte normal sans effet thermal */
+	color: inherit;
+	text-shadow: none;
+	position: relative;
+	z-index: 10;
+}
+
+/* Stabilisation du rendu pour text reveal lines - correction des problèmes de découpe */
+/* Applique des styles stables pour éviter les problèmes de rendu CSS */
+.text-on-thermal {
+	text-rendering: optimizeLegibility !important;
+	vertical-align: baseline !important;
+	/* S'assurer que le texte n'est pas coupé par overflow */
+	overflow: visible !important;
+}
+
+/* S'assurer que les containers de text reveal ne coupent pas les fonds */
+/* Les fonds doivent pouvoir dépasser du container */
+.text-on-thermal,
+[class*="text-reveal"],
+div[style*="overflow"]:has(.text-on-thermal) {
+	overflow: visible !important;
+}
+
+/* S'assurer que les parents ne coupent pas les fonds reveal */
+.text-on-thermal,
+.text-on-thermal * {
+	position: relative;
+	/* Permettre aux fonds de dépasser si nécessaire - désactiver contain */
+	contain: none;
+}
+
+/* Backdrop blur léger pour créer un effet de "vitre" derrière le texte */
+.text-on-thermal-backdrop {
+	backdrop-filter: blur(2px) brightness(0.3);
+	-webkit-backdrop-filter: blur(2px) brightness(0.3);
+	background: rgba(0, 0, 0, 0.2);
+	padding: 1rem;
+	border-radius: 0.5rem;
+}
+
+/* Overlay sombre léger pour sections avec texte sur effet thermique */
+.thermal-text-overlay {
+	position: relative;
+}
+
+.thermal-text-overlay::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.3) 0%,
+		rgba(0, 0, 0, 0.1) 50%,
+		rgba(0, 0, 0, 0.3) 100%
+	);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.thermal-text-overlay > * {
+	position: relative;
+	z-index: 2;
+}
+
+/* ========================================
+   FILTER INFRARED
+   ======================================== */
+/* Filtre thermique pour les médias - Performant (GPU-accelerated) */
+/* ÉTAPE 1: Inversion des couleurs (fondamental pour effet thermique) */
+/* ÉTAPE 2: Manipulation RGB pour palette thermique monochrome avec accent rouge subtil (page home) */
+.filter-infrared {
+	/* Inversion des couleurs en premier */
+	filter: 
+		invert(100%) 
+		/* Rotation initiale pour préparer la palette */
+		hue-rotate(180deg) 
+		/* Saturation réduite pour effet monochrome */
+		saturate(80%) 
+		/* Contraste renforcé pour mieux séparer zones chaudes/froides */
+		contrast(180%) 
+		/* ASSOMBRISSEMENT : Réduction de la luminosité pour image plus sombre */
+		brightness(70%) 
+		/* Ajustement de la teinte vers rouge (couleur d'accentuation page home) */
+		hue-rotate(-45deg) 
+		/* Saturation finale réduite pour effet monochrome avec teinte rouge subtile */
+		saturate(60%) 
+		/* Contraste final renforcé pour faire ressortir les nuances */
+		contrast(150%);
+	/* Force l'accélération GPU pour meilleures performances */
+	will-change: filter;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+}
+
+/* Application automatique aux médias UNIQUEMENT - l'effet thermal reste pour les médias */
+img.filter-infrared,
+video.filter-infrared,
+iframe.filter-infrared,
+[style*="background-image"].filter-infrared {
+	filter: 
+		invert(100%) 
+		hue-rotate(180deg) 
+		saturate(80%) 
+		contrast(180%) 
+		brightness(70%) 
+		hue-rotate(-45deg) 
+		saturate(60%) 
+		contrast(150%);
+	/* Force l'accélération GPU pour meilleures performances */
+	will-change: filter;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+}
+
+/* ========================================
+   SCROLL TEXT ANIMATION
+   ======================================== */
+/* Animation défilement infini pour les bannières de séparation */
+@keyframes scroll-text {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.animate-scroll-text {
+	animation: scroll-text 15s linear infinite;
+}
+

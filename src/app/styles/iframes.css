@@ -1,0 +1,87 @@
+/* ========================================
+   IFRAMES - YOUTUBE & SOUNDCLOUD
+   ========================================
+   
+   Ce fichier contient toutes les règles CSS spécifiques aux iframes
+   YouTube et SoundCloud utilisées dans l'application.
+*/
+
+/* ========================================
+   YOUTUBE IFRAMES
+   ======================================== */
+
+/* Masquer complètement les contrôles YouTube */
+iframe[src*="youtube.com"] {
+	pointer-events: none !important;
+}
+
+/* Masquer tous les contrôles média WebKit de YouTube */
+iframe[src*="youtube.com"]::-webkit-media-controls {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-panel {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-play-button {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-timeline {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-current-time-display {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-time-remaining-display {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-mute-button {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-volume-slider {
+	display: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-media-controls-fullscreen-button {
+	display: none !important;
+}
+
+/* Masquer les overlays YouTube */
+iframe[src*="youtube.com"]::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: transparent;
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* ========================================
+   SOUNDCLOUD IFRAMES
+   ======================================== */
+
+/* Styliser le widget SoundCloud */
+iframe[src*="soundcloud.com"] {
+	border-radius: 12px !important;
+	background: transparent !important;
+}
+
+/* Overlay pour harmoniser avec notre design */
+.soundcloud-container {
+	position: relative;
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(8px);
+	border: 1px solid rgba(255, 106, 0, 0.3);
+	border-radius: 12px;
+	overflow: hidden;
+}
+

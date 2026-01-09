@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "./styles/globals.css";
+import "./styles/fonts.css";
+import "./styles/iframes.css";
+import "./styles/scrollbar.css";
+import "./styles/utilities.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import BgVideoHome from "@/components/bg-video-home";
-import SoundCloudPlayer from "@/components/soundcloud-player-simple";
-import CustomScrollbar from "@/components/custom-scrollbar";
-import DynamicColorProvider from "@/components/dynamic-color-provider";
-import MenuOverlay from "@/components/menu-overlay";
+import { Header, Footer } from "@/components/layout";
+import { BgVideoHome } from "@/components/features";
+import { SoundCloudPlayer } from "@/components/player";
+import { CustomScrollbar } from "@/components/ui";
+import { DynamicColorProvider } from "@/components/providers";
+import { MenuOverlay } from "@/components/menu";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",

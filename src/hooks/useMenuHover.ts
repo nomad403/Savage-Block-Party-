@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getPagePrimaryColor } from './usePagePrimaryColor';
+import { useAppEvent } from './useAppEvents';
 
 /**
  * Hook centralisé pour gérer l'état de hover du menu
@@ -14,24 +15,17 @@ export function useMenuHover() {
   const [overlayColor, setOverlayColor] = useState<string | null>(null);
 
   // Écouter les événements de hover du menu depuis le header
-  useEffect(() => {
-    const handleMenuItemHover = (event: CustomEvent) => {
-      const itemHref = event.detail.itemHref;
-      if (itemHref) {
-        setHoveredMenuItem(itemHref);
-        const color = getPagePrimaryColor(itemHref);
-        setOverlayColor(color);
-      } else {
-        setHoveredMenuItem(null);
-        setOverlayColor(null);
-      }
-    };
-
-    window.addEventListener('menuItemHover', handleMenuItemHover as EventListener);
-    return () => {
-      window.removeEventListener('menuItemHover', handleMenuItemHover as EventListener);
-    };
-  }, []);
+  useAppEvent('menuItemHover', (event) => {
+    const itemHref = event.detail.itemHref;
+    if (itemHref) {
+      setHoveredMenuItem(itemHref);
+      const color = getPagePrimaryColor(itemHref);
+      setOverlayColor(color);
+    } else {
+      setHoveredMenuItem(null);
+      setOverlayColor(null);
+    }
+  });
 
   return {
     isMenuHovered: !!hoveredMenuItem,

@@ -34,6 +34,7 @@ export function usePagePrimaryColor() {
 
 /**
  * Fonction utilitaire pour obtenir la couleur primaire d'une page donnée
+ * Utilisée dans useMenuHover et header.tsx pour obtenir la couleur depuis un pathname
  */
 export function getPagePrimaryColor(pathname: string | null): string {
   if (pathname === "/") {

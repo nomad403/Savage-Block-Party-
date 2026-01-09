@@ -1,0 +1,234 @@
+/* ========================================
+   AGENDA PAGE - STYLES SPÉCIFIQUES
+   ========================================
+   
+   Ce fichier contient toutes les règles CSS spécifiques à la page Agenda.
+*/
+
+/* Page agenda - reveal focus en cyan */
+body:has(#agenda-root) .reveal-focus::before {
+    background: #22D3EE; /* Cyan-400 */
+    left: -2px; /* compense la bordure 2px côté gauche */
+    right: -2px; /* compense la bordure 2px côté droit */
+}
+
+/* Page agenda - custom scrollbar thumb */
+body.scrollable-page.agenda .custom-scrollbar-thumb {
+	background: #000000; /* Noir sur agenda */
+}
+
+body.scrollable-page.agenda .custom-scrollbar-thumb:hover {
+	background: #333333; /* Gris foncé au hover */
+}
+
+/* Page agenda - header transparent sans ombre */
+body:has(#agenda-root) header {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Page agenda - header toujours fixe et visible sur mobile */
+body:has(#agenda-root) header {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	transform: translateY(0) !important;
+	will-change: auto !important;
+}
+
+/* Désactiver toute animation du header sur agenda */
+body:has(#agenda-root) header * {
+	transform: none !important;
+}
+
+/* Page agenda - ajustement du padding-top pour mobile */
+/* Mobile : padding-top avec un petit espace après le header (96px = 80px header + 16px espace) */
+body:has(#agenda-root) .agenda-container {
+	padding-top: 128px !important;
+	padding-bottom: 128px !important;
+}
+
+/* Desktop : padding-top standard (128px = 8rem) */
+@media (min-width: 768px) {
+	body:has(#agenda-root) .agenda-container {
+		padding-top: 8rem !important; /* 128px */
+	}
+}
+
+/* Scroll fade pour la liste agenda - isolé à la page agenda uniquement */
+body:has(#agenda-root) .agenda-scroll {
+    position: relative;
+}
+
+/* Fade en haut - séparé */
+body:has(#agenda-root) .agenda-scroll::before {
+    content: "";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    width: 100%;
+    pointer-events: none;
+    z-index: 40; /* En dessous de l'overlay hover (z-50) mais au-dessus du contenu */
+    background-image: linear-gradient(
+        to bottom,
+        rgb(31, 31, 31) 0%,
+        rgba(31, 31, 31, 0.97) 40%,
+        rgba(31, 31, 31, 0.7) 70%,
+        rgba(31, 31, 31, 0.3) 90%,
+        rgba(31, 31, 31, 0) 100%
+    );
+    /* Optimisation GPU */
+    will-change: opacity;
+    transform: translateZ(0);
+}
+
+/* Fade en bas - séparé */
+body:has(#agenda-root) .agenda-scroll::after {
+    content: "";
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    width: 100%;
+    pointer-events: none;
+    z-index: 40; /* En dessous de l'overlay hover (z-50) mais au-dessus du contenu */
+    background-image: linear-gradient(
+        to top,
+        rgb(31, 31, 31) 0%,
+        rgb(31, 31, 31) 12%,
+        rgba(31, 31, 31, 0) 100%
+    );
+    /* Optimisation GPU */
+    will-change: opacity;
+    transform: translateZ(0);
+}
+
+/* Désactiver le fade quand un item est étendu */
+body:has(#agenda-root) .agenda-scroll.has-expanded::before,
+body:has(#agenda-root) .agenda-scroll.has-expanded::after {
+    display: none;
+}
+
+/* Page agenda - waveform gérée par la logique centralisée (useGlobalDynamicColors) */
+
+/* ========================================
+   MENU LINK - AGENDA SPECIFIC
+   ======================================== */
+/* Fond coloré pour le bouton menu mobile sur agenda */
+.menu-link-agenda::before {
+	background: #0080FF !important; /* Bleu pour agenda (synchronisé avec getPagePrimaryColor) */
+}
+
+/* ========================================
+   PLAYER COMPACT - AGENDA
+   ======================================== */
+/* Animation IN/OUT pour le player compact sur agenda */
+.player-compact-agenda {
+	position: relative;
+	overflow: hidden;
+	padding: 0.5rem;
+	border-radius: 0.5rem;
+	width: fit-content;
+}
+
+.player-compact-agenda::before {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: #22D3EE; /* Cyan-400 (même couleur que le footer story) */
+	transform: translateX(-100%);
+	transition: transform 0.35s ease;
+	pointer-events: none;
+	will-change: transform;
+	z-index: 1;
+	border-radius: 0.5rem;
+}
+
+.player-compact-agenda.animate-in::before {
+	transform: translateX(0);
+}
+
+.player-compact-agenda.animate-out::before {
+	transform: translateX(100%);
+}
+
+.player-compact-agenda > * {
+	position: relative;
+	z-index: 2;
+}
+
+/* ========================================
+   CALENDAR GRID LINES
+   ======================================== */
+/* Calendar grid lines - black */
+.calendar-lines {
+	position: relative;
+}
+.calendar-lines::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background-image:
+		linear-gradient(to right, rgba(0,0,0,0.85) 1px, transparent 1px),
+		linear-gradient(to bottom, rgba(0,0,0,0.85) 1px, transparent 1px);
+	background-size: 48px 48px; /* cell size */
+}
+
+/* Agenda: grille sans décalage (inspiration CalArts 2024)
+   On dessine les lignes avec un overlay pour garantir l'alignement, 
+   au lieu d'utiliser des bordures sur chaque cellule. */
+.calendar-grid-lines {
+    background-image:
+        linear-gradient(to right, rgba(0,0,0,0.85) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.85) 1px, transparent 1px);
+    background-size: calc(100% / 7) 100%, 100% calc(100% / 6);
+    background-position: left top;
+    z-index: 0;
+}
+
+/* Agenda 13x7 overlay */
+.grid-lines-13x7 {
+    border: 1px solid #000;
+    border-bottom: none;
+    background-image:
+        repeating-linear-gradient(to right, transparent, transparent calc(100% / 13 - 1px), #000 calc(100% / 13 - 1px), #000 calc(100% / 13)),
+        repeating-linear-gradient(to bottom, transparent, transparent calc(100% / 7 - 1px), #000 calc(100% / 7 - 1px), #000 calc(100% / 7));
+    background-position: 0 0;
+    background-size: auto;
+}
+
+/* Centre scroll: 7x6 grid overlay */
+.grid-lines-7x6 {
+    background-image:
+        repeating-linear-gradient(to right, #000, #000 1px, transparent 1px, transparent calc(100% / 7)),
+        repeating-linear-gradient(to bottom, #000, #000 1px, transparent 1px, transparent calc(100% / 6));
+    background-position: 0 0;
+    background-size: auto;
+    box-shadow: inset 0 0 0 1px #000;
+}
+
+/* Normalise la box-sizing pour éviter tout décalage dû aux bordures */
+.calendar-case { 
+    box-sizing: border-box; 
+}
+
+/* Reset spécifique uniquement pour les divs d'images dans les cases */
+.calendar-case div[aria-hidden="true"] {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    font-size: 0;
+    line-height: 0;
+    display: block;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+

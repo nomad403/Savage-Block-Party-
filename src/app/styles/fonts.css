@@ -1,0 +1,96 @@
+/* ========================================
+   FONTS
+   ========================================
+   
+   Ce fichier contient toutes les déclarations @font-face
+   pour les polices utilisées dans l'application.
+*/
+
+/* ========================================
+   HANSON FONT
+   ======================================== */
+@font-face {
+	font-family: 'Hanson';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/hanson/Hanson-Bold.ttf') format('truetype'),
+		 url('/fonts/hanson/Hanson-Bold.otf') format('opentype');
+}
+
+/* ========================================
+   CY FONT FAMILY
+   ======================================== */
+/* CY Font - remplace Satoshi */
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 100;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Thin-iF6673e736d93c9.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 200;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-ExtraLight-iF6673e7371dad1.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Light-iF6673e7370fbcf.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Regular-iF6673e73706204.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-SemiLight-iF6673e736e6655.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-SemiBold-iF6673e736f094d.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Bold-iF6673e737316f8.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 800;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-ExtraBold-iF6673e73727887.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Cy';
+	font-style: normal;
+	font-weight: 900;
+	font-display: swap;
+	src: url('/fonts/cy-font-family/Cy-Black-iF6673e7373b6aa.ttf') format('truetype');
+}
+
