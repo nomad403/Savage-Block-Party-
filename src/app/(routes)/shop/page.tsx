@@ -755,6 +755,27 @@ export default function ShopPage() {
                     onClick={() => setSelectedProductId(isSelected ? null : product.id)}
                     onMouseEnter={() => setHoveredProductId(product.id)}
                     onMouseLeave={() => setHoveredProductId(null)}
+                    onTouchStart={() => {
+                      // Sur mobile (iOS notamment), activer le hover au touch
+                      if (isMobile) {
+                        setHoveredProductId(product.id);
+                      }
+                    }}
+                    onTouchEnd={() => {
+                      // Sur mobile, désactiver le hover après le touch
+                      // Délai pour permettre la transition visuelle et éviter les désactivations trop rapides
+                      if (isMobile) {
+                        setTimeout(() => {
+                          setHoveredProductId(null);
+                        }, 300);
+                      }
+                    }}
+                    onTouchCancel={() => {
+                      // Sur mobile, désactiver le hover si le touch est annulé
+                      if (isMobile) {
+                        setHoveredProductId(null);
+                      }
+                    }}
                     style={{ 
                       display: 'flex',
                       flexDirection: 'column',
