@@ -82,7 +82,7 @@ export default function ShopPage() {
         (span as HTMLElement).style.setProperty('background-color', '#000000', 'important');
       });
 
-      // Forcer les textes du player en blanc
+      // Forcer les textes du player en blanc quand un item est sélectionné
       const playerTexts = document.querySelectorAll('.header-player .font-title, .header-player .font-text');
       playerTexts.forEach((el) => {
         (el as HTMLElement).style.setProperty('color', '#FFFFFF', 'important');
@@ -106,11 +106,14 @@ export default function ShopPage() {
       });
     } else {
       // Restaurer les styles par défaut quand aucun item n'est sélectionné
+      // Le texte du player doit être noir par défaut sur la page shop
       const menuButtons = document.querySelectorAll('header button span');
       menuButtons.forEach((span) => {
         (span as HTMLElement).style.removeProperty('background-color');
       });
 
+      // Le texte du player reste noir par défaut (géré par CSS)
+      // On ne force rien ici, le CSS s'en charge
       const playerTexts = document.querySelectorAll('.header-player .font-title, .header-player .font-text');
       playerTexts.forEach((el) => {
         (el as HTMLElement).style.removeProperty('color');
@@ -245,9 +248,9 @@ export default function ShopPage() {
           filter: brightness(0) saturate(100%) !important;
         }
         
-        /* Menu hamburger en noir par défaut sur la page shop */
-        body:has(#shop-root) header button span {
-          background-color: #000000 !important;
+        /* Menu hamburger en rouge (couleur primaire) sur la page shop */
+        body:has(#shop-root) header button.header-burger-mobile span {
+          background-color: #FF1744 !important;
         }
 
         /* Bouton menu actif en noir sur la page shop */
@@ -282,6 +285,9 @@ export default function ShopPage() {
           color: #000000 !important;
         }
 
+        /* Mobile : boutons menu en noir quand un item est sélectionné (géré par header.tsx via événement shopItemSelected) */
+        /* La logique est centralisée dans header.tsx - MenuButtonSpan utilise setProperty avec !important */
+
         /* Forcer le fond du player en noir quand un item est sélectionné */
         body:has(.product-item.selected) .header-player {
           background-color: #000000 !important;
@@ -304,14 +310,8 @@ export default function ShopPage() {
           fill: #FFFFFF !important;
         }
 
-        /* L'icône panier garde sa couleur primaire même quand un item est sélectionné */
-        body:has(.product-item.selected) .header-player a[href="/shop"] {
-          color: #FF1744 !important;
-        }
-
-        body:has(.product-item.selected) .header-player a[href="/shop"] svg {
-          fill: #FF1744 !important;
-        }
+        /* L'icône panier devient noire quand un item est sélectionné (géré par header.tsx) */
+        /* La logique est centralisée dans header.tsx via isShopItemSelected */
 
         /* Forcer les boutons du player en blanc */
         body:has(.product-item.selected) .header-player button {
@@ -532,17 +532,101 @@ export default function ShopPage() {
           flex-shrink: 0;
         }
 
+        /* Mobile: items plus hauts, alignés en bas, scroll horizontal avec snap */
+        @media (max-width: 767px) {
+          body:has(#shop-root) .product-column {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+            align-items: flex-end !important;
+            padding-top: 80px !important; /* Header mobile */
+            padding-bottom: var(--footer-total-height-mobile) !important; /* Footer mobile */
+            height: 100vh !important;
+          }
+
+          body:has(#shop-root) .product-item-wrapper {
+            flex: 0 0 100vw !important;
+            width: 100vw !important;
+            scroll-snap-align: start !important;
+            scroll-snap-stop: always !important;
+          }
+
+          body:has(#shop-root) .product-item {
+            height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            min-height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            display: flex !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+          }
+
+          /* Item sélectionné sur mobile : fond en fullscreen */
+          body:has(#shop-root) .product-item-wrapper:has(.product-item.selected) {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 50 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          body:has(#shop-root) .product-item-wrapper:has(.product-item.selected) .product-item-expand {
+            width: 100vw !important;
+            height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          body:has(#shop-root) .product-item.selected {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        }
+
       `}</style>
       <div id="shop-root" ref={shopRootRef}>
-      <main className="h-screen w-full overflow-hidden" style={{ backgroundColor: '#d4d4d4' }}>
-        <div className="flex h-full">
-          {/* Section produits - grille 3 colonnes */}
+      <main 
+        className="w-full overflow-hidden" 
+        style={{ 
+          backgroundColor: '#d4d4d4',
+          minHeight: '100vh',
+          height: '100vh',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 'var(--z-background)' // -1, derrière le contenu mais devant rien
+        }}
+      >
+        <div className="flex h-full" style={{ position: 'relative', zIndex: 'var(--z-content)' }}>
+          {/* Section produits - grille 3 colonnes desktop, scroll horizontal mobile */}
           <div 
             ref={productColumnRef}
             className="w-full product-column" 
             id="product-column"
             style={{ 
+              // Desktop: scroll vertical, grille 3 colonnes
+              // Mobile: scroll horizontal, items alignés en bas
               overflowY: 'auto',
+              overflowX: 'hidden',
               height: '100vh',
               paddingBottom: '0',
               paddingLeft: '0',

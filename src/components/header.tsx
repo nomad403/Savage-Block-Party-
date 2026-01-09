@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,11 +13,13 @@ export default function Header() {
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [hoveredMenuItem, setHoveredMenuItem] = useState<string | null>(null);
+    const [isShopItemSelected, setIsShopItemSelected] = useState(false);
     const pathname = usePathname();
     const isHome = pathname === "/";
     const isAgenda = pathname?.startsWith("/agenda");
     const isFamily = pathname?.startsWith("/family");
     const isPresse = pathname?.startsWith("/presse");
+    const isShop = pathname?.startsWith("/shop");
     
     // Utiliser les couleurs dynamiques globales
     const { colors, currentTheme } = useGlobalDynamicColors();
@@ -44,6 +46,30 @@ export default function Header() {
     useEffect(() => {
         setOpen(false);
     }, [pathname]);
+
+    // Écouter l'événement quand un item est sélectionné sur la page shop
+    useEffect(() => {
+        const handleShopItemSelected = (event: CustomEvent) => {
+            setIsShopItemSelected(event.detail?.isSelected || false);
+        };
+
+        window.addEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+        return () => {
+            window.removeEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+        };
+    }, []);
+
+    // Écouter l'événement quand un item est sélectionné sur la page shop
+    useEffect(() => {
+        const handleShopItemSelected = (event: CustomEvent) => {
+            setIsShopItemSelected(event.detail?.isSelected || false);
+        };
+
+        window.addEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+        return () => {
+            window.removeEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+        };
+    }, []);
 
     // Notifier le player de l'état du menu
     useEffect(() => {
@@ -205,7 +231,7 @@ export default function Header() {
                             href="/shop"
                             className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
                             style={{ 
-                                color: hoveredMenuItem ? '#000000' : pagePrimaryColor,
+                                color: (isShop && isShopItemSelected) ? '#000000' : (hoveredMenuItem ? '#000000' : pagePrimaryColor),
                                 width: '36px', // md: proportionné au logo 120px
                                 height: '36px'
                             }}
@@ -231,7 +257,7 @@ export default function Header() {
                             href="/shop"
                             className="flex items-center justify-center transition-all duration-200 hover:opacity-80 relative z-[20002]"
                             style={{ 
-                                color: hoveredMenuItem ? '#000000' : pagePrimaryColor,
+                                color: (isShop && isShopItemSelected) ? '#000000' : (hoveredMenuItem ? '#000000' : pagePrimaryColor),
                                 width: '32px',
                                 height: '32px'
                             }}
@@ -306,39 +332,67 @@ export default function Header() {
 						>
 							<div className="h-full w-full flex">
 								<nav className="ml-auto h-full w-full flex flex-col justify-center items-end gap-0 pr-10 sm:pr-14 relative z-[41]">
-									{menuItems.map((item) => {
-										// Logique de couleur pour les boutons menu mobile :
-										// - Bouton survolé → noir (#000000)
-										// - Autres boutons → couleur du fond (mobileMenuBgColor) pour se fondre avec le fond
-										// - Aucun hover → couleur primaire de la page actuelle
-										let buttonColor: string;
-										if (hoveredMenuItem === item.href) {
-											// Bouton survolé : noir
-											buttonColor = "#000000";
-										} else if (hoveredMenuItem) {
-											// Autre bouton quand un bouton est survolé : couleur du fond
-											buttonColor = mobileMenuBgColor !== "transparent" ? mobileMenuBgColor : pagePrimaryColor;
-										} else {
-											// Aucun hover : couleur primaire de la page actuelle
-											buttonColor = pagePrimaryColor;
+									{(() => {
+										/**
+										 * Composant interne pour gérer la couleur des boutons menu avec !important
+										 */
+										function MenuButtonSpan({ buttonColor, label }: { buttonColor: string; label: string }) {
+											const spanRef = useRef<HTMLSpanElement>(null);
+											
+											useEffect(() => {
+												if (spanRef.current) {
+													// Forcer la couleur avec !important pour surcharger les règles CSS
+													spanRef.current.style.setProperty('color', buttonColor, 'important');
+												}
+											}, [buttonColor]);
+											
+											return (
+												<span 
+													ref={spanRef}
+													className="relative z-[43]" 
+													style={{ 
+														transition: 'color 0.3s ease'
+													} as React.CSSProperties}
+												>{label}</span>
+											);
 										}
 										
-										return (
-											<Link
-												key={item.href}
-												href={item.href}
-												className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl leading-none relative z-[42] ${isAgenda ? 'menu-link-agenda' : ''} ${isFamily ? 'menu-link-family' : ''} ${isPresse ? 'menu-link-presse' : ''}`}
-												onClick={() => setOpen(false)}
-												onMouseEnter={() => setHoveredMenuItem(item.href)}
-												onMouseLeave={() => setHoveredMenuItem(null)}
-											>
-												<span className="relative z-[43]" style={{ 
-													color: buttonColor,
-													transition: 'color 0.3s ease'
-												} as React.CSSProperties}>{item.label}</span>
-											</Link>
-										);
-									})}
+										return menuItems.map((item) => {
+											// Logique de couleur pour les boutons menu mobile :
+											// - Bouton survolé → noir (#000000)
+											// - Autres boutons → couleur du fond du menu mobile (même couleur que le fond)
+											// - Aucun hover → couleur primaire de la page actuelle
+											// - Exception page shop : si un item est sélectionné → tous les boutons en noir
+											let buttonColor: string;
+											
+											// Exception page shop : si un item est sélectionné, tous les boutons sont noirs
+											if (isShop && isShopItemSelected) {
+												buttonColor = "#000000";
+											} else if (hoveredMenuItem === item.href) {
+												// Bouton survolé : noir
+												buttonColor = "#000000";
+											} else if (hoveredMenuItem) {
+												// Autre bouton quand un bouton est survolé : couleur du fond du menu mobile (même couleur que le fond)
+												buttonColor = mobileMenuBgColor !== "transparent" ? mobileMenuBgColor : pagePrimaryColor;
+											} else {
+												// Aucun hover : couleur primaire de la page actuelle
+												buttonColor = pagePrimaryColor;
+											}
+											
+											return (
+												<Link
+													key={item.href}
+													href={item.href}
+													className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl leading-none relative z-[42] ${isAgenda ? 'menu-link-agenda' : ''} ${isFamily ? 'menu-link-family' : ''} ${isPresse ? 'menu-link-presse' : ''}`}
+													onClick={() => setOpen(false)}
+													onMouseEnter={() => setHoveredMenuItem(item.href)}
+													onMouseLeave={() => setHoveredMenuItem(null)}
+												>
+													<MenuButtonSpan buttonColor={buttonColor} label={item.label} />
+												</Link>
+											);
+										});
+									})()}
 								</nav>
 							</div>
 						</motion.div>

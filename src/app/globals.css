@@ -947,22 +947,83 @@ body:has(#shop-root) header {
 	box-shadow: none !important;
 }
 
-body:has(#shop-root) header,
-body:has(#shop-root) header *,
-body:has(#shop-root) header span {
+/* Page shop - éléments header en noir SAUF les icônes (Panier et burger) */
+body:has(#shop-root) header {
 	color: #000000 !important;
 }
 
-/* Page shop - player en blanc au hover du menu (logique globale) */
-body:has(#shop-root) header.text-black .header-player,
-body:has(#shop-root) header.text-black .header-player *,
-body:has(#shop-root) header.text-black .header-player button,
-body:has(#shop-root) header.text-black .header-player button *,
-body:has(#shop-root) header.text-black .header-player button svg,
-body:has(#shop-root) header.text-black .header-player span,
-body:has(#shop-root) header.text-black .header-player div {
-	color: #FFFFFF !important;
+/* Icônes Panier et burger en rouge (couleur primaire) par défaut sur shop */
+/* Les styles inline dans header.tsx gèrent le hover (noir) et la sélection d'item (noir) */
+body:has(#shop-root) header:not(:has(.product-item.selected)) a[href="/shop"] {
+	color: #FF1744 !important;
 }
+
+body:has(#shop-root) header:not(:has(.product-item.selected)) a[href="/shop"] svg {
+	color: #FF1744 !important;
+	fill: #FF1744 !important;
+}
+
+/* Icône panier en noir quand un item est sélectionné (géré aussi par header.tsx via isShopItemSelected) */
+body:has(.product-item.selected) header a[href="/shop"],
+body:has(.product-item.selected) header a[href="/shop"] svg {
+	color: #000000 !important;
+	fill: #000000 !important;
+}
+
+body:has(#shop-root) header button.header-burger-mobile span {
+	background-color: #FF1744 !important;
+}
+
+/* Au hover du menu : icônes panier et burger en noir (mobile uniquement) */
+/* Les styles inline dans header.tsx définissent déjà la couleur, mais on force avec CSS pour garantir */
+@media (max-width: 767px) {
+	body:has(#shop-root) header.text-black a[href="/shop"],
+	body:has(#shop-root) header.text-black a[href="/shop"] svg {
+		color: #000000 !important;
+		fill: #000000 !important;
+	}
+
+	body:has(#shop-root) header.text-black button.header-burger-mobile span {
+		background-color: #000000 !important;
+	}
+}
+
+/* Page shop - texte du player en noir par défaut */
+body:has(#shop-root) .header-player,
+body:has(#shop-root) .header-player *,
+body:has(#shop-root) .header-player .font-title,
+body:has(#shop-root) .header-player .font-text,
+body:has(#shop-root) .header-player span,
+body:has(#shop-root) .header-player div {
+	color: #000000 !important;
+}
+
+/* Page shop - texte du player en blanc au hover du menu (mobile uniquement) */
+@media (max-width: 767px) {
+	body:has(#shop-root) header.text-black .header-player,
+	body:has(#shop-root) header.text-black .header-player *,
+	body:has(#shop-root) header.text-black .header-player .font-title,
+	body:has(#shop-root) header.text-black .header-player .font-text,
+	body:has(#shop-root) header.text-black .header-player span,
+	body:has(#shop-root) header.text-black .header-player div {
+		color: #FFFFFF !important;
+	}
+
+	/* Page shop - icônes SVG du player en blanc au hover du menu (mobile uniquement) */
+	body:has(#shop-root) header.text-black .header-player svg,
+	body:has(#shop-root) header.text-black .header-player button svg {
+		color: #FFFFFF !important;
+		fill: #FFFFFF !important;
+	}
+}
+
+/* Page shop - icônes SVG du player en noir par défaut */
+body:has(#shop-root) .header-player svg {
+	color: #000000 !important;
+	fill: #000000 !important;
+}
+
+/* Exception : texte blanc uniquement quand un item est sélectionné (géré par shop/page.tsx) */
 
 /* Page shop - boutons menu en rouge (couleur primaire) */
 body:has(#shop-root) header nav a,
@@ -983,17 +1044,16 @@ body:has(#shop-root) header.text-black nav a * {
 	color: #000000 !important;
 }
 
-/* Page shop - menu mobile (menu-link) en rouge */
-body:has(#shop-root) .menu-link,
-body:has(#shop-root) .menu-link > span {
-	color: #FF1744 !important;
-}
-
-/* Page shop - menu mobile en noir au hover (logique globale) */
-body:has(#shop-root) .menu-link:hover > span,
-body:has(#shop-root) .menu-link:focus-visible > span {
-	color: #000000 !important;
-}
+/* Page shop - menu mobile (menu-link) en rouge par défaut */
+/* La logique de couleur est CENTRALISÉE dans header.tsx via MenuButtonSpan */
+/* MenuButtonSpan utilise setProperty avec !important pour garantir la priorité sur les règles CSS */
+/* On ne force rien ici pour laisser les styles inline prendre le dessus */
+/* 
+ * RÈGLES DE COULEUR (gérées par header.tsx) :
+ * - Par défaut : couleur primaire de la page (rouge pour shop)
+ * - Au hover : bouton hover = noir, autres = couleur du fond
+ * - Item sélectionné sur shop : tous les boutons = noir
+ */
 
 /* Page shop - footer : texte en rouge, fond en noir */
 body:has(#shop-root) footer,
