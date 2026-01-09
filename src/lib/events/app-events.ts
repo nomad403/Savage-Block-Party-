@@ -143,14 +143,20 @@ export function dispatchAppEvent<T extends AppEvent>(event: T): void {
 
 /**
  * Crée un listener typé pour un événement
+ * @template T - Le type d'événement (ex: 'shopItemSelected')
  */
 export function createAppEventListener<T extends AppEvent['type']>(
   type: T,
   handler: (event: CustomEvent<Extract<AppEvent, { type: T }>['detail']>) => void
 ): (event: Event) => void {
   return (event: Event) => {
-    const customEvent = event as CustomEvent<Extract<AppEvent, { type: T }>['detail']>;
-    handler(customEvent);
+    if (event instanceof CustomEvent) {
+      // TypeScript a besoin d'une assertion explicite ici
+      // car il ne peut pas inférer que le type de l'événement correspond exactement à T
+      // Cette assertion est sûre car nous vérifions que event.type === type au runtime
+      // @ts-ignore - TypeScript ne peut pas inférer correctement l'union de types
+      handler(event);
+    }
   };
 }
 

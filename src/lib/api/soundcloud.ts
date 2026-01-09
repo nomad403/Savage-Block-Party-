@@ -1,5 +1,5 @@
 import { SoundCloudTrack } from '@/types/audio-analysis';
-import { ANALYSIS_CONFIG as SOUNDCLOUD_CONFIG } from '@/lib/utils/analysis-config';
+import { SOUNDCLOUD_CONFIG } from '@/lib/utils/analysis-config';
 
 /**
  * Récupère tous les tracks publics d'un utilisateur SoundCloud
