@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -39,17 +39,38 @@ export default function Header() {
     // Les états shop items sont maintenant gérés par useShopItemState()
     // Plus besoin d'écouter les événements ici
 
+    // Fonction pour gérer le hover d'un item menu
+    // Émet l'événement pour synchroniser useMenuHover() et les autres composants
+    // Mémorisée avec useCallback pour éviter les re-renders inutiles
+    const handleMenuItemHover = useCallback((itemHref: string | null) => {
+        menuEvents.itemHover(!!itemHref, itemHref);
+    }, []);
+
+    // Sur mobile, réinitialiser le hover quand l'utilisateur touche ailleurs
+    useEffect(() => {
+        if (!isMobile) return;
+
+        const handleTouchStart = (e: TouchEvent) => {
+            // Si l'utilisateur touche en dehors du menu mobile, réinitialiser le hover
+            const target = e.target as HTMLElement;
+            const menuNav = target.closest('nav');
+            
+            // Si on touche en dehors du menu ou si le menu n'est pas ouvert, réinitialiser
+            if (!menuNav || !open) {
+                handleMenuItemHover(null);
+            }
+        };
+
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        return () => {
+            document.removeEventListener('touchstart', handleTouchStart);
+        };
+    }, [isMobile, open, handleMenuItemHover]);
 
     // Notifier le player de l'état du menu
     useEffect(() => {
         menuEvents.toggle(open);
     }, [open]);
-
-    // Fonction pour gérer le hover d'un item menu
-    // Émet l'événement pour synchroniser useMenuHover() et les autres composants
-    const handleMenuItemHover = (itemHref: string | null) => {
-        menuEvents.itemHover(!!itemHref, itemHref);
-    };
 
     // Gérer la visibilité du header au scroll sur mobile
     useEffect(() => {
@@ -339,9 +360,24 @@ export default function Header() {
 										key={item.href}
 										href={item.href}
 													className={`menu-link w-full font-title uppercase text-4xl sm:text-5xl leading-none relative z-[42] ${isAgenda ? 'menu-link-agenda' : ''} ${isFamily ? 'menu-link-family' : ''} ${isPresse ? 'menu-link-presse' : ''}`}
-										onClick={() => setOpen(false)}
+										onClick={() => {
+											setOpen(false);
+											// Réinitialiser l'état hover après le clic sur mobile
+											handleMenuItemHover(null);
+										}}
 													onMouseEnter={() => handleMenuItemHover(item.href)}
 													onMouseLeave={() => handleMenuItemHover(null)}
+													onTouchStart={() => {
+														// Sur mobile, activer le hover au touch
+														handleMenuItemHover(item.href);
+													}}
+													onTouchEnd={() => {
+														// Sur mobile, désactiver le hover après le touch
+														// Petit délai pour permettre la transition visuelle
+														setTimeout(() => {
+															handleMenuItemHover(null);
+														}, 100);
+													}}
 									>
 													<MenuButtonSpan buttonColor={buttonColor} label={item.label} />
 									</Link>
