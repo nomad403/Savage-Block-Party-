@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -58,7 +58,77 @@ export default function HeaderPlayer() {
     // LOGIQUE GLOBALE : Si un menu est survolé, le fond devient noir, sinon couleur primaire
     const backgroundColor = isMenuHovered ? '#000000' : pagePrimaryColor;
     // Textes : blancs sur fond noir, noirs sur fond coloré
+    // Exception page shop mobile : texte blanc au hover du menu (même si fond n'est pas noir)
     const textColor = (isMenuHovered || backgroundColor === '#000000' || isAgenda) ? '#FFFFFF' : '#000000';
+    
+    // Références pour forcer les couleurs avec !important sur la page shop mobile
+    const titleRef = useRef<HTMLDivElement>(null);
+    const artistRef = useRef<HTMLDivElement>(null);
+    const prevButtonRef = useRef<HTMLButtonElement>(null);
+    const nextButtonRef = useRef<HTMLButtonElement>(null);
+    
+    // Forcer les couleurs avec !important sur mobile au hover du menu
+    useEffect(() => {
+        // Détecter si on est sur mobile (avec gestion du resize)
+        const checkMobile = () => {
+            return typeof window !== 'undefined' && window.innerWidth <= 767;
+        };
+        
+        const isMobile = checkMobile();
+        
+        // Sur toutes les pages mobile, forcer le texte et les boutons en blanc au hover du menu
+        // car le fond devient noir (backgroundColor = '#000000' quand isMenuHovered)
+        if (isMenuHovered && isMobile) {
+            if (titleRef.current) {
+                titleRef.current.style.setProperty('color', '#FFFFFF', 'important');
+            }
+            if (artistRef.current) {
+                artistRef.current.style.setProperty('color', '#FFFFFF', 'important');
+            }
+            if (prevButtonRef.current) {
+                prevButtonRef.current.style.setProperty('color', '#FFFFFF', 'important');
+                // Forcer aussi les SVG à l'intérieur du bouton
+                const svg = prevButtonRef.current.querySelector('svg');
+                if (svg) {
+                    svg.style.setProperty('color', '#FFFFFF', 'important');
+                    svg.style.setProperty('fill', '#FFFFFF', 'important');
+                }
+            }
+            if (nextButtonRef.current) {
+                nextButtonRef.current.style.setProperty('color', '#FFFFFF', 'important');
+                // Forcer aussi les SVG à l'intérieur du bouton
+                const svg = nextButtonRef.current.querySelector('svg');
+                if (svg) {
+                    svg.style.setProperty('color', '#FFFFFF', 'important');
+                    svg.style.setProperty('fill', '#FFFFFF', 'important');
+                }
+            }
+        } else {
+            // Restaurer les couleurs normales (basées sur textColor)
+            if (titleRef.current) {
+                titleRef.current.style.setProperty('color', textColor, 'important');
+            }
+            if (artistRef.current) {
+                artistRef.current.style.setProperty('color', textColor, 'important');
+            }
+            if (prevButtonRef.current) {
+                prevButtonRef.current.style.setProperty('color', textColor, 'important');
+                const svg = prevButtonRef.current.querySelector('svg');
+                if (svg) {
+                    svg.style.setProperty('color', textColor, 'important');
+                    svg.style.setProperty('fill', textColor, 'important');
+                }
+            }
+            if (nextButtonRef.current) {
+                nextButtonRef.current.style.setProperty('color', textColor, 'important');
+                const svg = nextButtonRef.current.querySelector('svg');
+                if (svg) {
+                    svg.style.setProperty('color', textColor, 'important');
+                    svg.style.setProperty('fill', textColor, 'important');
+                }
+            }
+        }
+    }, [isMenuHovered, textColor]);
 
     const handlePlayPause = () => {
         // Envoyer l'événement au player SoundCloud
@@ -108,6 +178,7 @@ export default function HeaderPlayer() {
                 
                 {/* Bouton précédent mobile - toujours visible */}
                 <button
+                    ref={prevButtonRef}
                     onClick={handlePrevious}
                     className="md:hidden h-5 w-5 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
                     style={{ color: textColor }}
@@ -212,6 +283,7 @@ export default function HeaderPlayer() {
                 
                 {/* Bouton suivant mobile - toujours visible */}
                 <button
+                    ref={nextButtonRef}
                     onClick={handleNext}
                     className="md:hidden h-5 w-5 flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0"
                     style={{ color: textColor }}
@@ -226,12 +298,14 @@ export default function HeaderPlayer() {
                 {/* Infos titre/artiste - visibles sur mobile maintenant qu'on est en bas */}
                 <div className="flex flex-col min-w-0 max-w-[140px] md:max-w-[200px]">
                     <div 
+                        ref={titleRef}
                         className="font-title text-[10px] md:text-xs leading-tight truncate"
                         style={{ color: textColor }}
                     >
                         {trackTitle}
                     </div>
                     <div 
+                        ref={artistRef}
                         className="font-text text-[9px] md:text-[10px] mt-0.5 truncate opacity-70"
                         style={{ color: textColor }}
                     >

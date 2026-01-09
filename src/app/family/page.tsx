@@ -118,7 +118,11 @@ function FamilyDropdownsWrapper({
       }}
     >
       {/* Les dropdowns sont cliquables si isVisible=true ET isMenuHovered=false */}
-      <FamilyDropdowns onItemSelect={onItemSelect} selectedItem={selectedItem} />
+      <FamilyDropdowns 
+        onItemSelect={onItemSelect} 
+        selectedItem={selectedItem}
+        isVisible={isVisible}
+      />
     </div>
   );
 }

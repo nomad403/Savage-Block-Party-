@@ -51,6 +51,7 @@ export default function ShopPage() {
   const shopRootRef = useRef<HTMLDivElement>(null);
   const { isMenuOpen } = useMenu();
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [hoveredProductId, setHoveredProductId] = useState<number | null>(null);
 
   // Utiliser useLayoutEffect pour garantir que le DOM est mis à jour avant le paint
   useLayoutEffect(() => {
@@ -71,6 +72,29 @@ export default function ShopPage() {
     });
     window.dispatchEvent(event);
   }, [selectedProductId]);
+
+  // Notifier quand un item est survolé (mobile uniquement) pour changer les couleurs du header
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 767;
+    if (isMobile) {
+      const event = new CustomEvent('shopItemHovered', { 
+        detail: { 
+          isHovered: hoveredProductId !== null,
+          productId: hoveredProductId
+        } 
+      });
+      window.dispatchEvent(event);
+    } else {
+      // Sur desktop, ne pas notifier le hover
+      const event = new CustomEvent('shopItemHovered', { 
+        detail: { 
+          isHovered: false,
+          productId: null
+        } 
+      });
+      window.dispatchEvent(event);
+    }
+  }, [hoveredProductId]);
 
   // Forcer les styles CSS pour le header quand un item est sélectionné (exception page shop)
   // Cette fonction est appelée à chaque changement d'état pour maintenir les couleurs
@@ -349,6 +373,7 @@ export default function ShopPage() {
         /* S'assurer que le wrapper d'image ne coupe pas les images */
         .product-image-wrapper {
           overflow: visible !important;
+          height: var(--shop-item-image-height) !important;
         }
 
         .product-image-back {
@@ -369,13 +394,14 @@ export default function ShopPage() {
           transform: scale(1.6);
         }
 
-        /* Fond gris clair avec hover rouge */
+        /* Fond gris clair avec hover rouge - Tailles responsive via variables CSS */
+        /* Les variables sont appliquées automatiquement via les media queries dans globals.css */
         .product-item {
           position: relative;
           overflow: visible;
           isolation: isolate;
           border-radius: 0;
-          padding: 21px;
+          padding: var(--shop-item-padding);
           background: #e5e5e5;
           width: 100%;
           transition: background-color 0.3s ease, grid-column 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -415,36 +441,55 @@ export default function ShopPage() {
           transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Expansion sur toute la page pour l'item sélectionné */
+        /* Expansion sur toute la page pour l'item sélectionné - TOUTES LES TAILLES D'ÉCRAN */
         .product-item-wrapper:has(.product-item.selected) {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          z-index: 40;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 40 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
         .product-item-wrapper:has(.product-item.selected) .product-item-expand {
-          width: 100vw;
-          height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          width: 100vw !important;
+          height: 100vh !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
         }
 
-        /* Core interne - contenu fixe, non déformé */
+        /* Item sélectionné - fond fullscreen sur toutes les tailles */
+        .product-item.selected {
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          position: relative !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        /* Core interne - contenu responsive via variables CSS */
+        /* Les variables sont appliquées automatiquement via les media queries dans globals.css */
         .product-item-core {
-          width: 420px;
-          max-width: 420px;
+          width: var(--shop-item-core-width);
+          max-width: 100%;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           margin: 0 auto;
+          gap: var(--shop-item-gap);
           /* Aucune transition de transform ou width */
         }
 
@@ -532,34 +577,198 @@ export default function ShopPage() {
           flex-shrink: 0;
         }
 
-        /* Mobile: items plus hauts, alignés en bas, scroll horizontal avec snap */
-        @media (max-width: 767px) {
+        /* ========================================
+           LOGIQUE DE SCROLL CENTRALISÉE
+           ======================================== */
+        /* Toutes les règles de scroll sont ici, aucune logique inline */
+        
+        /* Desktop: scroll vertical, grille 3 colonnes */
+        @media (min-width: 1024px) {
+          body:has(#shop-root) .product-column {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            grid-auto-rows: minmax(auto, 1fr) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            position: relative !important;
+            padding-top: 116px !important; /* Header desktop */
+            padding-bottom: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            /* Optimisations scroll */
+            will-change: scroll-position !important;
+            overscroll-behavior-y: contain !important;
+            overscroll-behavior-x: none !important;
+            /* Scrollbar masquée */
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+          }
+          
+          body:has(#shop-root) .product-column::-webkit-scrollbar {
+            display: none !important;
+          }
+
+          /* Desktop: items adaptés à la hauteur disponible */
+          body:has(#shop-root) .product-item {
+            min-height: calc((100vh - 116px) / 2) !important;
+            height: auto !important;
+            max-height: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+
+          /* Desktop: item sélectionné en fullscreen */
+          body:has(#shop-root) .product-item-wrapper:has(.product-item.selected) {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 50 !important;
+          }
+
+          body:has(#shop-root) .product-item.selected {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+          }
+        }
+
+        /* Tablette (640px - 1023px): scroll vertical avec items adaptés */
+        @media (min-width: 640px) and (max-width: 1023px) {
           body:has(#shop-root) .product-column {
             display: flex !important;
-            flex-direction: row !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            scroll-snap-type: x mandatory !important;
+            flex-direction: column !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            scroll-snap-type: y mandatory !important;
             -webkit-overflow-scrolling: touch !important;
-            align-items: flex-end !important;
+            align-items: stretch !important;
             padding-top: 80px !important; /* Header mobile */
             padding-bottom: var(--footer-total-height-mobile) !important; /* Footer mobile */
+            padding-left: 0 !important;
+            padding-right: 0 !important;
             height: 100vh !important;
+            max-height: 100vh !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            position: relative !important;
+            /* Optimisations scroll */
+            will-change: scroll-position !important;
+            overscroll-behavior-y: contain !important;
+            overscroll-behavior-x: none !important;
+            /* Scrollbar masquée */
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+          }
+          
+          body:has(#shop-root) .product-column::-webkit-scrollbar {
+            display: none !important;
           }
 
           body:has(#shop-root) .product-item-wrapper {
-            flex: 0 0 100vw !important;
-            width: 100vw !important;
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
             scroll-snap-align: start !important;
             scroll-snap-stop: always !important;
+            box-sizing: border-box !important;
           }
 
           body:has(#shop-root) .product-item {
-            height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
             min-height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            max-height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
             display: flex !important;
-            align-items: flex-end !important;
+            align-items: center !important;
             justify-content: center !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
+          }
+
+          /* Tablette: item sélectionné en fullscreen */
+          body:has(#shop-root) .product-item-wrapper:has(.product-item.selected) {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 50 !important;
+          }
+
+          body:has(#shop-root) .product-item.selected {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+          }
+        }
+
+        /* Mobile (< 640px): scroll vertical */
+        @media (max-width: 639px) {
+          body:has(#shop-root) .product-column {
+            display: flex !important;
+            flex-direction: column !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            scroll-snap-type: y mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+            align-items: stretch !important;
+            padding-top: 80px !important; /* Header mobile */
+            padding-bottom: var(--footer-total-height-mobile) !important; /* Footer mobile */
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            position: relative !important;
+            /* Optimisations scroll */
+            will-change: scroll-position !important;
+            overscroll-behavior-y: contain !important;
+            overscroll-behavior-x: none !important;
+            /* Scrollbar masquée */
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+          }
+          
+          body:has(#shop-root) .product-column::-webkit-scrollbar {
+            display: none !important;
+          }
+
+          body:has(#shop-root) .product-item-wrapper {
+            flex: 0 0 auto !important;
+            flex-shrink: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            scroll-snap-align: start !important;
+            scroll-snap-stop: always !important;
+            box-sizing: border-box !important;
+          }
+
+          body:has(#shop-root) .product-item {
+            min-height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            max-height: calc(100vh - 80px - var(--footer-total-height-mobile)) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
           }
 
           /* Item sélectionné sur mobile : fond en fullscreen */
@@ -569,7 +778,7 @@ export default function ShopPage() {
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            width: 100vw !important;
+            width: 100% !important;
             height: 100vh !important;
             z-index: 50 !important;
             display: flex !important;
@@ -580,7 +789,7 @@ export default function ShopPage() {
           }
 
           body:has(#shop-root) .product-item-wrapper:has(.product-item.selected) .product-item-expand {
-            width: 100vw !important;
+            width: 100% !important;
             height: 100vh !important;
             display: flex !important;
             align-items: center !important;
@@ -588,7 +797,7 @@ export default function ShopPage() {
           }
 
           body:has(#shop-root) .product-item.selected {
-            width: 100vw !important;
+            width: 100% !important;
             height: 100vh !important;
             min-height: 100vh !important;
             position: relative !important;
@@ -603,7 +812,7 @@ export default function ShopPage() {
       `}</style>
       <div id="shop-root" ref={shopRootRef}>
       <main 
-        className="w-full overflow-hidden" 
+        className="w-full" 
         style={{ 
           backgroundColor: '#d4d4d4',
           minHeight: '100vh',
@@ -613,36 +822,18 @@ export default function ShopPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 'var(--z-background)' // -1, derrière le contenu mais devant rien
+          zIndex: 'var(--z-background)', // -1, derrière le contenu mais devant rien
+          overflow: 'hidden' // Le scroll est géré par .product-column, pas par main
         }}
       >
-        <div className="flex h-full" style={{ position: 'relative', zIndex: 'var(--z-content)' }}>
+        <div className="flex h-full" style={{ position: 'relative', zIndex: 'var(--z-content)', overflow: 'visible' }}>
           {/* Section produits - grille 3 colonnes desktop, scroll horizontal mobile */}
           <div 
             ref={productColumnRef}
             className="w-full product-column" 
             id="product-column"
-            style={{ 
-              // Desktop: scroll vertical, grille 3 colonnes
-              // Mobile: scroll horizontal, items alignés en bas
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              height: '100vh',
-              paddingBottom: '0',
-              paddingLeft: '0',
-              paddingRight: '0',
-              paddingTop: '116px', 
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gridAutoRows: 'min-content',
-              gap: '0',
-              borderCollapse: 'collapse',
-              alignContent: 'start',
-              alignItems: 'start',
-            }}
+            // Tous les styles sont gérés par CSS via media queries
+            // Aucun style inline pour éviter les conflits
           >
             {products.map((product, index) => {
               const isSelected = selectedProductId === product.id;
@@ -671,8 +862,9 @@ export default function ShopPage() {
                 className="product-item-wrapper"
                 style={{
                   transform: translateX !== 0 ? `translateX(${translateX}vw)` : 'none',
-                  opacity: selectedIndex !== -1 && !isSelected ? 0 : 1,
-                  transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
+                  opacity: selectedIndex !== -1 && !isSelected ? 0 : (isMenuOpen ? 0 : 1),
+                  transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  pointerEvents: isMenuOpen ? 'none' : 'auto'
                 }}
               >
                 <div className="product-item-expand">
@@ -680,6 +872,8 @@ export default function ShopPage() {
                     className={`product-item ${isSelected ? 'selected' : ''}`}
                     data-product-id={product.id}
                     onClick={() => setSelectedProductId(isSelected ? null : product.id)}
+                    onMouseEnter={() => setHoveredProductId(product.id)}
+                    onMouseLeave={() => setHoveredProductId(null)}
                     style={{ 
                       display: 'flex',
                       flexDirection: 'column',
@@ -689,10 +883,12 @@ export default function ShopPage() {
                   >
                     <div className="product-item-core">
                       {/* Texte défilant au hover */}
-                      <ScrollingText words={getRandomWordsForProduct(product.id)} productId={product.id} />
+                      <div className={`transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                        <ScrollingText words={getRandomWordsForProduct(product.id)} productId={product.id} />
+                      </div>
 
                       {/* Image */}
-                      <div className="relative product-image-wrapper" style={{ width: '100%', height: '420px', flexShrink: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible' }}>
+                      <div className="relative product-image-wrapper" style={{ width: '100%', height: 'var(--shop-item-image-height)', flexShrink: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible' }}>
                         {product.imageHover ? (
                           <div className={`product-image-container h-full w-full transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ maxWidth: '100%', maxHeight: '100%' }}>
                             <div 
@@ -713,26 +909,31 @@ export default function ShopPage() {
                       </div>
 
                       {/* Nom et prix centrés sous l'image */}
-                      <div className={`product-text-wrapper relative z-10 flex flex-col items-center justify-center gap-2 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ flexShrink: 0, width: '100%', paddingTop: '16px', paddingBottom: '8px' }}>
-                        <h3 className="font-title text-lg md:text-xl uppercase text-center">{product.title}</h3>
-                        <span className="font-title text-lg md:text-xl">{product.price}</span>
+                      <div className={`product-text-wrapper relative z-10 flex flex-col items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ flexShrink: 0, width: '100%', gap: 'var(--shop-item-gap)', paddingTop: 'var(--shop-item-gap)', paddingBottom: 'calc(var(--shop-item-gap) / 2)' }}>
+                        <h3 className="font-title uppercase text-center" style={{ fontSize: 'var(--shop-item-text-size-title)' }}>{product.title}</h3>
+                        <span className="font-title" style={{ fontSize: 'var(--shop-item-text-size-price)' }}>{product.price}</span>
                       </div>
 
                       {/* Bouton d'action - visible uniquement quand l'item est sélectionné */}
                       {isSelected && (
-                        <div className={`product-buttons-wrapper relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ flexShrink: 0, width: '100%', paddingTop: '24px' }}>
+                        <div className={`product-buttons-wrapper relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ flexShrink: 0, width: '100%', paddingTop: 'var(--shop-item-gap)' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               // TODO: Implémenter l'action "Ajouter au panier"
                               console.log('Ajouter au panier:', product.id);
                             }}
-                            className="product-add-to-cart-button font-title text-sm md:text-base uppercase px-8 py-3 rounded-full transition-all duration-200 hover:opacity-90 whitespace-nowrap"
+                            className="product-add-to-cart-button font-title uppercase rounded-full transition-all duration-200 hover:opacity-90 whitespace-nowrap"
                             style={{
                               backgroundColor: '#000000',
                               color: '#FFFFFF',
                               border: 'none',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              paddingLeft: 'var(--shop-item-button-padding-x)',
+                              paddingRight: 'var(--shop-item-button-padding-x)',
+                              paddingTop: 'var(--shop-item-button-padding-y)',
+                              paddingBottom: 'var(--shop-item-button-padding-y)',
+                              fontSize: 'var(--shop-item-button-text-size)'
                             }}
                           >
                             Ajouter au panier

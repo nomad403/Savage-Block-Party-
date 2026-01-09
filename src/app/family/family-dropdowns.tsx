@@ -13,13 +13,21 @@ const DROPDOWN_PADDING_X = 16; // 16px pour une meilleure respiration, proportio
 interface FamilyDropdownsProps {
   onItemSelect: (item: string) => void;
   selectedItem: string | null;
+  isVisible?: boolean; // Visibilité des dropdowns (masqués par scroll)
 }
 
-export default function FamilyDropdowns({ onItemSelect, selectedItem }: FamilyDropdownsProps) {
+export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible = true }: FamilyDropdownsProps) {
   // Logique d'ouverture/fermeture extraite dans hook
   const { activeDropdown, toggleDropdown, closeDropdown, dropdownRefs } = useDropdown();
   const { isMenuOpen } = useMenu();
   const { isMenuHovered } = useMenuHover();
+
+  // Fermer les listes ouvertes quand les dropdowns sont masqués par le scroll
+  useEffect(() => {
+    if (!isVisible && activeDropdown) {
+      closeDropdown();
+    }
+  }, [isVisible, activeDropdown, closeDropdown]);
 
   // Z-index géré par CSS via .family-dropdowns-container
   // Base: var(--z-dropdowns) = 10003

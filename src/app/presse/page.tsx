@@ -102,16 +102,66 @@ export default function PressePage() {
 
   return (
     <main id="presse-root" className="w-full relative">
-      {/* Fond gris comme sur la page shop */}
-      <div className="fixed inset-0 w-full h-full z-0 bg-[#e5e5e5]" />
+      {/* ========================================
+          LAYER 1: BACKGROUND VIDEO (FIXED)
+          Responsabilité UNIQUE: Afficher la vidéo de fond fullscreen
+          Position: fixed, inset-0
+          Z-index: var(--z-background) = -1
+          Overflow: hidden (pas de scroll)
+          ======================================== */}
+      <section 
+        className="fixed inset-0 w-full h-full overflow-hidden" 
+        style={{ zIndex: 'var(--z-background)' }}
+        aria-hidden="true"
+      >
+        <video
+          className="absolute inset-0 w-full h-full object-cover filter-infrared"
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{ 
+            width: '100vw', 
+            height: '100vh',
+            objectFit: 'cover',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
+          <source src="/presse/videos/teaser.webm" type="video/webm" />
+        </video>
+      </section>
 
       {/* Formulaire avec fond couleur uni par-dessus */}
-      <section className={`relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ "--presse-accent": "#A855F7", paddingTop: '96px', minHeight: '100vh' } as React.CSSProperties}>
+      <section className={`relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} presse-form-section`} style={{ "--presse-accent": "#A855F7", paddingTop: '96px', minHeight: '100vh' } as React.CSSProperties}>
         <div className="w-full max-w-6xl mx-auto" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', paddingRight: 'clamp(16px, 4vw, 24px)' }}>
           {/* Container flex : vertical sur mobile, horizontal à partir de md */}
-          <div className="w-full flex flex-col md:flex-row md:items-start md:gap-8 lg:gap-12">
-            {/* Formulaire à gauche (sur mobile il est en bas) */}
+          <div className="w-full flex flex-col md:flex-row md:items-start gap-8 md:gap-12 lg:gap-16">
+            {/* Description à gauche (sur mobile elle est en haut) */}
             <div className="w-full md:w-1/2 md:order-1">
+              <div className="space-y-0 text-left" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
+                <TextRevealLines 
+                  lines={[
+                    "Soutenez la culture indépendante : musique, danse, graffiti",
+                    "et médias urbains. Co-créons des formats exigeants, roots",
+                    "et inclusifs, ancrés dans le réel.",
+                    "Rejoignez un réseau d'artistes, lieux et labels",
+                    "pour faire rayonner l'underground."
+                  ]}
+                  color="#A855F7"
+                  delayStep={0.12}
+                  horizontalPadding={8}
+                  density="normal"
+                  className="font-text font-semibold text-base md:text-lg lg:text-xl leading-[1.18] text-black tracking-tight"
+                />
+              </div>
+            </div>
+
+            {/* Formulaire à droite (sur mobile il est en bas) */}
+            <div className="w-full md:w-1/2 md:order-2">
               <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-3 items-stretch w-full" suppressHydrationWarning>
                 {/* Nom de l'organisme */}
                 <div suppressHydrationWarning>
@@ -272,26 +322,6 @@ export default function PressePage() {
                 </div>
               )}
             </form>
-            </div>
-
-            {/* Description à droite (sur mobile elle est en haut) */}
-            <div className="w-full md:w-1/2 md:order-2 mt-4 md:mt-0">
-              <div className="space-y-0 text-left" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
-                <TextRevealLines 
-                  lines={[
-                    "Soutenez la culture indépendante : musique, danse, graffiti",
-                    "et médias urbains. Co-créons des formats exigeants, roots",
-                    "et inclusifs, ancrés dans le réel.",
-                    "Rejoignez un réseau d'artistes, lieux et labels",
-                    "pour faire rayonner l'underground."
-                  ]}
-                  color="#A855F7"
-                  delayStep={0.12}
-                  horizontalPadding={8}
-                  density="normal"
-                  className="font-text font-semibold text-sm md:text-base leading-[1.18] text-black tracking-tight"
-                />
-              </div>
             </div>
             </div>
         </div>

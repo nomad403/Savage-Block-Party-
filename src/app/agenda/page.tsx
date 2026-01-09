@@ -11,7 +11,7 @@ export default async function AgendaPage() {
 
   return (
     <main id="agenda-root" className="min-h-screen" style={{ backgroundColor: '#1f1f1f', color: '#ffffff' }}>
-      <div className="container-px pt-28 md:pt-32 pb-12 md:pb-16">
+      <div className="container-px pb-12 md:pb-16 agenda-container">
           <AgendaEventsList events={events} />
         </div>
     </main>

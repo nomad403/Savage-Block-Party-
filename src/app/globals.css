@@ -14,6 +14,40 @@
 	--footer-total-height-mobile: calc(var(--player-height-mobile) + var(--waveform-height)); /* 172px */
 	--footer-total-height-desktop: var(--waveform-height); /* 72px */
 	
+	/* Shop Page - Tailles des items (responsive) */
+	/* Mobile (< 640px) */
+	--shop-item-core-width: min(90vw, 320px);
+	--shop-item-image-height: min(40vh, calc((100vh - 80px - var(--footer-total-height-mobile)) * 0.5), 280px);
+	--shop-item-padding: clamp(12px, 4vw, 16px);
+	--shop-item-gap: clamp(8px, 2vw, 12px);
+	--shop-item-text-size-title: clamp(0.875rem, 4vw, 1rem);
+	--shop-item-text-size-price: clamp(0.875rem, 4vw, 1rem);
+	--shop-item-button-padding-x: clamp(1.25rem, 4vw, 1.5rem);
+	--shop-item-button-padding-y: clamp(0.625rem, 2vw, 0.75rem);
+	--shop-item-button-text-size: clamp(0.75rem, 3vw, 0.875rem);
+	
+	/* Tablet (640px - 1023px) */
+	--shop-item-core-width-tablet: min(85vw, 380px);
+	--shop-item-image-height-tablet: min(45vh, calc((100vh - 80px - var(--footer-total-height-mobile)) * 0.5), 360px);
+	--shop-item-padding-tablet: clamp(16px, 3vw, 20px);
+	--shop-item-gap-tablet: clamp(12px, 2vw, 16px);
+	--shop-item-text-size-title-tablet: clamp(1rem, 2.5vw, 1.125rem);
+	--shop-item-text-size-price-tablet: clamp(1rem, 2.5vw, 1.125rem);
+	--shop-item-button-padding-x-tablet: clamp(1.75rem, 3vw, 2rem);
+	--shop-item-button-padding-y-tablet: clamp(0.75rem, 1.5vw, 0.875rem);
+	--shop-item-button-text-size-tablet: clamp(0.875rem, 2vw, 1rem);
+	
+	/* Desktop (>= 1024px) */
+	--shop-item-core-width-desktop: clamp(360px, 30vw, 420px);
+	--shop-item-image-height-desktop: clamp(360px, 30vh, 420px);
+	--shop-item-padding-desktop: clamp(18px, 2vw, 21px);
+	--shop-item-gap-desktop: clamp(14px, 1.5vw, 16px);
+	--shop-item-text-size-title-desktop: clamp(1.125rem, 1.5vw, 1.25rem);
+	--shop-item-text-size-price-desktop: clamp(1.125rem, 1.5vw, 1.25rem);
+	--shop-item-button-padding-x-desktop: clamp(1.75rem, 2vw, 2rem);
+	--shop-item-button-padding-y-desktop: clamp(0.625rem, 0.8vw, 0.75rem);
+	--shop-item-button-text-size-desktop: clamp(0.875rem, 1vw, 1rem);
+	
 	/* Z-Index Layers - Hiérarchie documentée */
 	--z-background: -1; /* Médias de fond */
 	--z-content: 1; /* Contenu principal */
@@ -25,6 +59,38 @@
 	--z-header: 20000; /* Header fixe */
 	--z-header-menu-bg: 20010; /* Fonds colorés menu (au-dessus de tout) */
 	--z-overlay-global: 10000; /* Overlay global menu hover */
+}
+
+/* ========================================
+   SHOP PAGE - VARIABLES RESPONSIVE
+   ======================================== */
+/* Application des variables selon les breakpoints */
+@media (min-width: 640px) and (max-width: 1023px) {
+	:root {
+		--shop-item-core-width: var(--shop-item-core-width-tablet);
+		--shop-item-image-height: var(--shop-item-image-height-tablet);
+		--shop-item-padding: var(--shop-item-padding-tablet);
+		--shop-item-gap: var(--shop-item-gap-tablet);
+		--shop-item-text-size-title: var(--shop-item-text-size-title-tablet);
+		--shop-item-text-size-price: var(--shop-item-text-size-price-tablet);
+		--shop-item-button-padding-x: var(--shop-item-button-padding-x-tablet);
+		--shop-item-button-padding-y: var(--shop-item-button-padding-y-tablet);
+		--shop-item-button-text-size: var(--shop-item-button-text-size-tablet);
+	}
+}
+
+@media (min-width: 1024px) {
+	:root {
+		--shop-item-core-width: var(--shop-item-core-width-desktop);
+		--shop-item-image-height: var(--shop-item-image-height-desktop);
+		--shop-item-padding: var(--shop-item-padding-desktop);
+		--shop-item-gap: var(--shop-item-gap-desktop);
+		--shop-item-text-size-title: var(--shop-item-text-size-title-desktop);
+		--shop-item-text-size-price: var(--shop-item-text-size-price-desktop);
+		--shop-item-button-padding-x: var(--shop-item-button-padding-x-desktop);
+		--shop-item-button-padding-y: var(--shop-item-button-padding-y-desktop);
+		--shop-item-button-text-size: var(--shop-item-button-text-size-desktop);
+	}
 }
 
 /* ========================================
@@ -857,10 +923,31 @@ body:has(#presse-root) header.text-black .header-player div {
 	color: #FFFFFF !important;
 }
 
-/* Page presse - désactiver le scroll */
-/* Page presse - scrollable */
+/* Page presse - header toujours fixe et visible */
+body:has(#presse-root) header {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	transform: translateY(0) !important;
+	will-change: auto !important;
+}
+
+/* Désactiver toute animation du header sur presse */
+body:has(#presse-root) header * {
+	transform: none !important;
+}
+
+/* Page presse - espacement en bas sur mobile pour permettre le scroll au-dessus du player */
+@media (max-width: 767px) {
+	body:has(#presse-root) .presse-form-section {
+		padding-bottom: calc(var(--footer-total-height-mobile) + 80px) !important; /* Footer + espace supplémentaire */
+	}
+}
 
 /* Page shop - Supprimer la scrollbar de la colonne de produits */
+/* NOTE: Les règles de scrollbar sont maintenant dans shop/page.tsx dans les media queries */
+/* Cette règle globale sert de backup mais les media queries prennent le dessus */
 body:has(#shop-root) .product-column {
 	-ms-overflow-style: none !important;
 	scrollbar-width: none !important;
@@ -876,6 +963,35 @@ body:has(#shop-root) .product-column::-webkit-scrollbar {
 body:has(#agenda-root) header {
     background-color: transparent !important;
     box-shadow: none !important;
+}
+
+/* Page agenda - header toujours fixe et visible sur mobile */
+body:has(#agenda-root) header {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	transform: translateY(0) !important;
+	will-change: auto !important;
+}
+
+/* Désactiver toute animation du header sur agenda */
+body:has(#agenda-root) header * {
+	transform: none !important;
+}
+
+/* Page agenda - ajustement du padding-top pour mobile */
+/* Mobile : padding-top avec un petit espace après le header (96px = 80px header + 16px espace) */
+body:has(#agenda-root) .agenda-container {
+	padding-top: 128px !important;
+	padding-bottom: 128px !important;
+}
+
+/* Desktop : padding-top standard (128px = 8rem) */
+@media (min-width: 768px) {
+	body:has(#agenda-root) .agenda-container {
+		padding-top: 8rem !important; /* 128px */
+	}
 }
 
 /* Scroll fade pour la liste agenda - isolé à la page agenda uniquement */
@@ -953,36 +1069,23 @@ body:has(#shop-root) header {
 }
 
 /* Icônes Panier et burger en rouge (couleur primaire) par défaut sur shop */
-/* Les styles inline dans header.tsx gèrent le hover (noir) et la sélection d'item (noir) */
-body:has(#shop-root) header:not(:has(.product-item.selected)) a[href="/shop"] {
-	color: #FF1744 !important;
-}
-
-body:has(#shop-root) header:not(:has(.product-item.selected)) a[href="/shop"] svg {
-	color: #FF1744 !important;
-	fill: #FF1744 !important;
-}
-
-/* Icône panier en noir quand un item est sélectionné (géré aussi par header.tsx via isShopItemSelected) */
-body:has(.product-item.selected) header a[href="/shop"],
-body:has(.product-item.selected) header a[href="/shop"] svg {
-	color: #000000 !important;
-	fill: #000000 !important;
-}
+/* La logique de couleur de l'icône panier est CENTRALISÉE dans header.tsx */
+/* header.tsx utilise setProperty avec !important pour garantir la priorité sur les règles CSS */
+/* 
+ * RÈGLES DE COULEUR (gérées par header.tsx via useEffect) :
+ * - Par défaut : couleur primaire de la page (rouge pour shop)
+ * - Item sélectionné : noir
+ * - Menu hover sur mobile : noir
+ * - Hover direct : noir
+ */
+/* On ne force rien ici pour laisser les styles inline avec !important prendre le dessus */
 
 body:has(#shop-root) header button.header-burger-mobile span {
 	background-color: #FF1744 !important;
 }
 
-/* Au hover du menu : icônes panier et burger en noir (mobile uniquement) */
-/* Les styles inline dans header.tsx définissent déjà la couleur, mais on force avec CSS pour garantir */
+/* Au hover du menu : burger en noir (mobile uniquement) */
 @media (max-width: 767px) {
-	body:has(#shop-root) header.text-black a[href="/shop"],
-	body:has(#shop-root) header.text-black a[href="/shop"] svg {
-		color: #000000 !important;
-		fill: #000000 !important;
-	}
-
 	body:has(#shop-root) header.text-black button.header-burger-mobile span {
 		background-color: #000000 !important;
 	}
@@ -1012,6 +1115,16 @@ body:has(#shop-root) .header-player div {
 	/* Page shop - icônes SVG du player en blanc au hover du menu (mobile uniquement) */
 	body:has(#shop-root) header.text-black .header-player svg,
 	body:has(#shop-root) header.text-black .header-player button svg {
+		color: #FFFFFF !important;
+		fill: #FFFFFF !important;
+	}
+}
+
+/* Toutes les pages - boutons précédent/suivant du player en blanc au hover du menu (mobile uniquement) */
+/* Le fond du player devient noir, donc les boutons doivent être blancs pour être visibles */
+@media (max-width: 767px) {
+	header.text-black .header-player button,
+	header.text-black .header-player button svg {
 		color: #FFFFFF !important;
 		fill: #FFFFFF !important;
 	}

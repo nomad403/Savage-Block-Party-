@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useGlobalDynamicColors } from "../hooks/useGlobalDynamicColors";
 import { usePagePrimaryColor, getPagePrimaryColor } from "../hooks/usePagePrimaryColor";
+import { useMenuHover } from "../hooks/useMenuHover";
 import HeaderPlayer from "./header-player";
 
 export default function Header() {
@@ -14,6 +15,11 @@ export default function Header() {
     const [lastScrollY, setLastScrollY] = useState(0);
     const [hoveredMenuItem, setHoveredMenuItem] = useState<string | null>(null);
     const [isShopItemSelected, setIsShopItemSelected] = useState(false);
+    const [isShopItemHovered, setIsShopItemHovered] = useState(false);
+    const cartIconRef = useRef<HTMLAnchorElement>(null);
+    const cartIconMobileRef = useRef<HTMLAnchorElement>(null);
+    const logoRef = useRef<SVGSVGElement | null>(null);
+    const menuButtonRef = useRef<HTMLButtonElement | null>(null);
     const pathname = usePathname();
     const isHome = pathname === "/";
     const isAgenda = pathname?.startsWith("/agenda");
@@ -24,6 +30,7 @@ export default function Header() {
     // Utiliser les couleurs dynamiques globales
     const { colors, currentTheme } = useGlobalDynamicColors();
     const pagePrimaryColor = usePagePrimaryColor();
+    const { isMenuHovered } = useMenuHover();
     
     // Debug: log pour vérifier les changements de couleur
     useEffect(() => {
@@ -59,17 +66,99 @@ export default function Header() {
         };
     }, []);
 
-    // Écouter l'événement quand un item est sélectionné sur la page shop
+    // Écouter l'événement quand un item est survolé sur la page shop (mobile uniquement)
     useEffect(() => {
-        const handleShopItemSelected = (event: CustomEvent) => {
-            setIsShopItemSelected(event.detail?.isSelected || false);
+        const handleShopItemHovered = (event: CustomEvent) => {
+            const isMobile = typeof window !== 'undefined' && window.innerWidth <= 767;
+            if (isMobile) {
+                setIsShopItemHovered(event.detail?.isHovered || false);
+            } else {
+                setIsShopItemHovered(false);
+            }
         };
 
-        window.addEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+        window.addEventListener('shopItemHovered', handleShopItemHovered as EventListener);
         return () => {
-            window.removeEventListener('shopItemSelected', handleShopItemSelected as EventListener);
+            window.removeEventListener('shopItemHovered', handleShopItemHovered as EventListener);
         };
     }, []);
+
+    // Gestion centralisée de la couleur de l'icône panier avec !important
+    useEffect(() => {
+        // Détecter si on est sur mobile
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 767;
+        
+        // Calculer la couleur cible
+        let targetColor: string;
+        if (isShop && isShopItemSelected) {
+            targetColor = '#000000'; // Item sélectionné → noir
+        } else if (isShop && isShopItemHovered && isMobile) {
+            targetColor = '#000000'; // Item hover sur mobile → noir
+        } else if (isShop && isMenuHovered && isMobile) {
+            targetColor = '#000000'; // Menu hover sur mobile → noir
+        } else if (hoveredMenuItem) {
+            targetColor = '#000000'; // Hover direct → noir
+        } else {
+            targetColor = pagePrimaryColor; // Par défaut → couleur primaire
+        }
+
+        // Appliquer avec !important pour surcharger les règles CSS
+        if (cartIconRef.current) {
+            cartIconRef.current.style.setProperty('color', targetColor, 'important');
+            const svg = cartIconRef.current.querySelector('svg');
+            if (svg) {
+                svg.style.setProperty('color', targetColor, 'important');
+                svg.style.setProperty('fill', targetColor, 'important');
+            }
+        }
+        
+        if (cartIconMobileRef.current) {
+            cartIconMobileRef.current.style.setProperty('color', targetColor, 'important');
+            const svg = cartIconMobileRef.current.querySelector('svg');
+            if (svg) {
+                svg.style.setProperty('color', targetColor, 'important');
+                svg.style.setProperty('fill', targetColor, 'important');
+            }
+        }
+    }, [isShop, isShopItemSelected, isShopItemHovered, isMenuHovered, hoveredMenuItem, pagePrimaryColor]);
+
+    // Gestion centralisée des couleurs du logo et menu (mobile uniquement) quand un item shop est survolé
+    useEffect(() => {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 767;
+        
+        if (!isShop || !isMobile) return;
+
+        // Trouver le logo et le bouton menu
+        const logoElement = document.querySelector('header svg[aria-label="Savage Block Party"]') as SVGSVGElement | null;
+        const menuButton = document.querySelector('header button.header-burger-mobile') as HTMLButtonElement | null;
+        const menuButtonSpans = menuButton?.querySelectorAll('span');
+
+        let targetColor: string;
+        if (isShopItemSelected || isShopItemHovered) {
+            targetColor = '#000000'; // Item sélectionné ou hover → noir
+        } else {
+            targetColor = pagePrimaryColor; // Par défaut → couleur primaire
+        }
+
+        // Appliquer au logo
+        if (logoRef.current) {
+            logoRef.current.style.setProperty('fill', targetColor, 'important');
+        } else if (logoElement) {
+            logoElement.style.setProperty('fill', targetColor, 'important');
+        }
+
+        // Appliquer au bouton menu (spans)
+        if (menuButtonRef.current) {
+            const spans = menuButtonRef.current.querySelectorAll('span');
+            spans.forEach((span) => {
+                span.style.setProperty('background-color', targetColor, 'important');
+            });
+        } else if (menuButtonSpans) {
+            menuButtonSpans.forEach((span) => {
+                span.style.setProperty('background-color', targetColor, 'important');
+            });
+        }
+    }, [isShop, isShopItemSelected, isShopItemHovered, pagePrimaryColor]);
 
     // Notifier le player de l'état du menu
     useEffect(() => {
@@ -171,7 +260,7 @@ export default function Header() {
             <motion.header 
                 className={`h-20 md:h-24 w-full z-[20000] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
                 initial={{ y: 0 }}
-                animate={{ y: (isFamily ? 0 : (isVisible ? 0 : -96)) }} // Sur family, toujours visible et fixe
+                animate={{ y: ((isFamily || isAgenda || isPresse) ? 0 : (isVisible ? 0 : -96)) }} // Sur family, agenda et presse, toujours visible et fixe
                 transition={{ duration: 0.3, ease: "easeInOut" }}
             >
                 <div className="h-full flex items-center justify-between px-[clamp(16px,4vw,24px)]">
@@ -228,10 +317,10 @@ export default function Header() {
                     <div className="hidden md:flex items-center gap-3 shrink-0">
                         {/* Icône Panier - taille proportionnée au logo sur écrans moyens et grands */}
                         <Link 
+                            ref={cartIconRef}
                             href="/shop"
                             className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
                             style={{ 
-                                color: (isShop && isShopItemSelected) ? '#000000' : (hoveredMenuItem ? '#000000' : pagePrimaryColor),
                                 width: '36px', // md: proportionné au logo 120px
                                 height: '36px'
                             }}
@@ -254,10 +343,10 @@ export default function Header() {
                     <div className="md:hidden flex items-center gap-5 shrink-0 relative z-[20001]">
                         {/* Icône Panier - toujours visible sur mobile, taille agrandie pour proportionnalité avec burger */}
                         <Link 
+                            ref={cartIconMobileRef}
                             href="/shop"
                             className="flex items-center justify-center transition-all duration-200 hover:opacity-80 relative z-[20002]"
                             style={{ 
-                                color: (isShop && isShopItemSelected) ? '#000000' : (hoveredMenuItem ? '#000000' : pagePrimaryColor),
                                 width: '32px',
                                 height: '32px'
                             }}
@@ -270,6 +359,7 @@ export default function Header() {
                         
                         {/* Bouton burger */}
                         <button 
+                            ref={menuButtonRef}
                             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} 
                             className="flex items-center gap-2 relative z-[20002] header-burger-mobile" 
                             onClick={() => setOpen(!open)}

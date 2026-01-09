@@ -178,7 +178,7 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 				// Le polling peut échouer de manière non critique si le widget n'est pas prêt
 				console.warn(`⚠️ Polling ${operationName} échoué après ${maxAttempts} tentative(s) - ce n'est pas critique`);
 			} else {
-				console.error(`❌ Échec définitif pour ${operationName} après ${maxAttempts} tentatives`);
+			console.error(`❌ Échec définitif pour ${operationName} après ${maxAttempts} tentatives`);
 			}
 			setRetryCount(prev => prev + 1);
 			setWidgetHealth(retryCount >= maxRetries ? 'failed' : 'degraded');
@@ -1116,18 +1116,18 @@ useEffect(() => {
 							reject(new Error('Widget non disponible'));
 							return;
 						}
-						widgetRef.current.getCurrentSound((sound: any) => {
-							if (sound && sound.title) {
-								resolve({
-									title: sound.title,
-									artist: sound.user?.username || "Latest tracks",
-									artwork: (sound.artwork_url || sound.user?.avatar_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"),
-									waveform: sound.waveform_url || sound.visual_waveform_url
-								});
-							} else {
-								resolve(null);
-							}
-						});
+					widgetRef.current.getCurrentSound((sound: any) => {
+						if (sound && sound.title) {
+							resolve({
+								title: sound.title,
+								artist: sound.user?.username || "Latest tracks",
+								artwork: (sound.artwork_url || sound.user?.avatar_url || "/home/images/logo_orange.png").replace("-large", "-t200x200"),
+								waveform: sound.waveform_url || sound.visual_waveform_url
+							});
+						} else {
+							resolve(null);
+						}
+					});
 					} catch (error) {
 						reject(error);
 					}
@@ -1849,7 +1849,7 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 								</div>
 							</div>
 						) : (
-							<div className="flex items-end gap-[0.5px] h-full w-full">
+						<div className="flex items-end gap-[0.5px] h-full w-full">
 								{Array.from({ length: barCount }).map((_, i) => {
 									const sin = Math.sin((i / Math.max(1, barCount)) * Math.PI);
 								const h = Math.max(1, Math.round(sin * 60)); // Réduit de 80 à 60 pour cohérence avec header minimaliste
