@@ -613,7 +613,9 @@ export default function ShopPage() {
             -webkit-overflow-scrolling: touch !important;
             align-items: stretch !important;
             padding-top: 80px !important; /* Header mobile */
-            padding-bottom: var(--footer-total-height-mobile) !important; /* Footer mobile */
+            /* Padding bottom = footer + espacement supplémentaire pour permettre au dernier item de se snapper jusqu'en haut */
+            /* L'espacement supplémentaire = hauteur d'un item (100vh - header - footer) pour permettre le scroll complet */
+            padding-bottom: calc(var(--footer-total-height-mobile) + (100vh - 80px - var(--footer-total-height-mobile))) !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
             height: 100vh !important;

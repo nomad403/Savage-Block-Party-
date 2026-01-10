@@ -129,8 +129,12 @@ export function useGlobalDynamicColors() {
 
   // Fonction pour obtenir les couleurs globales
   const getGlobalColors = (): GlobalColors => {
-    // LOGIQUE GLOBALE : Si un menu est survolé OU un item shop est sélectionné OU un item shop est survolé, tous les éléments permanents deviennent noirs
-    const shouldBeBlack = isMenuHovered || isShopItemSelected || isShopItemHovered;
+    // LOGIQUE GLOBALE : 
+    // - Si un menu est survolé → noir
+    // - Si un item shop est sélectionné → noir
+    // - Si un item shop NON sélectionné est survolé (fond rouge) → noir
+    // Note: Si un item sélectionné est survolé, on garde le noir (pas de changement)
+    const shouldBeBlack = isMenuHovered || isShopItemSelected || (isShopItemHovered && !isShopItemSelected);
     const logoColor = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
     const menuColor = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
     const playerBgColorValue = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);

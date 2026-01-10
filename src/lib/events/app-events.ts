@@ -109,6 +109,13 @@ export interface AudioFeaturesEvent {
   };
 }
 
+export interface FamilyDropdownOpenEvent {
+  type: 'family-dropdown-open';
+  detail: {
+    isOpen: boolean;
+  };
+}
+
 // Union de tous les types d'événements
 export type AppEvent =
   | ShopItemSelectedEvent
@@ -127,7 +134,8 @@ export type AppEvent =
   | SoundCloudNetworkErrorEvent
   | SoundCloudReinitializeEvent
   | SoundCloudHealthChangedEvent
-  | AudioFeaturesEvent;
+  | AudioFeaturesEvent
+  | FamilyDropdownOpenEvent;
 
 // ============================================================================
 // FONCTIONS UTILITAIRES
@@ -286,6 +294,18 @@ export const audioEvents = {
     dispatchAppEvent<AudioFeaturesEvent>({
       type: 'audioFeatures',
       detail: { rms, spectralCentroid, spectralFlux },
+    });
+  },
+};
+
+/**
+ * Helpers pour les événements de la page family
+ */
+export const familyEvents = {
+  dropdownOpen: (isOpen: boolean) => {
+    dispatchAppEvent<FamilyDropdownOpenEvent>({
+      type: 'family-dropdown-open',
+      detail: { isOpen },
     });
   },
 };

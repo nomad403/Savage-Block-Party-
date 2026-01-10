@@ -66,7 +66,7 @@ function FamilyDropdownsWrapper({
             } else {
               // Sur desktop : IntersectionObserver peut modifier isVisible
               // (mais handleScroll a aussi son mot à dire)
-              setIsVisible(entry.isIntersecting);
+            setIsVisible(entry.isIntersecting);
             }
           });
         },

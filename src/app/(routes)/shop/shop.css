@@ -107,6 +107,14 @@ body:has(#shop-root).scrollable-page .custom-scrollbar {
 	right: 0 !important;
 }
 
+/* Page shop - Masquer la scrollbar personnalisée sur mobile */
+@media (max-width: 767px) {
+	body:has(#shop-root) .custom-scrollbar {
+		display: none !important;
+		pointer-events: none !important;
+	}
+}
+
 body:has(#shop-root) .custom-scrollbar-thumb {
 	background: #000000 !important;
 }
