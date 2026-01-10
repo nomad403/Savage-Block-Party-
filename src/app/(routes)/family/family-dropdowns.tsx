@@ -7,6 +7,9 @@ import { useMenuHover } from "@/hooks/useMenuHover";
 import { useDropdown } from "@/hooks/useDropdown";
 import { TextRevealLines } from "@/components/ui";
 
+// Détecter iOS pour appliquer des corrections spécifiques
+const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
 // Padding horizontal du bouton dropdown - ajusté pour respiration du texte
 const DROPDOWN_PADDING_X = 16; // 16px pour une meilleure respiration, proportionnel au header
 
@@ -24,6 +27,81 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   const { isMenuHovered } = useMenuHover();
   const [isScrollingList, setIsScrollingList] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const listElementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  
+  // Helper pour créer les handlers de touch optimisés pour iOS
+  const createTouchHandlers = (dropdownKey: string) => ({
+    onTouchStart: (e: React.TouchEvent) => {
+      e.stopPropagation();
+      // Sur iOS, enregistrer la position Y du touch pour détecter le scroll
+      if (isIOS && e.touches.length > 0) {
+        touchStartYRef.current = e.touches[0].clientY;
+      }
+      setIsScrollingList(true);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    },
+    onTouchEnd: (e: React.TouchEvent) => {
+      e.stopPropagation();
+      touchStartYRef.current = null;
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      // Sur iOS, délai plus long pour être sûr que le scroll est terminé
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrollingList(false);
+      }, isIOS ? 500 : 300);
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      e.stopPropagation();
+      setIsScrollingList(true);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      // Sur iOS, empêcher le scroll de la page si on détecte un mouvement dans la liste
+      if (isIOS && touchStartYRef.current !== null && e.touches.length > 0) {
+        const currentY = e.touches[0].clientY;
+        const deltaY = Math.abs(currentY - touchStartYRef.current);
+        // Si le mouvement est significatif (scroll dans la liste), empêcher le scroll de la page
+        if (deltaY > 5) {
+          const list = listElementRefs.current[dropdownKey];
+          if (list) {
+            // Vérifier si la liste peut scroller
+            const canScroll = list.scrollHeight > list.clientHeight;
+            if (canScroll) {
+              // Empêcher le scroll de la page seulement si on scroll dans la liste
+              e.preventDefault();
+            }
+          }
+        }
+      }
+    },
+    onTouchCancel: (e: React.TouchEvent) => {
+      e.stopPropagation();
+      touchStartYRef.current = null;
+      setIsScrollingList(false);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    },
+    onScroll: (e: React.UIEvent) => {
+      e.stopPropagation();
+      setIsScrollingList(true);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      // Sur iOS, délai plus long
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrollingList(false);
+      }, isIOS ? 500 : 300);
+    },
+    onWheel: (e: React.WheelEvent) => {
+      // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
+      e.stopPropagation();
+    }
+  });
 
   // Notifier le parent quand l'état d'ouverture change
   useEffect(() => {
@@ -148,6 +226,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         <AnimatePresence>
           {activeDropdown === 'djs' && (
             <motion.div
+              ref={(el) => { listElementRefs.current['djs'] = el as HTMLDivElement; }}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -160,45 +239,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 touchAction: 'pan-y',
                 overscrollBehavior: 'contain'
               }}
-              onTouchStart={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                // Ne pas preventDefault car cela empêche le scroll de la liste
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-              }}
-              onTouchEnd={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsScrollingList(false);
-                }, 300); // Augmenter le délai pour être sûr
-              }}
-              onTouchMove={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                // Ne pas preventDefault sur touchMove car cela empêche le scroll de la liste
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-              }}
-              onScroll={(e: React.UIEvent) => {
-                e.stopPropagation();
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsScrollingList(false);
-                }, 300); // Augmenter le délai pour être sûr
-              }}
-              onWheel={(e: React.WheelEvent) => {
-                // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
-                e.stopPropagation();
-              }}
+              {...createTouchHandlers('djs')}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
                 {djs.map((dj, index) => (
@@ -271,6 +312,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         <AnimatePresence>
           {activeDropdown === 'danseurs' && (
             <motion.div
+              ref={(el) => { listElementRefs.current['danseurs'] = el as HTMLDivElement; }}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -283,45 +325,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 touchAction: 'pan-y',
                 overscrollBehavior: 'contain'
               }}
-              onTouchStart={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                // Ne pas preventDefault car cela empêche le scroll de la liste
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-              }}
-              onTouchEnd={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsScrollingList(false);
-                }, 300); // Augmenter le délai pour être sûr
-              }}
-              onTouchMove={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                // Ne pas preventDefault sur touchMove car cela empêche le scroll de la liste
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-              }}
-              onScroll={(e: React.UIEvent) => {
-                e.stopPropagation();
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsScrollingList(false);
-                }, 300); // Augmenter le délai pour être sûr
-              }}
-              onWheel={(e: React.WheelEvent) => {
-                // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
-                e.stopPropagation();
-              }}
+              {...createTouchHandlers('danseurs')}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
                 {danseurs.map((danseur, index) => (
@@ -394,6 +398,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         <AnimatePresence>
           {activeDropdown === 'collab' && (
             <motion.div
+              ref={(el) => { listElementRefs.current['collab'] = el as HTMLDivElement; }}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -406,45 +411,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 touchAction: 'pan-y',
                 overscrollBehavior: 'contain'
               }}
-              onTouchStart={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                // Ne pas preventDefault car cela empêche le scroll de la liste
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-              }}
-              onTouchEnd={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsScrollingList(false);
-                }, 300); // Augmenter le délai pour être sûr
-              }}
-              onTouchMove={(e: React.TouchEvent) => {
-                e.stopPropagation();
-                // Ne pas preventDefault sur touchMove car cela empêche le scroll de la liste
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-              }}
-              onScroll={(e: React.UIEvent) => {
-                e.stopPropagation();
-                setIsScrollingList(true);
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsScrollingList(false);
-                }, 300); // Augmenter le délai pour être sûr
-              }}
-              onWheel={(e: React.WheelEvent) => {
-                // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
-                e.stopPropagation();
-              }}
+              {...createTouchHandlers('collab')}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
                 {collabs.map((collab, index) => (

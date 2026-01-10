@@ -80,6 +80,9 @@ function FamilyDropdownsWrapper({
 
   // Gestion de la visibilité basée sur le scroll
   useEffect(() => {
+    let lastScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    
     const handleScroll = () => {
       // IMPORTANT: Ne jamais masquer si un dropdown est ouvert
       // Cela empêche la fermeture des dropdowns pendant le scroll dans une liste
@@ -88,26 +91,60 @@ function FamilyDropdownsWrapper({
         if (!isVisible) {
           setIsVisible(true);
         }
+        // Réinitialiser le timeout pour éviter les masquages intempestifs
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+          scrollTimeout = null;
+        }
         return; // Ne pas continuer la logique de masquage
       }
       
       const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const scrollDelta = Math.abs(scrollY - lastScrollY);
+      lastScrollY = scrollY;
+      
+      // Sur iOS, ignorer les très petits mouvements de scroll qui peuvent venir du scroll dans une liste
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS && scrollDelta < 2) {
+        return; // Ignorer les très petits mouvements
+      }
       
       // Si on scroll vers le bas ET qu'on a scrollé un peu → afficher
       if (scrollDirection === 'down' && scrollY > 50) {
         setIsVisible(true);
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+          scrollTimeout = null;
+        }
       } 
       // Si on scroll vers le haut ET qu'on est proche du haut → masquer
       // MAIS seulement si aucun dropdown n'est ouvert
       else if (scrollDirection === 'up' && scrollY < 100) {
         // Double vérification : ne masquer que si aucun dropdown n'est ouvert
         if (!hasOpenDropdownRef.current) {
-          setIsVisible(false);
+          // Sur iOS, délai avant de masquer pour éviter les masquages intempestifs
+          if (isIOS) {
+            if (scrollTimeout) {
+              clearTimeout(scrollTimeout);
+            }
+            scrollTimeout = setTimeout(() => {
+              if (!hasOpenDropdownRef.current) {
+                setIsVisible(false);
+              }
+              scrollTimeout = null;
+            }, 300);
+          } else {
+            setIsVisible(false);
+          }
         }
       }
       // Si le sentinel est visible → toujours afficher
       else if (sentinelVisibleRef.current) {
         setIsVisible(true);
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+          scrollTimeout = null;
+        }
       }
     };
 
@@ -116,6 +153,9 @@ function FamilyDropdownsWrapper({
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
     };
   }, [scrollDirection, isVisible]);
 
