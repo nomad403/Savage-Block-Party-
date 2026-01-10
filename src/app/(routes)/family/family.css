@@ -49,6 +49,39 @@ body:has(#family-root) .family-dropdowns-container[style*="z-index: 10004"] {
 }
 
 /* ========================================
+   DROPDOWNS LISTES - SCROLL MOBILE (iOS/Android)
+   ======================================== */
+/* Améliorer le scroll des listes déroulantes sur mobile */
+/* Compatible iOS (Safari), Android (Chrome) et autres navigateurs */
+body:has(#family-root) .family-dropdowns-container [style*="overflow-y"] {
+	/* Scroll fluide sur iOS */
+	-webkit-overflow-scrolling: touch !important;
+	
+	/* Permettre uniquement le scroll vertical dans la liste */
+	touch-action: pan-y !important;
+	
+	/* Empêcher le scroll de la page pendant le scroll de la liste */
+	overscroll-behavior: contain !important;
+	
+	/* Masquer la scrollbar mais permettre le scroll */
+	scrollbar-width: none !important; /* Firefox */
+	-ms-overflow-style: none !important; /* IE/Edge */
+}
+
+body:has(#family-root) .family-dropdowns-container [style*="overflow-y"]::-webkit-scrollbar {
+	display: none !important; /* Chrome, Safari, Edge */
+}
+
+/* Empêcher le scroll de la page quand on scroll dans une liste déroulante */
+@media (max-width: 767px) {
+	body:has(#family-root) .family-dropdowns-container [style*="overflow-y"] {
+		/* Sur mobile, empêcher la propagation du scroll vers la page */
+		position: relative;
+		z-index: calc(var(--z-dropdowns-open) + 1) !important; /* 10005 */
+	}
+}
+
+/* ========================================
    MENU HOVER - FAMILY SPECIFIC
    ======================================== */
 /* Fonds des boutons menu au-dessus des dropdowns */

@@ -25,13 +25,20 @@ export function useDropdown() {
     setActiveDropdown(null);
   };
 
-  // Fermer le dropdown quand on clique en dehors
+  // Fermer le dropdown quand on clique/touche en dehors
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (activeDropdown) {
         const dropdownElement = dropdownRefs.current[activeDropdown];
-        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
-          closeDropdown();
+        const target = event.target as Node;
+        
+        // Vérifier si le touch/click est dans le dropdown ou dans une liste déroulante
+        if (dropdownElement && !dropdownElement.contains(target)) {
+          // Vérifier aussi si le touch est dans une liste déroulante (motion.div avec overflow-y)
+          const isInDropdownList = (target as HTMLElement).closest('[style*="overflow-y"]');
+          if (!isInDropdownList) {
+            closeDropdown();
+          }
         }
       }
     };
@@ -39,12 +46,15 @@ export function useDropdown() {
     if (activeDropdown) {
       // Petit délai pour éviter de fermer immédiatement après l'ouverture
       const timeoutId = setTimeout(() => {
+        // Gérer les événements souris et touch pour compatibilité mobile
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside, { passive: true });
       }, 10);
 
       return () => {
         clearTimeout(timeoutId);
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
       };
     }
   }, [activeDropdown]);

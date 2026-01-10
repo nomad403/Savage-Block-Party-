@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenu } from "@/hooks/useMenu";
 import { useMenuHover } from "@/hooks/useMenuHover";
@@ -21,13 +21,25 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   const { activeDropdown, toggleDropdown, closeDropdown, dropdownRefs } = useDropdown();
   const { isMenuOpen } = useMenu();
   const { isMenuHovered } = useMenuHover();
+  const [isScrollingList, setIsScrollingList] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fermer les listes ouvertes quand les dropdowns sont masqués par le scroll
+  // Mais ne pas fermer si l'utilisateur est en train de scroller dans la liste
   useEffect(() => {
-    if (!isVisible && activeDropdown) {
+    if (!isVisible && activeDropdown && !isScrollingList) {
       closeDropdown();
     }
-  }, [isVisible, activeDropdown, closeDropdown]);
+  }, [isVisible, activeDropdown, closeDropdown, isScrollingList]);
+
+  // Cleanup du timeout au démontage
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Z-index géré par CSS via .family-dropdowns-container
   // Base: var(--z-dropdowns) = 10003
@@ -119,8 +131,47 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute bottom-full left-0 right-0 overflow-visible bg-transparent"
-              style={{ maxHeight: '80vh' }}
+              className="absolute bottom-full left-0 right-0 bg-transparent"
+              style={{ 
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain'
+              }}
+              onTouchStart={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+              }}
+              onTouchEnd={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsScrollingList(false);
+                }, 150);
+              }}
+              onTouchMove={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+              }}
+              onScroll={(e: React.UIEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsScrollingList(false);
+                }, 150);
+              }}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
                 {djs.map((dj, index) => (
@@ -197,8 +248,47 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute bottom-full left-0 right-0 overflow-visible bg-transparent"
-              style={{ maxHeight: '80vh' }}
+              className="absolute bottom-full left-0 right-0 bg-transparent"
+              style={{ 
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain'
+              }}
+              onTouchStart={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+              }}
+              onTouchEnd={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsScrollingList(false);
+                }, 150);
+              }}
+              onTouchMove={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+              }}
+              onScroll={(e: React.UIEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsScrollingList(false);
+                }, 150);
+              }}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
                 {danseurs.map((danseur, index) => (
@@ -275,8 +365,47 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute bottom-full left-0 right-0 overflow-visible bg-transparent"
-              style={{ maxHeight: '80vh' }}
+              className="absolute bottom-full left-0 right-0 bg-transparent"
+              style={{ 
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain'
+              }}
+              onTouchStart={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+              }}
+              onTouchEnd={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsScrollingList(false);
+                }, 150);
+              }}
+              onTouchMove={(e: React.TouchEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+              }}
+              onScroll={(e: React.UIEvent) => {
+                e.stopPropagation();
+                setIsScrollingList(true);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsScrollingList(false);
+                }, 150);
+              }}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
                 {collabs.map((collab, index) => (
