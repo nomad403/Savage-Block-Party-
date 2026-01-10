@@ -123,8 +123,8 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
       const timeoutId = setTimeout(() => {
         // Vérifier à nouveau que l'état n'a pas changé
         if (!isScrollingList && activeDropdown) {
-          closeDropdown();
-        }
+      closeDropdown();
+    }
       }, 500); // Délai plus long pour être sûr
       
       return () => clearTimeout(timeoutId);
@@ -185,12 +185,12 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
 
   return (
     <div 
-      className={`w-full flex ${activeDropdown ? 'flex-col md:flex-row' : 'flex-row'} family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}
+      className={`w-full flex flex-row family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}
       style={{ zIndex: finalZIndex }} // Gardé pour compatibilité avec autres pages
     >
       {/* Dropdown DJs */}
       <motion.div 
-        className={`relative ${activeDropdown && activeDropdown !== 'djs' ? 'hidden md:flex' : 'flex'} md:flex-1`}
+        className={`relative flex flex-1`}
         ref={(el) => { dropdownRefs.current['djs'] = el; }}
         initial={false}
         animate={{
@@ -277,7 +277,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
       
       {/* Dropdown Danseurs */}
       <motion.div 
-        className={`relative ${activeDropdown && activeDropdown !== 'danseurs' ? 'hidden md:flex' : 'flex'} md:flex-1`}
+        className={`relative flex flex-1`}
         ref={(el) => { dropdownRefs.current['danseurs'] = el; }}
         initial={false}
         animate={{
@@ -363,7 +363,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
       
       {/* Dropdown Collab */}
       <motion.div 
-        className={`relative ${activeDropdown && activeDropdown !== 'collab' ? 'hidden md:flex' : 'flex'} md:flex-1`}
+        className={`relative flex flex-1`}
         ref={(el) => { dropdownRefs.current['collab'] = el; }}
         initial={false}
         animate={{
