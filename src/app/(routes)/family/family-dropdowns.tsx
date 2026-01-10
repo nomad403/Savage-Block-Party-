@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMenu } from "@/hooks/useMenu";
 import { useMenuHover } from "@/hooks/useMenuHover";
 import { useDropdown } from "@/hooks/useDropdown";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 import { TextRevealLines } from "@/components/ui";
 
 // Détecter iOS pour appliquer des corrections spécifiques
@@ -25,6 +26,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   const { activeDropdown, toggleDropdown, closeDropdown, dropdownRefs } = useDropdown();
   const { isMenuOpen } = useMenu();
   const { isMenuHovered } = useMenuHover();
+  const isMobile = useIsMobile(); // Détection mobile pour logique dédiée
   const [isScrollingList, setIsScrollingList] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -193,14 +195,22 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         className={`relative flex flex-1`}
         ref={(el) => { dropdownRefs.current['djs'] = el; }}
         initial={false}
-        animate={{
-          flex: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
-          width: activeDropdown === 'djs' ? '100%' : activeDropdown ? '0%' : undefined,
-          opacity: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
-        }}
+        animate={
+          isMobile
+            ? {
+                // Sur mobile : NE JAMAIS animer flex/width, garder les boutons fixes
+                opacity: 1, // Toujours visible sur mobile
+              }
+            : {
+                // Sur desktop : logique actuelle (flex/width/opacity)
+                flex: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
+                width: activeDropdown === 'djs' ? '100%' : activeDropdown ? '0%' : undefined,
+                opacity: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
+              }
+        }
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
-          overflow: 'hidden',
+          overflow: isMobile ? 'visible' : 'hidden', // Sur mobile, pas d'overflow hidden
         }}
         onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
           // Ne fermer que si le focus va vraiment en dehors (pas vers un enfant)
@@ -231,8 +241,15 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute bottom-full left-0 right-0 bg-transparent"
+              className={isMobile ? "fixed left-0 right-0 bg-transparent" : "absolute bottom-full left-0 right-0 bg-transparent"}
               style={{ 
+                // Sur mobile : overlay fixe au-dessus des boutons
+                // Sur desktop : position absolute relative au bouton
+                ...(isMobile ? {
+                  bottom: '100%', // Au-dessus des boutons
+                  width: '100%',
+                  zIndex: 10005, // Au-dessus de tout
+                } : {}),
                 maxHeight: '80vh',
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
@@ -241,7 +258,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               }}
               {...createTouchHandlers('djs')}
             >
-              <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
+              <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
                 {djs.map((dj, index) => (
                   <div 
                     key={dj}
@@ -280,14 +297,22 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         className={`relative flex flex-1`}
         ref={(el) => { dropdownRefs.current['danseurs'] = el; }}
         initial={false}
-        animate={{
-          flex: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
-          width: activeDropdown === 'danseurs' ? '100%' : activeDropdown ? '0%' : undefined,
-          opacity: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
-        }}
+        animate={
+          isMobile
+            ? {
+                // Sur mobile : NE JAMAIS animer flex/width, garder les boutons fixes
+                opacity: 1, // Toujours visible sur mobile
+              }
+            : {
+                // Sur desktop : logique actuelle (flex/width/opacity)
+                flex: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
+                width: activeDropdown === 'danseurs' ? '100%' : activeDropdown ? '0%' : undefined,
+                opacity: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
+              }
+        }
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
-          overflow: 'hidden',
+          overflow: isMobile ? 'visible' : 'hidden', // Sur mobile, pas d'overflow hidden
         }}
         onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
           const currentTarget = e.currentTarget;
@@ -317,8 +342,15 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute bottom-full left-0 right-0 bg-transparent"
+              className={isMobile ? "fixed left-0 right-0 bg-transparent" : "absolute bottom-full left-0 right-0 bg-transparent"}
               style={{ 
+                // Sur mobile : overlay fixe au-dessus des boutons
+                // Sur desktop : position absolute relative au bouton
+                ...(isMobile ? {
+                  bottom: '100%', // Au-dessus des boutons
+                  width: '100%',
+                  zIndex: 10005, // Au-dessus de tout
+                } : {}),
                 maxHeight: '80vh',
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
@@ -327,7 +359,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               }}
               {...createTouchHandlers('danseurs')}
             >
-              <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
+              <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
                 {danseurs.map((danseur, index) => (
                   <div 
                     key={danseur}
@@ -366,14 +398,22 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         className={`relative flex flex-1`}
         ref={(el) => { dropdownRefs.current['collab'] = el; }}
         initial={false}
-        animate={{
-          flex: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
-          width: activeDropdown === 'collab' ? '100%' : activeDropdown ? '0%' : undefined,
-          opacity: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
-        }}
+        animate={
+          isMobile
+            ? {
+                // Sur mobile : NE JAMAIS animer flex/width, garder les boutons fixes
+                opacity: 1, // Toujours visible sur mobile
+              }
+            : {
+                // Sur desktop : logique actuelle (flex/width/opacity)
+                flex: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+                width: activeDropdown === 'collab' ? '100%' : activeDropdown ? '0%' : undefined,
+                opacity: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+              }
+        }
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
-          overflow: 'hidden',
+          overflow: isMobile ? 'visible' : 'hidden', // Sur mobile, pas d'overflow hidden
         }}
         onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
           const currentTarget = e.currentTarget;
@@ -403,8 +443,15 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="absolute bottom-full left-0 right-0 bg-transparent"
+              className={isMobile ? "fixed left-0 right-0 bg-transparent" : "absolute bottom-full left-0 right-0 bg-transparent"}
               style={{ 
+                // Sur mobile : overlay fixe au-dessus des boutons
+                // Sur desktop : position absolute relative au bouton
+                ...(isMobile ? {
+                  bottom: '100%', // Au-dessus des boutons
+                  width: '100%',
+                  zIndex: 10005, // Au-dessus de tout
+                } : {}),
                 maxHeight: '80vh',
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
@@ -413,7 +460,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               }}
               {...createTouchHandlers('collab')}
             >
-              <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
+              <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
                 {collabs.map((collab, index) => (
                   <div 
                     key={collab}
