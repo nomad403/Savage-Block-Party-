@@ -38,8 +38,7 @@ function FamilyDropdownsWrapper({
   const [isVisible, setIsVisible] = useState(false); // Masqué au chargement
   const scrollDirection = useScrollDirection();
   const sentinelVisibleRef = useRef(false);
-  const hasOpenDropdownRef = useRef(false); // Référence pour savoir si un dropdown est ouvert
-  const isMobile = useIsMobile(); // Détection mobile pour appliquer les corrections uniquement sur mobile
+  const isMobile = useIsMobile(); // Détection mobile : sur mobile, seul IntersectionObserver contrôle isVisible
 
   // Notifier le parent quand la visibilité change
   useEffect(() => {
@@ -59,19 +58,15 @@ function FamilyDropdownsWrapper({
         (entries) => {
           entries.forEach((entry) => {
             sentinelVisibleRef.current = entry.isIntersecting;
-            // Sur mobile uniquement : Ne pas masquer si un dropdown est ouvert
-            // Si le sentinel est visible → afficher les dropdowns
-            // Si le sentinel n'est pas visible → masquer SEULEMENT si aucun dropdown n'est ouvert (mobile uniquement)
-            if (entry.isIntersecting) {
-              setIsVisible(true);
+            
+            // RÈGLE ABSOLUE : Sur mobile, IntersectionObserver est la SEULE source de vérité
+            if (isMobile) {
+              // Sur mobile : isVisible = sentinel.isIntersecting (point final)
+              setIsVisible(entry.isIntersecting);
             } else {
-              // Sur mobile uniquement : ne masquer que si aucun dropdown n'est ouvert
-              // Sur desktop : masquer normalement
-              if (isMobile && !hasOpenDropdownRef.current) {
-                setIsVisible(false);
-              } else if (!isMobile) {
-                setIsVisible(false);
-              }
+              // Sur desktop : IntersectionObserver peut modifier isVisible
+              // (mais handleScroll a aussi son mot à dire)
+              setIsVisible(entry.isIntersecting);
             }
           });
         },
@@ -92,34 +87,21 @@ function FamilyDropdownsWrapper({
     return cleanup;
   }, [isMobile]); // Dépendance à isMobile pour recréer l'observer si nécessaire
 
-  // Gestion de la visibilité basée sur le scroll
+  // Gestion de la visibilité basée sur le scroll (DESKTOP UNIQUEMENT)
+  // Sur mobile, cette logique est COMPLÈTEMENT DÉSACTIVÉE
+  // IntersectionObserver est la seule source de vérité sur mobile
   useEffect(() => {
+    // Sur mobile, ne pas exécuter cette logique du tout
+    if (isMobile) {
+      return;
+    }
+    
     let lastScrollY = window.scrollY || document.documentElement.scrollTop || 0;
     let scrollTimeout: NodeJS.Timeout | null = null;
     
     const handleScroll = () => {
-      // IMPORTANT: Sur mobile uniquement, ne jamais masquer si un dropdown est ouvert
-      // Cela empêche la fermeture des dropdowns pendant le scroll dans une liste
-      if (isMobile && hasOpenDropdownRef.current) {
-        // Si un dropdown est ouvert, forcer la visibilité et ne jamais masquer
-        setIsVisible(true);
-        // Réinitialiser le timeout pour éviter les masquages intempestifs
-        if (scrollTimeout) {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = null;
-        }
-        return; // Ne pas continuer la logique de masquage
-      }
-      
       const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-      const scrollDelta = Math.abs(scrollY - lastScrollY);
       lastScrollY = scrollY;
-      
-      // Sur iOS, ignorer les très petits mouvements de scroll qui peuvent venir du scroll dans une liste
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS && scrollDelta < 2) {
-        return; // Ignorer les très petits mouvements
-      }
       
       // Si on scroll vers le bas ET qu'on a scrollé un peu → afficher
       if (scrollDirection === 'down' && scrollY > 50) {
@@ -130,31 +112,12 @@ function FamilyDropdownsWrapper({
         }
       } 
       // Si on scroll vers le haut ET qu'on est proche du haut → masquer
-      // Sur mobile : MAIS seulement si aucun dropdown n'est ouvert
       else if (scrollDirection === 'up' && scrollY < 100) {
-        // Sur mobile uniquement : triple vérification : ne masquer que si aucun dropdown n'est ouvert
-        if (isMobile && !hasOpenDropdownRef.current) {
-          // Annuler tout timeout existant
-          if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-          }
-          // Sur iOS, délai avant de masquer pour éviter les masquages intempestifs
-          if (isIOS) {
-            scrollTimeout = setTimeout(() => {
-              // Vérifier une dernière fois qu'aucun dropdown n'est ouvert
-              if (!hasOpenDropdownRef.current) {
-                setIsVisible(false);
-              }
-              scrollTimeout = null;
-            }, 300);
-          } else {
-            // Sur mobile (non iOS), masquer immédiatement mais seulement si aucun dropdown n'est ouvert
-            setIsVisible(false);
-          }
-        } else if (!isMobile) {
-          // Sur desktop, masquer normalement
-          setIsVisible(false);
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
         }
+        setIsVisible(false);
+        scrollTimeout = null;
       }
       // Si le sentinel est visible → toujours afficher
       else if (sentinelVisibleRef.current) {
@@ -175,7 +138,7 @@ function FamilyDropdownsWrapper({
         clearTimeout(scrollTimeout);
       }
     };
-  }, [scrollDirection, isVisible, isMobile]);
+  }, [scrollDirection, isMobile]);
 
   return (
     <div 
@@ -196,13 +159,10 @@ function FamilyDropdownsWrapper({
         selectedItem={selectedItem}
         isVisible={isVisible}
         onDropdownStateChange={(isOpen) => {
-          hasOpenDropdownRef.current = isOpen;
-          // Sur mobile uniquement : Si un dropdown s'ouvre, forcer la visibilité et la maintenir
-          if (isMobile && isOpen) {
-            setIsVisible(true);
-          }
-          // Si tous les dropdowns se ferment, permettre le masquage normal
-          // (mais ne pas forcer le masquage, laisser handleScroll gérer)
+          // Sur mobile : NE RIEN FAIRE
+          // IntersectionObserver est la seule source de vérité
+          // Sur desktop : cette callback n'est pas utilisée pour modifier isVisible
+          // (la logique desktop est gérée par handleScroll)
         }}
       />
     </div>
