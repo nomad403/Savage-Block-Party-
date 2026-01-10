@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import FamilyDropdowns from "./family-dropdowns";
 import { ScrollHint } from "@/components/ui";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 import "./family.css"; // Styles scopés pour Family
 
 /**
@@ -38,6 +39,7 @@ function FamilyDropdownsWrapper({
   const scrollDirection = useScrollDirection();
   const sentinelVisibleRef = useRef(false);
   const hasOpenDropdownRef = useRef(false); // Référence pour savoir si un dropdown est ouvert
+  const isMobile = useIsMobile(); // Détection mobile pour appliquer les corrections uniquement sur mobile
 
   // Notifier le parent quand la visibilité change
   useEffect(() => {
@@ -57,8 +59,20 @@ function FamilyDropdownsWrapper({
         (entries) => {
           entries.forEach((entry) => {
             sentinelVisibleRef.current = entry.isIntersecting;
+            // Sur mobile uniquement : Ne pas masquer si un dropdown est ouvert
             // Si le sentinel est visible → afficher les dropdowns
-            setIsVisible(entry.isIntersecting);
+            // Si le sentinel n'est pas visible → masquer SEULEMENT si aucun dropdown n'est ouvert (mobile uniquement)
+            if (entry.isIntersecting) {
+              setIsVisible(true);
+            } else {
+              // Sur mobile uniquement : ne masquer que si aucun dropdown n'est ouvert
+              // Sur desktop : masquer normalement
+              if (isMobile && !hasOpenDropdownRef.current) {
+                setIsVisible(false);
+              } else if (!isMobile) {
+                setIsVisible(false);
+              }
+            }
           });
         },
         {
@@ -76,7 +90,7 @@ function FamilyDropdownsWrapper({
 
     const cleanup = setupObserver();
     return cleanup;
-  }, []); // Pas de dépendance à scrollDirection pour éviter les re-créations
+  }, [isMobile]); // Dépendance à isMobile pour recréer l'observer si nécessaire
 
   // Gestion de la visibilité basée sur le scroll
   useEffect(() => {
@@ -84,13 +98,11 @@ function FamilyDropdownsWrapper({
     let scrollTimeout: NodeJS.Timeout | null = null;
     
     const handleScroll = () => {
-      // IMPORTANT: Ne jamais masquer si un dropdown est ouvert
+      // IMPORTANT: Sur mobile uniquement, ne jamais masquer si un dropdown est ouvert
       // Cela empêche la fermeture des dropdowns pendant le scroll dans une liste
-      if (hasOpenDropdownRef.current) {
-        // Si un dropdown est ouvert, forcer la visibilité
-        if (!isVisible) {
-          setIsVisible(true);
-        }
+      if (isMobile && hasOpenDropdownRef.current) {
+        // Si un dropdown est ouvert, forcer la visibilité et ne jamais masquer
+        setIsVisible(true);
         // Réinitialiser le timeout pour éviter les masquages intempestifs
         if (scrollTimeout) {
           clearTimeout(scrollTimeout);
@@ -118,24 +130,30 @@ function FamilyDropdownsWrapper({
         }
       } 
       // Si on scroll vers le haut ET qu'on est proche du haut → masquer
-      // MAIS seulement si aucun dropdown n'est ouvert
+      // Sur mobile : MAIS seulement si aucun dropdown n'est ouvert
       else if (scrollDirection === 'up' && scrollY < 100) {
-        // Double vérification : ne masquer que si aucun dropdown n'est ouvert
-        if (!hasOpenDropdownRef.current) {
+        // Sur mobile uniquement : triple vérification : ne masquer que si aucun dropdown n'est ouvert
+        if (isMobile && !hasOpenDropdownRef.current) {
+          // Annuler tout timeout existant
+          if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+          }
           // Sur iOS, délai avant de masquer pour éviter les masquages intempestifs
           if (isIOS) {
-            if (scrollTimeout) {
-              clearTimeout(scrollTimeout);
-            }
             scrollTimeout = setTimeout(() => {
+              // Vérifier une dernière fois qu'aucun dropdown n'est ouvert
               if (!hasOpenDropdownRef.current) {
                 setIsVisible(false);
               }
               scrollTimeout = null;
             }, 300);
           } else {
+            // Sur mobile (non iOS), masquer immédiatement mais seulement si aucun dropdown n'est ouvert
             setIsVisible(false);
           }
+        } else if (!isMobile) {
+          // Sur desktop, masquer normalement
+          setIsVisible(false);
         }
       }
       // Si le sentinel est visible → toujours afficher
@@ -157,7 +175,7 @@ function FamilyDropdownsWrapper({
         clearTimeout(scrollTimeout);
       }
     };
-  }, [scrollDirection, isVisible]);
+  }, [scrollDirection, isVisible, isMobile]);
 
   return (
     <div 
@@ -179,10 +197,12 @@ function FamilyDropdownsWrapper({
         isVisible={isVisible}
         onDropdownStateChange={(isOpen) => {
           hasOpenDropdownRef.current = isOpen;
-          // Si un dropdown s'ouvre, forcer la visibilité
-          if (isOpen && !isVisible) {
+          // Sur mobile uniquement : Si un dropdown s'ouvre, forcer la visibilité et la maintenir
+          if (isMobile && isOpen) {
             setIsVisible(true);
           }
+          // Si tous les dropdowns se ferment, permettre le masquage normal
+          // (mais ne pas forcer le masquage, laisser handleScroll gérer)
         }}
       />
     </div>
