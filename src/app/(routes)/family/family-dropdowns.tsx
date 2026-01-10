@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import { useMenu } from "@/hooks/useMenu";
 import { useMenuHover } from "@/hooks/useMenuHover";
 import { useDropdown } from "@/hooks/useDropdown";
@@ -31,6 +32,8 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const listElementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const buttonsContainerRef = useRef<HTMLDivElement | null>(null); // Référence pour le conteneur des boutons (mobile)
+  const [mounted, setMounted] = useState(false); // Pour le portal
   
   // Helper pour créer les handlers de touch optimisés pour iOS
   const createTouchHandlers = (dropdownKey: string) => ({
@@ -142,6 +145,26 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
     };
   }, []);
 
+  // Pour le portal sur mobile
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // État pour la hauteur des boutons (mobile)
+  const [buttonsHeight, setButtonsHeight] = useState(0);
+  
+  // Mettre à jour la hauteur des boutons pour le positionnement du dropdown mobile
+  useEffect(() => {
+    if (isMobile && buttonsContainerRef.current) {
+      const updateHeight = () => {
+        setButtonsHeight(buttonsContainerRef.current?.offsetHeight || 0);
+      };
+      updateHeight();
+      window.addEventListener('resize', updateHeight);
+      return () => window.removeEventListener('resize', updateHeight);
+    }
+  }, [isMobile]);
+
   // Z-index géré par CSS via .family-dropdowns-container
   // Base: var(--z-dropdowns) = 10003
   // Ouvert: var(--z-dropdowns-open) = 10004
@@ -185,314 +208,300 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
     "La Rotonde"
   ];
 
-  return (
-    <div 
-      className={`w-full flex flex-row family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}
-      style={{ zIndex: finalZIndex }} // Gardé pour compatibilité avec autres pages
-    >
-      {/* Dropdown DJs */}
-      <motion.div 
-        className={`relative flex flex-1`}
-        ref={(el) => { dropdownRefs.current['djs'] = el; }}
-        initial={false}
-        animate={
-          isMobile
-            ? {
-                // Sur mobile : NE JAMAIS animer flex/width, garder les boutons fixes
-                opacity: 1, // Toujours visible sur mobile
-              }
-            : {
-                // Sur desktop : logique actuelle (flex/width/opacity)
-                flex: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
-                width: activeDropdown === 'djs' ? '100%' : activeDropdown ? '0%' : undefined,
-                opacity: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
-              }
-        }
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        style={{
-          overflow: isMobile ? 'visible' : 'hidden', // Sur mobile, pas d'overflow hidden
-        }}
-        onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
-          // Ne fermer que si le focus va vraiment en dehors (pas vers un enfant)
-          const currentTarget = e.currentTarget;
-          if (!currentTarget) return;
-          
-          if (!currentTarget.contains(e.relatedTarget as Node)) {
-            setTimeout(() => {
-              if (activeDropdown === 'djs' && currentTarget && !currentTarget.contains(document.activeElement)) {
-                closeDropdown();
-              }
-            }, 100);
-          }
-        }}
-      >
-        <button
-          onClick={() => toggleDropdown('djs')}
-          className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
-          style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+  // Fonction helper pour rendre le contenu d'un dropdown
+  const renderDropdownContent = (items: string[], dropdownKey: string) => (
+    <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
+      {items.map((item, index) => (
+        <div 
+          key={item}
+          onClick={() => selectItem(item)}
+          className="cursor-pointer hover:opacity-80 transition-opacity relative"
+          style={{ 
+            margin: 0,
+            padding: 0,
+            overflow: 'visible',
+            flexShrink: 0,
+            width: '100%'
+          }}
         >
-          DJs
-        </button>
-        <AnimatePresence>
-          {activeDropdown === 'djs' && (
-            <motion.div
-              ref={(el) => { listElementRefs.current['djs'] = el as HTMLDivElement; }}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className={isMobile ? "fixed left-0 right-0 bg-transparent" : "absolute bottom-full left-0 right-0 bg-transparent"}
-              style={{ 
-                // Sur mobile : overlay fixe au-dessus des boutons
-                // Sur desktop : position absolute relative au bouton
-                ...(isMobile ? {
-                  bottom: '100%', // Au-dessus des boutons
-                  width: '100%',
-                  zIndex: 10005, // Au-dessus de tout
-                } : {}),
-                maxHeight: '80vh',
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y',
-                overscrollBehavior: 'contain'
-              }}
-              {...createTouchHandlers('djs')}
-            >
-              <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
-                {djs.map((dj, index) => (
-                  <div 
-                    key={dj}
-                    onClick={() => selectItem(dj)}
-                    className="cursor-pointer hover:opacity-80 transition-opacity relative"
-                    style={{ 
-                      margin: 0,
-                      padding: 0,
-                      overflow: 'visible',
-                      flexShrink: 0,
-                      width: '100%'
-                    }}
-                  >
-                    <TextRevealLines
-                      text={dj}
-                      color="#22C55E"
-                      className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
-                      delayStep={0.1}
-                      density="tight"
-                      horizontalPadding={12}
-                      startInset={DROPDOWN_PADDING_X - 12}
-                      endInset={1}
-                      itemIndex={index}
-                      itemDelay={0.05}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+          <TextRevealLines
+            text={item}
+            color="#22C55E"
+            className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
+            delayStep={0.1}
+            density="tight"
+            horizontalPadding={12}
+            startInset={DROPDOWN_PADDING_X - 12}
+            endInset={1}
+            itemIndex={index}
+            itemDelay={0.05}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
+  // Rendre le dropdown overlay mobile (séparé des boutons)
+  const renderMobileDropdownOverlay = () => {
+    if (!isMobile || !activeDropdown || !mounted) return null;
+
+    const items = activeDropdown === 'djs' ? djs : activeDropdown === 'danseurs' ? danseurs : collabs;
+
+    return createPortal(
+      <AnimatePresence>
+        {activeDropdown && (
+          <motion.div
+            ref={(el) => { listElementRefs.current[activeDropdown] = el as HTMLDivElement; }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="fixed left-0 right-0 bg-transparent"
+            style={{ 
+              bottom: `${buttonsHeight}px`, // Au-dessus des boutons
+              width: '100%',
+              zIndex: 10005,
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
+            {...createTouchHandlers(activeDropdown)}
+          >
+            {renderDropdownContent(items, activeDropdown)}
+          </motion.div>
+        )}
+      </AnimatePresence>,
+      document.body
+    );
+  };
+
+  return (
+    <>
+      <div 
+        ref={buttonsContainerRef}
+        className={`w-full flex flex-row family-dropdowns-container transition-opacity duration-300 ${isMenuHovered ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}
+        style={{ zIndex: finalZIndex }} // Gardé pour compatibilité avec autres pages
+      >
+      {/* Dropdown DJs */}
+      {isMobile ? (
+        // Sur mobile : bouton simple sans motion.div (hauteur fixe garantie)
+        <div className="relative flex flex-1" ref={(el) => { dropdownRefs.current['djs'] = el; }}>
+          <button
+            onClick={() => toggleDropdown('djs')}
+            className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+            style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+          >
+            DJs
+          </button>
+        </div>
+      ) : (
+        // Sur desktop : motion.div avec animations flex/width
+        <motion.div 
+          className={`relative flex flex-1`}
+          ref={(el) => { dropdownRefs.current['djs'] = el; }}
+          initial={false}
+          animate={{
+            flex: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
+            width: activeDropdown === 'djs' ? '100%' : activeDropdown ? '0%' : undefined,
+            opacity: activeDropdown === 'djs' ? 1 : activeDropdown ? 0 : 1,
+          }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          style={{
+            overflow: 'hidden',
+          }}
+          onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
+            const currentTarget = e.currentTarget;
+            if (!currentTarget) return;
+            
+            if (!currentTarget.contains(e.relatedTarget as Node)) {
+              setTimeout(() => {
+                if (activeDropdown === 'djs' && currentTarget && !currentTarget.contains(document.activeElement)) {
+                  closeDropdown();
+                }
+              }, 100);
+            }
+          }}
+        >
+          <button
+            onClick={() => toggleDropdown('djs')}
+            className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+            style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+          >
+            DJs
+          </button>
+          <AnimatePresence>
+            {activeDropdown === 'djs' && (
+              <motion.div
+                ref={(el) => { listElementRefs.current['djs'] = el as HTMLDivElement; }}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="absolute bottom-full left-0 right-0 bg-transparent"
+                style={{ 
+                  maxHeight: '80vh',
+                  overflowY: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-y',
+                  overscrollBehavior: 'contain'
+                }}
+                {...createTouchHandlers('djs')}
+              >
+                {renderDropdownContent(djs, 'djs')}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
       
       {/* Dropdown Danseurs */}
-      <motion.div 
-        className={`relative flex flex-1`}
-        ref={(el) => { dropdownRefs.current['danseurs'] = el; }}
-        initial={false}
-        animate={
-          isMobile
-            ? {
-                // Sur mobile : NE JAMAIS animer flex/width, garder les boutons fixes
-                opacity: 1, // Toujours visible sur mobile
-              }
-            : {
-                // Sur desktop : logique actuelle (flex/width/opacity)
-                flex: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
-                width: activeDropdown === 'danseurs' ? '100%' : activeDropdown ? '0%' : undefined,
-                opacity: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
-              }
-        }
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        style={{
-          overflow: isMobile ? 'visible' : 'hidden', // Sur mobile, pas d'overflow hidden
-        }}
-        onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
-          const currentTarget = e.currentTarget;
-          if (!currentTarget) return;
-          
-          if (!currentTarget.contains(e.relatedTarget as Node)) {
-            setTimeout(() => {
-              if (activeDropdown === 'danseurs' && currentTarget && !currentTarget.contains(document.activeElement)) {
-                closeDropdown();
-              }
-            }, 100);
-          }
-        }}
-      >
-        <button
-          onClick={() => toggleDropdown('danseurs')}
-          className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
-          style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+      {isMobile ? (
+        // Sur mobile : bouton simple sans motion.div (hauteur fixe garantie)
+        <div className="relative flex flex-1" ref={(el) => { dropdownRefs.current['danseurs'] = el; }}>
+          <button
+            onClick={() => toggleDropdown('danseurs')}
+            className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+            style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+          >
+            Danseurs
+          </button>
+        </div>
+      ) : (
+        // Sur desktop : motion.div avec animations flex/width
+        <motion.div 
+          className={`relative flex flex-1`}
+          ref={(el) => { dropdownRefs.current['danseurs'] = el; }}
+          initial={false}
+          animate={{
+            flex: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
+            width: activeDropdown === 'danseurs' ? '100%' : activeDropdown ? '0%' : undefined,
+            opacity: activeDropdown === 'danseurs' ? 1 : activeDropdown ? 0 : 1,
+          }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          style={{
+            overflow: 'hidden',
+          }}
+          onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
+            const currentTarget = e.currentTarget;
+            if (!currentTarget) return;
+            
+            if (!currentTarget.contains(e.relatedTarget as Node)) {
+              setTimeout(() => {
+                if (activeDropdown === 'danseurs' && currentTarget && !currentTarget.contains(document.activeElement)) {
+                  closeDropdown();
+                }
+              }, 100);
+            }
+          }}
         >
-          Danseurs
-        </button>
-        <AnimatePresence>
-          {activeDropdown === 'danseurs' && (
-            <motion.div
-              ref={(el) => { listElementRefs.current['danseurs'] = el as HTMLDivElement; }}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className={isMobile ? "fixed left-0 right-0 bg-transparent" : "absolute bottom-full left-0 right-0 bg-transparent"}
-              style={{ 
-                // Sur mobile : overlay fixe au-dessus des boutons
-                // Sur desktop : position absolute relative au bouton
-                ...(isMobile ? {
-                  bottom: '100%', // Au-dessus des boutons
-                  width: '100%',
-                  zIndex: 10005, // Au-dessus de tout
-                } : {}),
-                maxHeight: '80vh',
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y',
-                overscrollBehavior: 'contain'
-              }}
-              {...createTouchHandlers('danseurs')}
-            >
-              <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
-                {danseurs.map((danseur, index) => (
-                  <div 
-                    key={danseur}
-                    onClick={() => selectItem(danseur)}
-                    className="cursor-pointer hover:opacity-80 transition-opacity relative"
-                    style={{ 
-                      margin: 0,
-                      padding: 0,
-                      overflow: 'visible',
-                      flexShrink: 0,
-                      width: '100%'
-                    }}
-                  >
-                    <TextRevealLines
-                      text={danseur}
-                      color="#22C55E"
-                      className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
-                      delayStep={0.1}
-                      density="tight"
-                      horizontalPadding={12}
-                      startInset={DROPDOWN_PADDING_X - 12}
-                      endInset={1}
-                      itemIndex={index}
-                      itemDelay={0.05}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+          <button
+            onClick={() => toggleDropdown('danseurs')}
+            className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+            style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+          >
+            Danseurs
+          </button>
+          <AnimatePresence>
+            {activeDropdown === 'danseurs' && (
+              <motion.div
+                ref={(el) => { listElementRefs.current['danseurs'] = el as HTMLDivElement; }}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="absolute bottom-full left-0 right-0 bg-transparent"
+                style={{ 
+                  maxHeight: '80vh',
+                  overflowY: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-y',
+                  overscrollBehavior: 'contain'
+                }}
+                {...createTouchHandlers('danseurs')}
+              >
+                {renderDropdownContent(danseurs, 'danseurs')}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
       
       {/* Dropdown Collab */}
-      <motion.div 
-        className={`relative flex flex-1`}
-        ref={(el) => { dropdownRefs.current['collab'] = el; }}
-        initial={false}
-        animate={
-          isMobile
-            ? {
-                // Sur mobile : NE JAMAIS animer flex/width, garder les boutons fixes
-                opacity: 1, // Toujours visible sur mobile
-              }
-            : {
-                // Sur desktop : logique actuelle (flex/width/opacity)
-                flex: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
-                width: activeDropdown === 'collab' ? '100%' : activeDropdown ? '0%' : undefined,
-                opacity: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
-              }
-        }
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        style={{
-          overflow: isMobile ? 'visible' : 'hidden', // Sur mobile, pas d'overflow hidden
-        }}
-        onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
-          const currentTarget = e.currentTarget;
-          if (!currentTarget) return;
-          
-          if (!currentTarget.contains(e.relatedTarget as Node)) {
-            setTimeout(() => {
-              if (activeDropdown === 'collab' && currentTarget && !currentTarget.contains(document.activeElement)) {
-                closeDropdown();
-              }
-            }, 100);
-          }
-        }}
-      >
-        <button
-          onClick={() => toggleDropdown('collab')}
-          className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
-          style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+      {isMobile ? (
+        // Sur mobile : bouton simple sans motion.div (hauteur fixe garantie)
+        <div className="relative flex flex-1" ref={(el) => { dropdownRefs.current['collab'] = el; }}>
+          <button
+            onClick={() => toggleDropdown('collab')}
+            className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+            style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+          >
+            Collab
+          </button>
+        </div>
+      ) : (
+        // Sur desktop : motion.div avec animations flex/width
+        <motion.div 
+          className={`relative flex flex-1`}
+          ref={(el) => { dropdownRefs.current['collab'] = el; }}
+          initial={false}
+          animate={{
+            flex: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+            width: activeDropdown === 'collab' ? '100%' : activeDropdown ? '0%' : undefined,
+            opacity: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+          }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          style={{
+            overflow: 'hidden',
+          }}
+          onBlur={(e: React.FocusEvent<HTMLDivElement>) => {
+            const currentTarget = e.currentTarget;
+            if (!currentTarget) return;
+            
+            if (!currentTarget.contains(e.relatedTarget as Node)) {
+              setTimeout(() => {
+                if (activeDropdown === 'collab' && currentTarget && !currentTarget.contains(document.activeElement)) {
+                  closeDropdown();
+                }
+              }, 100);
+            }
+          }}
         >
-          Collab
-        </button>
-        <AnimatePresence>
-          {activeDropdown === 'collab' && (
-            <motion.div
-              ref={(el) => { listElementRefs.current['collab'] = el as HTMLDivElement; }}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className={isMobile ? "fixed left-0 right-0 bg-transparent" : "absolute bottom-full left-0 right-0 bg-transparent"}
-              style={{ 
-                // Sur mobile : overlay fixe au-dessus des boutons
-                // Sur desktop : position absolute relative au bouton
-                ...(isMobile ? {
-                  bottom: '100%', // Au-dessus des boutons
-                  width: '100%',
-                  zIndex: 10005, // Au-dessus de tout
-                } : {}),
-                maxHeight: '80vh',
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y',
-                overscrollBehavior: 'contain'
-              }}
-              {...createTouchHandlers('collab')}
-            >
-              <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
-                {collabs.map((collab, index) => (
-                  <div 
-                    key={collab}
-                    onClick={() => selectItem(collab)}
-                    className="cursor-pointer hover:opacity-80 transition-opacity relative"
-                    style={{ 
-                      margin: 0,
-                      padding: 0,
-                      overflow: 'visible',
-                      flexShrink: 0,
-                      width: '100%'
-                    }}
-                  >
-                    <TextRevealLines
-                      text={collab}
-                      color="#22C55E"
-                      className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
-                      delayStep={0.1}
-                      density="tight"
-                      horizontalPadding={12}
-                      startInset={DROPDOWN_PADDING_X - 12}
-                      endInset={1}
-                      itemIndex={index}
-                      itemDelay={0.05}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </div>
+          <button
+            onClick={() => toggleDropdown('collab')}
+            className={`w-full text-black font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 bg-green-500 hover:bg-green-600 transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+            style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
+          >
+            Collab
+          </button>
+          <AnimatePresence>
+            {activeDropdown === 'collab' && (
+              <motion.div
+                ref={(el) => { listElementRefs.current['collab'] = el as HTMLDivElement; }}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="absolute bottom-full left-0 right-0 bg-transparent"
+                style={{ 
+                  maxHeight: '80vh',
+                  overflowY: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-y',
+                  overscrollBehavior: 'contain'
+                }}
+                {...createTouchHandlers('collab')}
+              >
+                {renderDropdownContent(collabs, 'collab')}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+      </div>
+      {/* Overlay mobile : dropdown rendu en portal (hors du flux des boutons) */}
+      {renderMobileDropdownOverlay()}
+    </>
   );
 }
