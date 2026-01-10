@@ -14,9 +14,10 @@ interface FamilyDropdownsProps {
   onItemSelect: (item: string) => void;
   selectedItem: string | null;
   isVisible?: boolean; // Visibilité des dropdowns (masqués par scroll)
+  onDropdownStateChange?: (isOpen: boolean) => void; // Callback pour notifier l'état d'ouverture
 }
 
-export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible = true }: FamilyDropdownsProps) {
+export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible = true, onDropdownStateChange }: FamilyDropdownsProps) {
   // Logique d'ouverture/fermeture extraite dans hook
   const { activeDropdown, toggleDropdown, closeDropdown, dropdownRefs } = useDropdown();
   const { isMenuOpen } = useMenu();
@@ -24,11 +25,31 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   const [isScrollingList, setIsScrollingList] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Notifier le parent quand l'état d'ouverture change
+  useEffect(() => {
+    onDropdownStateChange?.(!!activeDropdown);
+  }, [activeDropdown, onDropdownStateChange]);
+
   // Fermer les listes ouvertes quand les dropdowns sont masqués par le scroll
   // Mais ne pas fermer si l'utilisateur est en train de scroller dans la liste
+  // Protection renforcée : délai et vérification multiple
   useEffect(() => {
-    if (!isVisible && activeDropdown && !isScrollingList) {
-      closeDropdown();
+    // Ne jamais fermer si on est en train de scroller dans la liste
+    if (isScrollingList) {
+      return;
+    }
+    
+    // Ne fermer que si les dropdowns sont masqués ET qu'un dropdown est ouvert
+    // Avec un délai pour éviter les fermetures intempestives
+    if (!isVisible && activeDropdown) {
+      const timeoutId = setTimeout(() => {
+        // Vérifier à nouveau que l'état n'a pas changé
+        if (!isScrollingList && activeDropdown) {
+          closeDropdown();
+        }
+      }, 500); // Délai plus long pour être sûr
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isVisible, activeDropdown, closeDropdown, isScrollingList]);
 
@@ -141,6 +162,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               }}
               onTouchStart={(e: React.TouchEvent) => {
                 e.stopPropagation();
+                // Ne pas preventDefault car cela empêche le scroll de la liste
                 setIsScrollingList(true);
                 if (scrollTimeoutRef.current) {
                   clearTimeout(scrollTimeoutRef.current);
@@ -153,10 +175,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 }
                 scrollTimeoutRef.current = setTimeout(() => {
                   setIsScrollingList(false);
-                }, 150);
+                }, 300); // Augmenter le délai pour être sûr
               }}
               onTouchMove={(e: React.TouchEvent) => {
                 e.stopPropagation();
+                // Ne pas preventDefault sur touchMove car cela empêche le scroll de la liste
                 setIsScrollingList(true);
                 if (scrollTimeoutRef.current) {
                   clearTimeout(scrollTimeoutRef.current);
@@ -170,7 +193,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 }
                 scrollTimeoutRef.current = setTimeout(() => {
                   setIsScrollingList(false);
-                }, 150);
+                }, 300); // Augmenter le délai pour être sûr
+              }}
+              onWheel={(e: React.WheelEvent) => {
+                // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
+                e.stopPropagation();
               }}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
@@ -258,6 +285,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               }}
               onTouchStart={(e: React.TouchEvent) => {
                 e.stopPropagation();
+                // Ne pas preventDefault car cela empêche le scroll de la liste
                 setIsScrollingList(true);
                 if (scrollTimeoutRef.current) {
                   clearTimeout(scrollTimeoutRef.current);
@@ -270,10 +298,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 }
                 scrollTimeoutRef.current = setTimeout(() => {
                   setIsScrollingList(false);
-                }, 150);
+                }, 300); // Augmenter le délai pour être sûr
               }}
               onTouchMove={(e: React.TouchEvent) => {
                 e.stopPropagation();
+                // Ne pas preventDefault sur touchMove car cela empêche le scroll de la liste
                 setIsScrollingList(true);
                 if (scrollTimeoutRef.current) {
                   clearTimeout(scrollTimeoutRef.current);
@@ -287,7 +316,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 }
                 scrollTimeoutRef.current = setTimeout(() => {
                   setIsScrollingList(false);
-                }, 150);
+                }, 300); // Augmenter le délai pour être sûr
+              }}
+              onWheel={(e: React.WheelEvent) => {
+                // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
+                e.stopPropagation();
               }}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>
@@ -375,6 +408,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
               }}
               onTouchStart={(e: React.TouchEvent) => {
                 e.stopPropagation();
+                // Ne pas preventDefault car cela empêche le scroll de la liste
                 setIsScrollingList(true);
                 if (scrollTimeoutRef.current) {
                   clearTimeout(scrollTimeoutRef.current);
@@ -387,10 +421,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 }
                 scrollTimeoutRef.current = setTimeout(() => {
                   setIsScrollingList(false);
-                }, 150);
+                }, 300); // Augmenter le délai pour être sûr
               }}
               onTouchMove={(e: React.TouchEvent) => {
                 e.stopPropagation();
+                // Ne pas preventDefault sur touchMove car cela empêche le scroll de la liste
                 setIsScrollingList(true);
                 if (scrollTimeoutRef.current) {
                   clearTimeout(scrollTimeoutRef.current);
@@ -404,7 +439,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                 }
                 scrollTimeoutRef.current = setTimeout(() => {
                   setIsScrollingList(false);
-                }, 150);
+                }, 300); // Augmenter le délai pour être sûr
+              }}
+              onWheel={(e: React.WheelEvent) => {
+                // Empêcher le scroll de la page quand on scroll dans la liste (desktop)
+                e.stopPropagation();
               }}
             >
               <div className="w-full flex flex-col-reverse" style={{ gap: 0, alignItems: 'flex-start' }}>

@@ -37,6 +37,7 @@ function FamilyDropdownsWrapper({
   const [isVisible, setIsVisible] = useState(false); // Masqué au chargement
   const scrollDirection = useScrollDirection();
   const sentinelVisibleRef = useRef(false);
+  const hasOpenDropdownRef = useRef(false); // Référence pour savoir si un dropdown est ouvert
 
   // Notifier le parent quand la visibilité change
   useEffect(() => {
@@ -80,6 +81,16 @@ function FamilyDropdownsWrapper({
   // Gestion de la visibilité basée sur le scroll
   useEffect(() => {
     const handleScroll = () => {
+      // IMPORTANT: Ne jamais masquer si un dropdown est ouvert
+      // Cela empêche la fermeture des dropdowns pendant le scroll dans une liste
+      if (hasOpenDropdownRef.current) {
+        // Si un dropdown est ouvert, forcer la visibilité
+        if (!isVisible) {
+          setIsVisible(true);
+        }
+        return; // Ne pas continuer la logique de masquage
+      }
+      
       const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
       
       // Si on scroll vers le bas ET qu'on a scrollé un peu → afficher
@@ -87,8 +98,12 @@ function FamilyDropdownsWrapper({
         setIsVisible(true);
       } 
       // Si on scroll vers le haut ET qu'on est proche du haut → masquer
+      // MAIS seulement si aucun dropdown n'est ouvert
       else if (scrollDirection === 'up' && scrollY < 100) {
-        setIsVisible(false);
+        // Double vérification : ne masquer que si aucun dropdown n'est ouvert
+        if (!hasOpenDropdownRef.current) {
+          setIsVisible(false);
+        }
       }
       // Si le sentinel est visible → toujours afficher
       else if (sentinelVisibleRef.current) {
@@ -102,7 +117,7 @@ function FamilyDropdownsWrapper({
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [scrollDirection]);
+  }, [scrollDirection, isVisible]);
 
   return (
     <div 
@@ -122,6 +137,13 @@ function FamilyDropdownsWrapper({
         onItemSelect={onItemSelect} 
         selectedItem={selectedItem}
         isVisible={isVisible}
+        onDropdownStateChange={(isOpen) => {
+          hasOpenDropdownRef.current = isOpen;
+          // Si un dropdown s'ouvre, forcer la visibilité
+          if (isOpen && !isVisible) {
+            setIsVisible(true);
+          }
+        }}
       />
     </div>
   );
