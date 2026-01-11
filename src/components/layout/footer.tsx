@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useScrollZIndex } from "@/hooks/useScrollZIndex";
 import { HeaderPlayer } from "@/components/layout";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { usePageContext } from "@/hooks/usePageContext";
 
 export default function Footer() {
 	const { waveformZIndex } = useScrollZIndex();
 	const isMobile = useIsMobile();
+	const { isFamily } = usePageContext();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	// Écouter l'événement d'ouverture des dropdowns de la page family
@@ -21,6 +23,14 @@ export default function Footer() {
 			window.removeEventListener('family-dropdown-open', handleDropdownOpen as EventListener);
 		};
 	}, []);
+
+	// Réinitialiser l'état du dropdown quand on quitte la page family
+	// Pour éviter que le player reste masqué sur les autres pages
+	useEffect(() => {
+		if (!isFamily) {
+			setIsDropdownOpen(false);
+		}
+	}, [isFamily]);
 
 	// Masquer le player et la waveform sur mobile uniquement quand un dropdown est ouvert
 	const shouldHidePlayer = isMobile && isDropdownOpen;
