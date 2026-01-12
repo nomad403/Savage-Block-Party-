@@ -181,24 +181,17 @@ div[style*="overflow"]:has(.text-on-thermal) {
    FILTER INFRARED
    ======================================== */
 /* Filtre thermique pour les médias - Performant (GPU-accelerated) */
-/* ÉTAPE 1: Inversion des couleurs (fondamental pour effet thermique) */
-/* ÉTAPE 2: Manipulation RGB pour palette thermique monochrome avec accent rouge subtil (page home) */
+/* Effet infrared en noir et blanc / niveaux de gris uniquement */
 .filter-infrared {
 	/* Inversion des couleurs en premier */
 	filter: 
 		invert(100%) 
-		/* Rotation initiale pour préparer la palette */
-		hue-rotate(180deg) 
-		/* Saturation réduite pour effet monochrome */
-		saturate(80%) 
+		/* Désaturation complète pour noir et blanc pur */
+		saturate(0%) 
 		/* Contraste renforcé pour mieux séparer zones chaudes/froides */
 		contrast(180%) 
 		/* ASSOMBRISSEMENT : Réduction de la luminosité pour image plus sombre */
 		brightness(70%) 
-		/* Ajustement de la teinte vers rouge (couleur d'accentuation page home) */
-		hue-rotate(-45deg) 
-		/* Saturation finale réduite pour effet monochrome avec teinte rouge subtile */
-		saturate(60%) 
 		/* Contraste final renforcé pour faire ressortir les nuances */
 		contrast(150%);
 	/* Force l'accélération GPU pour meilleures performances */
@@ -214,12 +207,9 @@ iframe.filter-infrared,
 [style*="background-image"].filter-infrared {
 	filter: 
 		invert(100%) 
-		hue-rotate(180deg) 
-		saturate(80%) 
+		saturate(0%) 
 		contrast(180%) 
 		brightness(70%) 
-		hue-rotate(-45deg) 
-		saturate(60%) 
 		contrast(150%);
 	/* Force l'accélération GPU pour meilleures performances */
 	will-change: filter;

@@ -153,8 +153,12 @@ export default function Header() {
             <motion.header 
                 className={`h-20 md:h-24 w-full z-[20000] fixed top-0 left-0 right-0 ${headerBg} ${hoveredMenuItem ? 'text-black' : ''}`}
                 initial={{ y: 0 }}
-                animate={{ y: ((isFamily || isAgenda || isPresse) ? 0 : (isVisible ? 0 : -96)) }} // Sur family, agenda et presse, toujours visible et fixe
+                // IMPORTANT : Sur desktop, pas d'animation Y pour permettre le mix-blend-mode
+                // Le transform de Framer Motion crée un nouveau stacking context qui bloque le blend
+                animate={isMobile ? { y: ((isFamily || isAgenda || isPresse) ? 0 : (isVisible ? 0 : -96)) } : { y: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
+                // Forcer transform: none sur desktop pour éviter tout stacking context
+                style={!isMobile ? { transform: 'none' } : undefined}
             >
                 <div className="h-full flex items-center justify-between px-[clamp(16px,4vw,24px)]">
                     {/* Logo + Menu groupés à gauche */}
@@ -193,9 +197,9 @@ export default function Header() {
                                     key={item.href}
                                     href={item.href}
                                         className={menuLinkClass}
-                                        style={{ 
-                                            color: isActive ? '#000000' : menuTextColor 
-                                        }}
+                                        // IMPORTANT : Pas de couleur inline pour l'item actif sur desktop
+                                        // Le mix-blend-mode doit décider de la couleur, pas React
+                                        style={!isActive ? { color: menuTextColor } : undefined}
                                     onMouseEnter={() => handleMenuItemHover(item.href)}
                                     onMouseLeave={() => handleMenuItemHover(null)}
                                 >

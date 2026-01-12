@@ -310,7 +310,62 @@ html.no-scroll {
  * - /presse → #A855F7 (violet)
  */
 
-
+/**
+ * ========================================
+ * MENU ITEM ACTIVE (DESKTOP UNIQUEMENT)
+ * ========================================
+ * 
+ * Style pour le bouton menu sélectionné en version PC
+ * 
+ * PROBLÈME : mix-blend-mode ne fonctionne PAS avec les vidéos (couches GPU isolées)
+ * SOLUTION HYBRIDE :
+ * - Pages avec vidéos (home, family, presse) : effet de contraste adaptatif (text-shadow)
+ * - Pages sans vidéos (shop, agenda) : mix-blend-mode pour fusionner avec le contenu
+ * 
+ * IMPORTANT : Pour que le mix-blend-mode fonctionne correctement :
+ * - Le header ne doit PAS avoir de transform (géré dans header.tsx : pas d'animation Y sur desktop)
+ * - Pas d'isolation sur l'élément (cela bloque la fusion)
+ * - Z-index élevé pour être au-dessus du contenu avec lequel fusionner
+ */
+@media (min-width: 768px) {
+	/* ========================================
+	   HEADER - CONTEXTE POUR MIX-BLEND-MODE
+	   ========================================
+	   Comme sur ras-energies.com : le header et ses parents ne doivent PAS avoir
+	   de contexte d'isolation qui bloque le blend avec les vidéos en dessous
+	*/
+	header,
+	header > div,
+	header nav {
+		/* Forcer le contexte de composition pour permettre le blend */
+		transform: none !important; /* Forcer aucun transform pour éviter le stacking context */
+		will-change: auto; /* Éviter la création d'une couche GPU isolée */
+		/* Pas de background qui crée un contexte d'isolation */
+		background: transparent !important;
+		/* Pas d'isolation qui bloque le blend */
+		isolation: auto;
+	}
+	
+	/* ========================================
+	   MENU ITEM ACTIVE - MIX-BLEND-MODE
+	   ========================================
+	   Application du mix-blend-mode sur TOUTES les pages
+	   Comme sur ras-energies.com : le texte doit être dans le bon contexte
+	   pour pouvoir fusionner avec le contenu en dessous (y compris les vidéos)
+	   
+	   IMPORTANT : Pas de position: relative ni z-index qui créent un nouveau stacking context
+	   Le texte doit rester dans le flux normal pour que le blend fonctionne
+	*/
+	header nav a.menu-item-active {
+		/* Pas de position: relative qui crée un nouveau stacking context */
+		/* Pas de z-index qui isole l'élément */
+		/* IMPORTANT : Couleur blanche pour que le mix-blend-mode ait de la matière à inverser/différencier */
+		/* Pas de couleur inline dans React (supprimée dans header.tsx) */
+		color: white;
+		mix-blend-mode: difference;
+		/* Pas d'ombres portées comme demandé */
+	}
+}
 
 /* Logo tints, text reveal, calendar lines déplacés vers utilities.css et agenda.css */
 
