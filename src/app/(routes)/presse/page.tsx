@@ -180,7 +180,7 @@ export default function PressePage() {
               <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }}>
                 <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={320} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={400} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={340} className="flex-shrink-0" />
@@ -190,7 +190,7 @@ export default function PressePage() {
               <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
                 <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={320} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={400} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={364} className="flex-shrink-0" />
@@ -200,7 +200,7 @@ export default function PressePage() {
               <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
                 <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={320} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={400} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={340} className="flex-shrink-0" />
