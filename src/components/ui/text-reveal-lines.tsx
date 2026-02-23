@@ -1,44 +1,53 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useMenu } from "@/hooks/useMenu";
 
 type Density = "tight" | "normal" | "loose";
+type Typography = "cy" | "hanson";
 
 interface Props {
-	text?: string; // Texte à découper par \n (optionnel si lines est fourni)
+	text?: string;
 	color?: string;
 	className?: string;
-	delayStep?: number; // secondes entre lignes
-	horizontalPadding?: number; // Padding horizontal en pixels (par défaut 0)
-	itemIndex?: number; // Index de l'item pour déclencher l'animation de manière séquentielle
-	itemDelay?: number; // Délai en secondes avant de déclencher l'animation pour cet item (par défaut 0)
-	density?: Density; // Densité typographique (tight, normal, loose)
-	startInset?: number; // Décalage horizontal pour alignement avec le container parent (par défaut 0)
-	endInset?: number; // Décalage horizontal à la fin pour alignement avec le container parent (par défaut 0)
-	lines?: string[]; // Lignes explicites (optionnel, sinon split par \n)
-	instant?: boolean; // Si true, active l'animation immédiatement sans délais (par défaut false)
+	delayStep?: number;
+	horizontalPadding?: number;
+	itemIndex?: number;
+	itemDelay?: number;
+	density?: Density;
+	typography?: Typography;
+	startInset?: number;
+	endInset?: number;
+	lines?: string[];
+	instant?: boolean;
 }
 
-// Line-height selon la densité
-const DENSITY_LINE_HEIGHT: Record<Density, string> = {
-	tight: "1.05",
-	normal: "1.15",
-	loose: "1.5"
+// Configuration spécifique pour chaque typographie
+type TypographyConfig = {
+	lineHeight: Record<Density, string>;
+	verticalOffset: number; // Ajustement vertical pour le centrage (en pixels, positif = descend, négatif = monte)
+	heightAdjustment: number; // Ajustement de hauteur du background (en pixels, positif = réduit, négatif = augmente)
 };
 
-// Gap vertical entre les lignes selon la densité (en pixels)
-const DENSITY_GAP: Record<Density, number> = {
-	tight: 2,
-	normal: 4,
-	loose: 8
-};
-
-// Ajustement de hauteur du fond selon la densité (en pixels, positif = réduit la hauteur)
-const DENSITY_HEIGHT_ADJUSTMENT: Record<Density, number> = {
-	tight: 6, // Réduit la hauteur de 6px (3px en haut, 3px en bas) - pour family avec text-4xl
-	normal: 0, // Pas d'ajustement - pour presse avec text-sm/base
-	loose: -2 // Augmente la hauteur de 2px (1px en haut, 1px en bas) - pour textes larges
+const TYPOGRAPHY_CONFIG: Record<Typography, TypographyConfig> = {
+	cy: {
+		lineHeight: {
+			tight: "1.0", // Interlignage serré pour que les fonds se touchent sans se superposer (baseline uniforme en majuscules)
+			normal: "1.2",
+			loose: "1.5"
+		},
+		verticalOffset: 0, // Ajusté dynamiquement basé sur les descenders profonds
+		heightAdjustment: 0 // Pas d'ajustement supplémentaire, utilise la mesure réelle
+	},
+	hanson: {
+		lineHeight: {
+			tight: "1.1",
+			normal: "1.15",
+			loose: "1.3"
+		},
+		verticalOffset: 0, // Ajusté dynamiquement, Hanson est plus compacte
+		heightAdjustment: 0 // Pas d'ajustement supplémentaire, utilise la mesure réelle
+	}
 };
 
 export default function TextRevealLines({ 
@@ -50,123 +59,218 @@ export default function TextRevealLines({
 	itemIndex = 0, 
 	itemDelay = 0,
 	density = "normal",
+	typography = "cy",
 	startInset = 0,
 	endInset = 0,
 	lines: explicitLines,
 	instant = false
 }: Props) {
-	const containerRef = useRef<HTMLDivElement | null>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const textRef = useRef<HTMLSpanElement>(null);
+	const [lineRects, setLineRects] = useState<DOMRect[]>([]);
 	const [activeLines, setActiveLines] = useState<Set<number>>(new Set());
-	const hasAnimatedRef = useRef(false);
+	const animatedContentRef = useRef<string>("");
 	const { isMenuOpen } = useMenu();
 
-	// Découper le texte en lignes
-	const textLines = explicitLines || (text ? text.split('\n').filter(line => line.trim() !== '') : []);
+	// Préparer le texte
+	const displayText = useMemo(() => {
+		return explicitLines ? explicitLines.join('\n') : (text || '');
+	}, [explicitLines, text]);
 
-	useEffect(() => {
-		// Déclencher l'animation avec un délai basé sur l'index de l'item
-		if (!hasAnimatedRef.current && textLines.length > 0) {
-			hasAnimatedRef.current = true;
-			
-			const activateLine = (lineIndex: number) => {
-				setActiveLines(prev => new Set([...prev, lineIndex]));
-			};
+	// Créer une clé unique pour identifier le contenu
+	const contentKey = useMemo(() => {
+		return explicitLines ? explicitLines.join('|') : text || '';
+	}, [explicitLines, text]);
 
-			if (instant) {
-				// Mode instantané : activer toutes les lignes immédiatement
-				// L'animation CSS se fera en arrière-plan sans bloquer les interactions
-				requestAnimationFrame(() => {
-					textLines.forEach((_, index) => {
-						activateLine(index);
-					});
-				});
-			} else {
-				// Mode avec délais progressifs
-				const totalDelay = itemDelay + (itemIndex * 0.1);
-				
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
-						if (totalDelay > 0) {
-							setTimeout(() => {
-								// Activer les lignes progressivement
-								textLines.forEach((_, index) => {
-									setTimeout(() => {
-										activateLine(index);
-									}, (totalDelay * 1000) + (index * delayStep * 1000));
-								});
-							}, totalDelay * 1000);
-						} else {
-							// Activer les lignes progressivement sans délai initial
-							textLines.forEach((_, index) => {
-								setTimeout(() => {
-									activateLine(index);
-								}, index * delayStep * 1000);
-							});
-						}
-					});
-				});
-			}
+	// Configuration typographique
+	const config = useMemo(() => {
+		const { lineHeight, verticalOffset, heightAdjustment } = TYPOGRAPHY_CONFIG[typography];
+		return {
+			lineHeight: lineHeight[density],
+			verticalOffset,
+			heightAdjustment,
+			paddingLeft: horizontalPadding + startInset,
+			paddingRight: horizontalPadding + endInset,
+		};
+	}, [typography, density, horizontalPadding, startInset, endInset]);
+
+	// Mesurer les lignes réelles avec calcul de la distance entre lignes
+	useLayoutEffect(() => {
+		if (!textRef.current || !displayText) {
+			setLineRects([]);
+			return;
 		}
-	}, [textLines.length, itemIndex, itemDelay, delayStep, instant]);
-	
-	// Réinitialiser l'état active quand le texte change
-	useEffect(() => {
-		setActiveLines(new Set());
-		hasAnimatedRef.current = false;
-	}, [text]);
 
-	const lineHeight = DENSITY_LINE_HEIGHT[density];
-	const verticalGap = DENSITY_GAP[density];
-	const heightAdjustment = DENSITY_HEIGHT_ADJUSTMENT[density];
-	const paddingLeft = horizontalPadding + startInset;
-	const paddingRight = horizontalPadding + endInset;
+		const measureLines = () => {
+			if (!textRef.current || !containerRef.current) return;
+
+			try {
+				const range = document.createRange();
+				range.selectNodeContents(textRef.current);
+				const rawRects = Array.from(range.getClientRects());
+
+				if (rawRects.length === 0) {
+					setLineRects([]);
+					return;
+				}
+
+				const containerRect = containerRef.current.getBoundingClientRect();
+				
+				// Lire la vraie line-height CSS calculée (grille typographique fixe)
+				const computed = window.getComputedStyle(textRef.current);
+				const lineHeight = parseFloat(computed.lineHeight);
+
+				// Grouper les rects par ligne réelle (tolérance de 2px)
+				const threshold = 2;
+				const grouped: Array<{ top: number; left: number; right: number; width: number; rects: DOMRect[] }> = [];
+
+				rawRects.forEach(rect => {
+					const existing = grouped.find(r =>
+						Math.abs(r.top - rect.top) < threshold
+					);
+
+					if (existing) {
+						// Fusion horizontale : étendre la largeur
+						const left = Math.min(existing.left, rect.left);
+						const right = Math.max(existing.right, rect.right);
+						existing.left = left;
+						existing.right = right;
+						existing.width = right - left;
+						existing.rects.push(rect);
+					} else {
+						// Nouvelle ligne
+						grouped.push({
+							top: rect.top,
+							left: rect.left,
+							right: rect.right,
+							width: rect.width,
+							rects: [rect]
+						});
+					}
+				});
+
+				// Trier par top pour ordonner les lignes
+				const sorted = grouped.sort((a, b) => a.top - b.top);
+
+				// Utiliser la line-height comme grille typographique fixe
+				// Positionner chaque background en multiple exact de line-height
+				const finalRects = sorted.map((group, index) => {
+					// Top basé sur la grille typographique (multiple exact de line-height)
+					const top = index * lineHeight;
+					
+					// Hauteur fixe = line-height (pas de calcul à partir des rects)
+					const height = lineHeight;
+
+					return new DOMRect(
+						group.left - containerRect.left,
+						top,
+						group.width,
+						height
+					);
+				});
+
+				setLineRects(finalRects);
+			} catch (error) {
+				console.warn('Error measuring text lines:', error);
+				setLineRects([]);
+			}
+		};
+
+		// Mesurer après le rendu
+		const timeoutId = setTimeout(() => {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(measureLines);
+			});
+		}, 0);
+
+		// Observer les changements de taille
+		const resizeObserver = new ResizeObserver(() => {
+			measureLines();
+		});
+
+		if (containerRef.current) {
+			resizeObserver.observe(containerRef.current);
+		}
+
+		// Attendre le chargement des polices
+		if (document.fonts && document.fonts.ready) {
+			document.fonts.ready.then(() => {
+				requestAnimationFrame(measureLines);
+			}).catch(() => {});
+		}
+
+		return () => {
+			clearTimeout(timeoutId);
+			resizeObserver.disconnect();
+		};
+	}, [displayText, className, config.lineHeight, config.verticalOffset, config.heightAdjustment]);
+
+	// Réinitialiser l'état quand le contenu change
+	useEffect(() => {
+		if (animatedContentRef.current !== contentKey) {
+			setActiveLines(new Set());
+			animatedContentRef.current = contentKey;
+		}
+	}, [contentKey]);
+
+	// Gérer l'animation des lignes
+	useEffect(() => {
+		if (!displayText || lineRects.length === 0 || animatedContentRef.current !== contentKey) return;
+
+		const baseDelay = instant ? 0 : (itemDelay + itemIndex * 0.1) * 1000;
+
+		lineRects.forEach((_, index) => {
+			const lineDelay = baseDelay + (instant ? 0 : index * delayStep * 1000);
+			
+			if (lineDelay === 0) {
+				setActiveLines(prev => new Set([...prev, index]));
+			} else {
+				setTimeout(() => {
+					setActiveLines(prev => new Set([...prev, index]));
+				}, lineDelay);
+			}
+		});
+	}, [contentKey, displayText, lineRects.length, itemIndex, itemDelay, delayStep, instant]);
 
 	return (
 		<div 
-			ref={containerRef} 
+			ref={containerRef}
 			className={`relative transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
 			suppressHydrationWarning
-			style={{ 
-				position: 'relative', 
-				overflow: 'visible',
-				margin: 0,
-				padding: 0,
-				display: 'block',
-				textAlign: 'left',
-				lineHeight: lineHeight
-			}}
+			style={{ lineHeight: config.lineHeight }}
 		>
-			{textLines.map((line, index) => (
+			{/* Backgrounds positionnés absolument avec hauteur basée sur la distance réelle entre lignes */}
+			{lineRects.map((rect, index) => (
 				<div
-					key={index} 
-					className="reveal-line-row"
+					key={`line-bg-${index}`}
+					className="reveal-line-bg"
 					style={{
-						marginBottom: index < textLines.length - 1 ? `${verticalGap}px` : 0
+						position: 'absolute',
+						top: `${rect.top}px`,
+						left: `${rect.left - config.paddingLeft}px`,
+						width: `${rect.width + config.paddingLeft + config.paddingRight}px`,
+						height: `${rect.height}px`, // Hauteur = distance réelle entre lignes (lineGap)
+						backgroundColor: color,
+						transform: activeLines.has(index) ? 'scaleX(1)' : 'scaleX(0)',
+						transformOrigin: 'left center',
+						transition: 'transform 700ms ease-out',
+						zIndex: 1, // Au-dessus des logos (z-index 0) mais en dessous du texte (z-index 2)
 					}}
-				>
-					<span
-						className={`reveal-line text-on-thermal ${className} ${activeLines.has(index) ? 'is-active' : ''}`}
-						style={{
-							position: 'relative',
-							display: 'inline-block',
-							margin: 0,
-							padding: 0,
-							verticalAlign: 'baseline',
-							'--reveal-color': color,
-							'--reveal-padding-left': `${paddingLeft}px`,
-							'--reveal-padding-right': `${paddingRight}px`,
-							'--reveal-height-adjustment': `${heightAdjustment}px`,
-						} as React.CSSProperties & {
-							'--reveal-color': string;
-							'--reveal-padding-left': string;
-							'--reveal-padding-right': string;
-							'--reveal-height-adjustment': string;
-						}}
-					>
-						{line}
-					</span>
-				</div>
+				/>
 			))}
+
+			{/* Texte rendu normalement */}
+			<span
+				ref={textRef}
+				className={`text-on-thermal ${className}`}
+				style={{
+					display: 'inline',
+					position: 'relative',
+					zIndex: 2, // Au-dessus des fonds TRL (z-index 1) et des logos (z-index 0)
+				}}
+			>
+				{displayText}
+			</span>
 		</div>
 	);
 }

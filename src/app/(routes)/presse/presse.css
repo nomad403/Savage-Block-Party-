@@ -63,6 +63,138 @@ body:has(#presse-root) header * {
 	body:has(#presse-root) .presse-form-section {
 		padding-bottom: calc(var(--footer-total-height-mobile) + 80px) !important; /* Footer + espace supplémentaire */
 	}
+	body:has(#presse-root) .presse-intro-section {
+		padding-bottom: 60px !important;
+	}
+}
+
+/* Page presse - espacement entre sections pour un rendu graphique */
+body:has(#presse-root) .presse-intro-section {
+	min-height: 100vh;
+	padding-top: 0;
+	padding-bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow-x: visible;
+	overflow-y: hidden;
+}
+
+
+body:has(#presse-root) .presse-form-section {
+	min-height: auto;
+	padding-top: 120px;
+	padding-bottom: 120px;
+}
+
+/* Desktop - espacement plus généreux */
+@media (min-width: 768px) {
+	body:has(#presse-root) .presse-intro-section {
+		min-height: 100vh;
+		padding-top: 0;
+		padding-bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	
+	body:has(#presse-root) .presse-form-section {
+		padding-top: 140px;
+		padding-bottom: 160px;
+	}
+}
+
+/* Galerie de logos - masquer la scrollbar */
+body:has(#presse-root) .presse-logos-gallery::-webkit-scrollbar {
+	display: none;
+}
+
+body:has(#presse-root) .presse-logos-gallery {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	position: relative;
+	width: 100%;
+	overflow-x: visible;
+	overflow-y: hidden;
+}
+
+/* Défilement horizontal infini des logos */
+body:has(#presse-root) .presse-logos-scroll {
+	display: flex;
+	width: fit-content;
+	animation: presse-logos-scroll 40s linear infinite;
+	will-change: transform;
+}
+
+body:has(#presse-root) .presse-logos-set {
+	flex-shrink: 0;
+}
+
+@keyframes presse-logos-scroll {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(calc(-100% / 3));
+	}
+}
+
+/* Pause au hover pour meilleure UX */
+body:has(#presse-root) .presse-logos-gallery:hover .presse-logos-scroll {
+	animation-play-state: paused;
+}
+
+/* Page presse - logos en violet */
+body:has(#presse-root) .presse-logo-svg {
+	color: #A855F7;
+	opacity: 0.85;
+	transition: opacity 0.3s ease;
+}
+
+/* Forcer currentColor sur tous les éléments SVG internes */
+body:has(#presse-root) .presse-logo-svg svg {
+	color: inherit;
+}
+
+body:has(#presse-root) .presse-logo-svg svg * {
+	fill: currentColor !important;
+	stroke: currentColor !important;
+}
+
+body:has(#presse-root) .presse-logo-item:hover .presse-logo-svg {
+	opacity: 1;
+}
+
+/* Assurer que les logos sont bien centrés dans leur conteneur */
+body:has(#presse-root) .presse-logo-item {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Styles pour le wrapper SVG normalisé */
+body:has(#presse-root) .presse-logo-svg {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Ajustements spécifiques pour les SVG internes */
+body:has(#presse-root) .presse-logo-svg svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* Page presse - assurer que la page est scrollable */
+body:has(#presse-root) {
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+body:has(#presse-root) #presse-root {
+	min-height: 100vh;
 }
 
 /* Page presse - texte noir pour tous les textes */

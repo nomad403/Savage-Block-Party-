@@ -16,6 +16,41 @@ const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator
 // Padding horizontal du bouton dropdown - ajusté pour respiration du texte
 const DROPDOWN_PADDING_X = 16; // 16px pour une meilleure respiration, proportionnel au header
 
+// Composant pour les items avec animation hover
+function ItemWithHover({ item, index, onSelect, startInset }: { item: string; index: number; onSelect: () => void; startInset: number }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onSelect}
+      className="cursor-pointer relative"
+      style={{ 
+        margin: 0,
+        padding: 0,
+        overflow: 'visible',
+        flexShrink: 0,
+        width: '100%'
+      }}
+    >
+      <TextRevealLines
+        text={item.toUpperCase()}
+        color={isHovered ? "#FFFFFF" : "#22C55E"}
+        typography="cy"
+        className={`font-text font-semibold tracking-tight text-2xl whitespace-nowrap transition-colors duration-300 ${isHovered ? '!text-[#22C55E]' : '!text-black'}`}
+        delayStep={0.1}
+        density="tight"
+        horizontalPadding={12}
+        startInset={startInset}
+        endInset={1}
+        itemIndex={index}
+        itemDelay={0.05}
+      />
+    </div>
+  );
+}
+
 interface FamilyDropdownsProps {
   onItemSelect: (item: string) => void;
   selectedItem: string | null;
@@ -179,67 +214,51 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   };
 
   const djs = [
+    "Woodneymo",
     "Niel",
-    "HAX", 
-    "Le Sympathique",
     "Rita Amoureux",
     "Sungoma",
+    "Le Sympathique",
+    "Hax",
+    "Deezee",
+    "Mabrada",
     "Bengala",
-    "Darlean",
-    "Woodneymo"
+    "Emkay",
+    "Kythmos"
   ];
 
   const danseurs = [
+    "Lexou",
     "Vins Crespo",
-    "Rocket", 
-    "Milliard",
-    "Morgane",
-    "Ambre"
+    "Hamilton",
+    "H4",
+    "Elisa Poelmans",
+    "Daniela Barbieiri",
+    "Dikilla",
+    "Wizlex",
+    "Deyvrom",
+    "Deezee"
   ];
 
-  const collabs = [
-    "Good Dirty Sound",
-    "Grind Camp", 
-    "Antrebloc",
-    "Comuna 13",
-    "La Chapiteau (Marseille)",
-    "La Mûrisserie (Marseille)",
-    "Virage",
-    "Trabendo",
-    "Check Club",
-    "Dock B",
-    "La Rotonde"
+  const artistes = [
+    "Le Juiice",
+    "Shinobihana",
+    "Scratchy",
+    "Aeacus",
+    "Furlax"
   ];
 
   // Fonction helper pour rendre le contenu d'un dropdown
   const renderDropdownContent = (items: string[], dropdownKey: string) => (
     <div className={`w-full flex ${isMobile ? 'flex-col' : 'flex-col-reverse'}`} style={{ gap: 0, alignItems: 'flex-start' }}>
       {items.map((item, index) => (
-        <div 
+        <ItemWithHover
           key={item}
-          onClick={() => selectItem(item)}
-          className="cursor-pointer hover:opacity-80 transition-opacity relative"
-          style={{ 
-            margin: 0,
-            padding: 0,
-            overflow: 'visible',
-            flexShrink: 0,
-            width: '100%'
-          }}
-        >
-          <TextRevealLines
-            text={item}
-            color="#22C55E"
-            className="font-text font-semibold tracking-tight leading-[1.1] text-4xl text-black whitespace-nowrap"
-            delayStep={0.1}
-            density="tight"
-            horizontalPadding={12}
-            startInset={DROPDOWN_PADDING_X - 12}
-            endInset={1}
-            itemIndex={index}
-            itemDelay={0.05}
-          />
-        </div>
+          item={item}
+          index={index}
+          onSelect={() => selectItem(item)}
+          startInset={DROPDOWN_PADDING_X - 12}
+        />
       ))}
     </div>
   );
@@ -248,7 +267,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   const renderMobileDropdownOverlay = () => {
     if (!isMobile || !activeDropdown || !mounted) return null;
 
-    const items = activeDropdown === 'djs' ? djs : activeDropdown === 'danseurs' ? danseurs : collabs;
+    const items = activeDropdown === 'djs' ? djs : activeDropdown === 'danseurs' ? danseurs : activeDropdown === 'artistes' ? artistes : [];
 
     return createPortal(
       <AnimatePresence>
@@ -447,32 +466,32 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
       </motion.div>
       )}
       
-      {/* Dropdown Collab */}
+      {/* Dropdown Artistes */}
       {isMobile ? (
         // Sur mobile : bouton simple sans motion.div (hauteur fixe garantie)
-        <div className="relative flex flex-1" ref={(el) => { dropdownRefs.current['collab'] = el; }}>
+        <div className="relative flex flex-1" ref={(el) => { dropdownRefs.current['artistes'] = el; }}>
           <button
-            onClick={() => toggleDropdown('collab')}
+            onClick={() => toggleDropdown('artistes')}
             className={`w-full font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'} ${
-              activeDropdown === 'collab' 
+              activeDropdown === 'artistes' 
                 ? 'bg-white text-green-500' 
                 : 'bg-green-500 text-black hover:bg-green-600'
             }`}
             style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
           >
-            Collab
+            Artistes
           </button>
         </div>
       ) : (
         // Sur desktop : motion.div avec animations flex/width
       <motion.div 
           className={`relative flex flex-1`}
-        ref={(el) => { dropdownRefs.current['collab'] = el; }}
+        ref={(el) => { dropdownRefs.current['artistes'] = el; }}
         initial={false}
         animate={{
-          flex: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
-          width: activeDropdown === 'collab' ? '100%' : activeDropdown ? '0%' : undefined,
-          opacity: activeDropdown === 'collab' ? 1 : activeDropdown ? 0 : 1,
+          flex: activeDropdown === 'artistes' ? 1 : activeDropdown ? 0 : 1,
+          width: activeDropdown === 'artistes' ? '100%' : activeDropdown ? '0%' : undefined,
+          opacity: activeDropdown === 'artistes' ? 1 : activeDropdown ? 0 : 1,
         }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
@@ -484,7 +503,7 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
           
           if (!currentTarget.contains(e.relatedTarget as Node)) {
             setTimeout(() => {
-              if (activeDropdown === 'collab' && currentTarget && !currentTarget.contains(document.activeElement)) {
+              if (activeDropdown === 'artistes' && currentTarget && !currentTarget.contains(document.activeElement)) {
                 closeDropdown();
               }
             }, 100);
@@ -492,20 +511,20 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
         }}
       >
         <button
-          onClick={() => toggleDropdown('collab')}
+          onClick={() => toggleDropdown('artistes')}
             className={`w-full font-title uppercase text-xs lg:text-sm tracking-wide py-2 md:py-3 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'} ${
-              activeDropdown === 'collab' 
+              activeDropdown === 'artistes' 
                 ? 'bg-white text-green-500' 
                 : 'bg-green-500 text-black hover:bg-green-600'
             }`}
           style={{ paddingLeft: `${DROPDOWN_PADDING_X}px`, paddingRight: `${DROPDOWN_PADDING_X}px` }}
         >
-          Collab
+          Artistes
         </button>
         <AnimatePresence>
-          {activeDropdown === 'collab' && (
+          {activeDropdown === 'artistes' && (
             <motion.div
-                ref={(el) => { listElementRefs.current['collab'] = el as HTMLDivElement; }}
+                ref={(el) => { listElementRefs.current['artistes'] = el as HTMLDivElement; }}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -518,9 +537,9 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
                   touchAction: 'pan-y',
                   overscrollBehavior: 'contain'
                 }}
-                {...createTouchHandlers('collab')}
+                {...createTouchHandlers('artistes')}
               >
-                {renderDropdownContent(collabs, 'collab')}
+                {renderDropdownContent(artistes, 'artistes')}
             </motion.div>
           )}
         </AnimatePresence>

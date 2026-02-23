@@ -77,32 +77,25 @@
 /* Chaque ligne est shrink-to-fit pour que le fond corresponde à la largeur réelle du texte */
 .reveal-line {
 	position: relative;
-	display: inline-block;
+	display: inline;
 	margin: 0;
-	padding: 0;
+	padding: 0.05em calc(var(--reveal-padding-left, 0px) + var(--reveal-padding-right, 0px)) 0.05em 0;
+	padding-left: var(--reveal-padding-left, 0px);
 	vertical-align: baseline;
-	/* inline-block permet shrink-to-fit tout en permettant le wrapping si nécessaire */
-	white-space: normal; /* Permet le wrapping du texte */
+	white-space: normal;
 	word-wrap: break-word;
 	overflow-wrap: break-word;
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
+	background-image: linear-gradient(var(--reveal-color, #22D3EE), var(--reveal-color, #22D3EE));
+	background-repeat: no-repeat;
+	background-position: left 50%;
+	background-size: 0% var(--reveal-background-height, 85%);
+	transition: background-size 700ms ease-out;
 }
 
-.reveal-line::before {
-	content: "";
-	position: absolute;
-	top: calc(var(--reveal-height-adjustment, 0px) / 2);
-	bottom: calc(var(--reveal-height-adjustment, 0px) / 2);
-	left: calc(-1 * var(--reveal-padding-left, 0px));
-	width: calc(100% + var(--reveal-padding-left, 0px) + var(--reveal-padding-right, 0px));
-	background: var(--reveal-color, #22D3EE);
-	transform: scaleX(0);
-	transform-origin: left center;
-	transition: transform 700ms ease-out;
-	z-index: -1;
-}
-
-.reveal-line.is-active::before {
-	transform: scaleX(1);
+.reveal-line.is-active {
+	background-size: 100% var(--reveal-background-height, 85%);
 }
 
 /* ========================================

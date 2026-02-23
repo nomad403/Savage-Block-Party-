@@ -240,14 +240,6 @@ export default function FamilyPage() {
       };
     }
     
-    // Vidéo spécifique pour Darlean (YouTube)
-    if (item === 'Darlean') {
-      return {
-        type: 'youtube',
-        videoId: '24pjUzo6yEw',
-        startTime: 1323 // Défini dans l'URL (t=1323s)
-      };
-    }
     
     // Vidéo placeholder pour tous les autres items
     return {

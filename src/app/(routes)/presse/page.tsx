@@ -3,7 +3,17 @@
 import { useState, useEffect, useRef } from "react";
 import { TextRevealLines } from "@/components/ui";
 import { useMenu } from "@/hooks/useMenu";
+import { NormalizedLogo } from "@/components/presse/NormalizedLogo";
 import "./presse.css";
+
+// Imports SVG via SVGR
+import AsicsLogo from "../../../../public/presse/images/asics-6.svg";
+import BudLogo from "../../../../public/presse/images/Bud.svg";
+import HennessyLogo from "../../../../public/presse/images/Hennessy.svg";
+import KonbiniLogo from "../../../../public/presse/images/Konbini.svg";
+import ParcVilletteLogo from "../../../../public/presse/images/la-villette.svg";
+import RedBullLogo from "../../../../public/presse/images/redbullcom-1.svg";
+import VilleParisLogo from "../../../../public/presse/images/ville-de-paris-horizontale.svg";
 
 // Style pour l'effet text reveal line
 const textRevealStyle = `
@@ -141,8 +151,67 @@ export default function PressePage() {
         </video>
       </section>
 
+      {/* Section "Ils ont soutenu le projet" */}
+      <section className={`relative flex items-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} presse-intro-section`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
+        <div className="relative w-full" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', overflow: 'visible' }}>
+          {/* LOGOS - Layer 0 (dessous) */}
+          <div className="relative z-0 w-full presse-logos-gallery" style={{ overflowX: 'visible', overflowY: 'hidden', marginRight: 0 }}>
+            <div className="flex items-center presse-logos-scroll gap-8 md:gap-12 lg:gap-16">
+              {/* Première copie */}
+              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }}>
+                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={340} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={350} className="flex-shrink-0" />
+              </div>
+              {/* Deuxième copie pour la boucle infinie */}
+              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
+                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={340} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={350} className="flex-shrink-0" />
+              </div>
+              {/* Troisième copie pour une meilleure continuité sur large écran */}
+              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
+                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={340} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={350} className="flex-shrink-0" />
+              </div>
+            </div>
+          </div>
+
+          {/* TITRE SUPERPOSÉ - Layer 10 (dessus) */}
+          <div
+            className="absolute left-[clamp(16px,4vw,24px)] top-1/2 -translate-y-1/2 z-10"
+            style={{ width: 'clamp(200px, 30vw, 400px)' }}
+          >
+            <div className="space-y-0 text-left" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
+              <TextRevealLines 
+                lines={["Ils ont soutenu le projet"]}
+                color="#A855F7"
+                delayStep={0.12}
+                horizontalPadding={8}
+                density="normal"
+                typography="hanson"
+                className="font-title font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.1] text-black tracking-tight uppercase"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Formulaire avec fond couleur uni par-dessus */}
-      <section className={`relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} presse-form-section`} style={{ "--presse-accent": "#A855F7", paddingTop: '96px', minHeight: '100vh' } as React.CSSProperties}>
+      <section className={`relative z-10 flex items-center justify-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} presse-form-section`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
         <div className="w-full max-w-6xl mx-auto" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', paddingRight: 'clamp(16px, 4vw, 24px)' }}>
           {/* Container flex : vertical sur mobile, horizontal à partir de md */}
           <div className="w-full flex flex-col md:flex-row md:items-start gap-8 md:gap-12 lg:gap-16">
@@ -161,6 +230,7 @@ export default function PressePage() {
                   delayStep={0.12}
                   horizontalPadding={8}
                   density="normal"
+                  typography="cy"
                   className="font-text font-semibold text-base md:text-lg lg:text-xl leading-[1.18] text-black tracking-tight"
                 />
               </div>
@@ -172,7 +242,7 @@ export default function PressePage() {
                 {/* Nom de l'organisme */}
                 <div suppressHydrationWarning>
                   <label htmlFor="organisme" className="block font-text font-extrabold leading-none mb-0 relative z-[2]">
-                    <TextRevealLines text={"Nom de l'organisme"} color={focusedField === "organisme" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "organisme" ? "text-white !important" : "text-[#A855F7]"}`} delayStep={0.06} horizontalPadding={8} />
+                    <TextRevealLines text={"Nom de l'organisme"} color={focusedField === "organisme" ? "#000000" : "#A855F7"} typography="cy" className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "organisme" ? "text-white !important" : "text-[#A855F7]"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
                     <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
@@ -194,7 +264,7 @@ export default function PressePage() {
                 {/* Email de contact */}
                 <div suppressHydrationWarning>
                   <label htmlFor="email" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
-                    <TextRevealLines text={"Email de contact"} color={focusedField === "email" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "email" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                    <TextRevealLines text={"Email de contact"} color={focusedField === "email" ? "#000000" : "#A855F7"} typography="cy" className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "email" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
                     <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
@@ -216,7 +286,7 @@ export default function PressePage() {
                 {/* Téléphone */}
                 <div suppressHydrationWarning>
                   <label htmlFor="phone" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
-                    <TextRevealLines text={"Téléphone"} color={focusedField === "phone" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "phone" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                    <TextRevealLines text={"Téléphone"} color={focusedField === "phone" ? "#000000" : "#A855F7"} typography="cy" className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "phone" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
                     <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
@@ -238,7 +308,7 @@ export default function PressePage() {
                 {/* Site / Réseaux */}
                 <div suppressHydrationWarning>
                   <label htmlFor="website" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
-                    <TextRevealLines text={"Site / Réseaux"} color={focusedField === "website" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "website" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                    <TextRevealLines text={"Site / Réseaux"} color={focusedField === "website" ? "#000000" : "#A855F7"} typography="cy" className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "website" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
                     <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
@@ -260,7 +330,7 @@ export default function PressePage() {
                 {/* Objet */}
                 <div suppressHydrationWarning>
                   <label htmlFor="subject" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
-                    <TextRevealLines text={"Objet"} color={focusedField === "subject" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "subject" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                    <TextRevealLines text={"Objet"} color={focusedField === "subject" ? "#000000" : "#A855F7"} typography="cy" className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "subject" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
                     <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />
@@ -282,7 +352,7 @@ export default function PressePage() {
                 {/* Message */}
                 <div suppressHydrationWarning>
                   <label htmlFor="message" className="block font-text font-bold leading-none mb-0 relative z-[2]" suppressHydrationWarning>
-                    <TextRevealLines text={"Votre message"} color={focusedField === "message" ? "#000000" : "#A855F7"} className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "message" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
+                    <TextRevealLines text={"Votre message"} color={focusedField === "message" ? "#000000" : "#A855F7"} typography="cy" className={`font-text font-extrabold text-sm md:text-base transition-colors ${focusedField === "message" ? "text-white !important" : "text-black"}`} delayStep={0.06} horizontalPadding={8} />
                   </label>
                   <div className="reveal-focus -mt-1 w-full relative" suppressHydrationWarning>
                     <div className="absolute bg-[#A855F7] -z-10" style={{ top: 0, bottom: 0, left: '-8px', right: '-8px' }} suppressHydrationWarning />

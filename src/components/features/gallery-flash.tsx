@@ -191,6 +191,7 @@ export default function GalleryFlash() {
                     <TextRevealLines 
                       text={"Votre Instagram"}
                       color="#22D3EE"
+                      typography="hanson"
                       className="font-title text-base md:text-lg text-black"
                       delayStep={0.06}
                     />
@@ -228,6 +229,7 @@ export default function GalleryFlash() {
                 <TextRevealLines 
                   text="Rejoins le collectif" 
                   color="#22D3EE"
+                  typography="hanson"
                   className="text-4xl md:text-6xl font-title uppercase leading-tight text-black"
                   delayStep={0.12}
                 />
@@ -237,6 +239,7 @@ export default function GalleryFlash() {
                   <TextRevealLines 
                     text="Tu es artiste, créateur, ou simplement passionné par la culture urbaine ? Savage Block Party cherche de nouveaux talents pour enrichir sa communauté." 
                     color="#22D3EE"
+                    typography="cy"
                     className="text-lg md:text-xl font-text leading-relaxed text-black"
                     delayStep={0.12}
                   />
@@ -245,6 +248,7 @@ export default function GalleryFlash() {
                   <TextRevealLines 
                     text="Partage ton Instagram et montre-nous ton univers. Nous étudions chaque candidature avec attention pour découvrir les prochaines pépites du collectif." 
                     color="#22D3EE"
+                    typography="cy"
                     className="text-lg md:text-xl font-text leading-relaxed text-black"
                     delayStep={0.12}
                   />
@@ -253,6 +257,7 @@ export default function GalleryFlash() {
                   <TextRevealLines 
                     text="Prêt à faire partie de l'aventure ?" 
                     color="#22D3EE"
+                    typography="hanson"
                     className="font-title text-xl md:text-2xl text-black"
                     delayStep={0.12}
                   />
