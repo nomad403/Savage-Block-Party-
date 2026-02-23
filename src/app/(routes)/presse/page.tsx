@@ -6,7 +6,7 @@ import { useMenu } from "@/hooks/useMenu";
 import { NormalizedLogo } from "@/components/presse/NormalizedLogo";
 import "./presse.css";
 
-// Imports SVG via SVGR
+
 import AsicsLogo from "../../../../public/presse/images/asics-6.svg";
 import BudLogo from "../../../../public/presse/images/Bud.svg";
 import HennessyLogo from "../../../../public/presse/images/Hennessy.svg";
@@ -152,48 +152,12 @@ export default function PressePage() {
       </section>
 
       {/* Section "Ils ont soutenu le projet" */}
-      <section className={`relative flex items-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} presse-intro-section`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
-        <div className="relative w-full" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', overflow: 'visible' }}>
-          {/* LOGOS - Layer 0 (dessous) */}
-          <div className="relative z-0 w-full presse-logos-gallery" style={{ overflowX: 'visible', overflowY: 'hidden', marginRight: 0 }}>
-            <div className="flex items-center presse-logos-scroll gap-8 md:gap-12 lg:gap-16">
-              {/* Première copie */}
-              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }}>
-                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={340} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={350} className="flex-shrink-0" />
-              </div>
-              {/* Deuxième copie pour la boucle infinie */}
-              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
-                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={340} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={350} className="flex-shrink-0" />
-              </div>
-              {/* Troisième copie pour une meilleure continuité sur large écran */}
-              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
-                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={340} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={360} className="flex-shrink-0" />
-                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={350} className="flex-shrink-0" />
-              </div>
-            </div>
-          </div>
-
-          {/* TITRE SUPERPOSÉ - Layer 10 (dessus) */}
+      <section className={`relative flex flex-col md:flex-row items-center justify-center md:items-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} presse-intro-section`} style={{ "--presse-accent": "#A855F7" } as React.CSSProperties}>
+        <div className="relative w-full presse-intro-inner flex flex-col md:block md:justify-center min-h-[calc(100vh-var(--waveform-height,72px))] md:min-h-0" style={{ paddingLeft: 'clamp(16px, 4vw, 24px)', overflow: 'visible' }}>
+          {/* TITRE - mobile: centré verticalement (hors flux), desktop: superposé au centre gauche */}
           <div
-            className="absolute left-[clamp(16px,4vw,24px)] top-1/2 -translate-y-1/2 z-10"
-            style={{ width: 'clamp(200px, 30vw, 400px)' }}
+            className="presse-intro-title md:absolute relative z-10 md:left-[clamp(16px,4vw,24px)] md:top-1/2 md:-translate-y-1/2"
+            style={{ width: 'clamp(200px, 70vw, 400px)' }}
           >
             <div className="space-y-0 text-left" style={{ marginLeft: '-8px', paddingLeft: '8px', overflow: 'visible' }}>
               <TextRevealLines 
@@ -207,7 +171,45 @@ export default function PressePage() {
               />
             </div>
           </div>
+
+          {/* LOGOS - mobile: zone entre titre et player, desktop: derrière le titre */}
+          <div className="presse-logos-area relative z-0 w-full flex flex-1 items-center justify-center md:flex-none md:block">
+            <div className="w-full presse-logos-gallery" style={{ overflowX: 'visible', overflowY: 'hidden', marginRight: 0 }}>
+              <div className="flex items-center justify-center md:justify-start presse-logos-scroll gap-8 md:gap-12 lg:gap-16">
+              {/* Première copie */}
+              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }}>
+                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={400} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={340} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={320} className="flex-shrink-0" />
+              </div>
+              {/* Deuxième copie pour la boucle infinie */}
+              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
+                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={400} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={364} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={320} className="flex-shrink-0" />
+              </div>
+              {/* Troisième copie pour une meilleure continuité sur large écran */}
+              <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
+                <NormalizedLogo LogoComponent={AsicsLogo} ariaLabel="Asics" targetSize={330} opticalScale={0.7} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={BudLogo} ariaLabel="Bud" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HennessyLogo} ariaLabel="Hennessy" targetSize={360} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={KonbiniLogo} ariaLabel="Konbini" targetSize={400} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={340} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={320} className="flex-shrink-0" />
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
       </section>
 
       {/* Formulaire avec fond couleur uni par-dessus */}

@@ -66,6 +66,36 @@ body:has(#presse-root) header * {
 	body:has(#presse-root) .presse-intro-section {
 		padding-bottom: 60px !important;
 	}
+
+	/* Mobile layout:
+	   - le titre est centré verticalement (hors flux)
+	   - les logos défilent dans une zone centrée entre le titre et le player */
+	body:has(#presse-root) .presse-intro-inner {
+		position: relative;
+	}
+
+	body:has(#presse-root) .presse-intro-title {
+		position: absolute;
+		left: clamp(16px, 4vw, 24px);
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	body:has(#presse-root) .presse-logos-area {
+		position: absolute;
+		left: 0;
+		right: 0;
+		/* zone située sous le titre centré */
+		top: calc(50% + 48px);
+		/* zone située au-dessus du player mobile */
+		bottom: calc(var(--footer-total-height-mobile) + 16px);
+		display: flex;
+		align-items: center; /* centre verticalement le carrousel dans la zone */
+	}
+
+	body:has(#presse-root) .presse-logos-gallery {
+		width: 100%;
+	}
 }
 
 /* Page presse - espacement entre sections pour un rendu graphique */
