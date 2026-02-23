@@ -229,6 +229,19 @@ html.no-scroll {
 	}
 	
 	/**
+	 * RÈGLE UX MOBILE : Désactiver les pseudo-classes hover sur mobile
+	 * 
+	 * Sur mobile, les événements hover peuvent se déclencher après les touch,
+	 * créant des états visuels indésirables. On désactive donc les hover CSS
+	 * et on utilise uniquement les événements touch gérés par JavaScript.
+	 */
+	.menu-link:hover,
+	.menu-link:hover > span {
+		/* Désactiver tous les effets hover sur mobile */
+		/* La logique de hover est gérée uniquement par JavaScript via onTouchStart/onTouchEnd */
+	}
+	
+	/**
 	 * ORDRE DE SUPERPOSITION MOBILE (z-index) :
 	 * - Logo, Player et Burger : z-[20001] à z-[20003] (PROTECTION MAXIMALE)
 	 * - Header : z-[20000] (toujours au-dessus de tout)

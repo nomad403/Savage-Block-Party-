@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePageContext } from "@/hooks/usePageContext";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { useHasTouch } from "@/hooks/useHasTouch";
 import { useGlobalDynamicColors } from "@/hooks/useGlobalDynamicColors";
 import { getPagePrimaryColor } from "@/hooks/usePagePrimaryColor";
 import { useMenuHover } from "@/hooks/useMenuHover";
@@ -27,6 +28,9 @@ export default function Header() {
     const { isShopItemSelected, isShopItemHovered } = useShopItemState();
     // Utiliser le hook centralisé pour la détection mobile
     const isMobile = useIsMobile();
+    // Détecter si l'utilisateur utilise un périphérique tactile
+    // IMPORTANT : Permet d'éviter les conflits entre événements touch et mouse
+    const hasTouch = useHasTouch();
     
     // Couleur du header selon la page
     const headerBg = isHome ? "bg-transparent" : (isAgenda ? "bg-transparent" : "bg-transparent");
@@ -369,19 +373,26 @@ export default function Header() {
 											// Réinitialiser l'état hover après le clic sur mobile
 											handleMenuItemHover(null);
 										}}
-													onMouseEnter={() => handleMenuItemHover(item.href)}
-													onMouseLeave={() => handleMenuItemHover(null)}
-													onTouchStart={() => {
-														// Sur mobile, activer le hover au touch
-														handleMenuItemHover(item.href);
-													}}
-													onTouchEnd={() => {
-														// Sur mobile, désactiver le hover après le touch
-														// Petit délai pour permettre la transition visuelle
-														setTimeout(() => {
-															handleMenuItemHover(null);
-														}, 100);
-													}}
+													// RÈGLE UX MOBILE/PC :
+													// - Sur périphérique tactile : utiliser uniquement touch (évite les conflits mouse)
+													// - Sur desktop : utiliser uniquement mouse (meilleure performance)
+													// Cela évite les doubles déclenchements et les états hover indésirables
+													{...(hasTouch ? {
+														onTouchStart: () => {
+															// Sur mobile/tactile, activer le hover au touch
+															handleMenuItemHover(item.href);
+														},
+														onTouchEnd: () => {
+															// Sur mobile/tactile, désactiver le hover après le touch
+															// Petit délai pour permettre la transition visuelle
+															setTimeout(() => {
+																handleMenuItemHover(null);
+															}, 100);
+														}
+													} : {
+														onMouseEnter: () => handleMenuItemHover(item.href),
+														onMouseLeave: () => handleMenuItemHover(null)
+													})}
 									>
 													<MenuButtonSpan buttonColor={buttonColor} label={item.label} />
 									</Link>
