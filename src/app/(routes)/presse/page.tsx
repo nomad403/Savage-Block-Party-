@@ -167,7 +167,7 @@ export default function PressePage() {
                 horizontalPadding={8}
                 density="normal"
                 typography="hanson"
-                className="font-title font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.1] text-black tracking-tight uppercase"
+                className="font-title font-bold text-xl md:text-3xl lg:text-5xl leading-[1.1] text-black tracking-tight uppercase"
               />
             </div>
           </div>
