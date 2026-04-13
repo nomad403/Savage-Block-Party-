@@ -14,6 +14,8 @@ import { CustomScrollbar } from "@/components/ui";
 import { DynamicColorProvider } from "@/components/providers";
 import { MenuOverlay } from "@/components/menu";
 
+const isVercelHost = Boolean(process.env.VERCEL);
+
 const geistSans = Geist({
 	variable: "--font-geist-sans",
 	subsets: ["latin"],
@@ -64,8 +66,12 @@ export default function RootLayout({
 					<SoundCloudPlayer />
 				<CustomScrollbar />
 					<Footer />
-				<Analytics />
-				<SpeedInsights />
+				{isVercelHost ? (
+					<>
+						<Analytics />
+						<SpeedInsights />
+					</>
+				) : null}
 			</body>
 		</html>
 	);
