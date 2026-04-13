@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { getAllEvents, type EventItem } from "@/lib/api/events";
+import type { EventItem } from "@/lib/api/events";
 import AgendaEventsList from "./agenda-events-list";
+import { loadAgendaEventsWithFallback } from "./load-agenda-events";
 import "./agenda.css";
 
 /** Rendu à la demande : évite le prérendu build sans secrets + compatible Worker OpenNext. */
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AgendaPage() {
-  const events: EventItem[] = await getAllEvents();
+  const events: EventItem[] = await loadAgendaEventsWithFallback();
 
   return (
     <main id="agenda-root" className="min-h-screen" style={{ backgroundColor: '#1f1f1f', color: '#ffffff' }}>

@@ -10,9 +10,13 @@ export type EventItem = {
     endsAt?: string;   // ISO
 };
 
-// Nouvelle API officielle Shotgun: organizerId + key (variables serveur uniquement)
-const SHOTGUN_ORGANIZER_ID = (process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim();
-const SHOTGUN_API_KEY = (process.env.SB_SHOTGUN_API_KEY || "").trim();
+// Secrets lus à l’exécution (obligatoire sur Cloudflare Workers : pas d’inlining vide au build)
+function getShotgunOrganizerId(): string {
+    return (process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim();
+}
+function getShotgunApiKey(): string {
+    return (process.env.SB_SHOTGUN_API_KEY || "").trim();
+}
 // Ancien endpoint conservé en fallback pour compatibilité
 const SHOTGUN_SLUG = (process.env.NEXT_PUBLIC_SB_SHOTGUN_SLUG || process.env.SB_SHOTGUN_SLUG || 'savage-block-partys').trim();
 const DICE_SLUG = (process.env.NEXT_PUBLIC_SB_DICE_SLUG || process.env.SB_DICE_SLUG || 'savage-block-partys-5kd8').trim();
@@ -78,7 +82,7 @@ function formatShotgunLocation(e: any): string | undefined {
 }
 
 /** Plus récent en premier ; événements sans date en fin de liste. */
-function sortEventsNewestFirst(events: EventItem[]): EventItem[] {
+export function sortEventsNewestFirst(events: EventItem[]): EventItem[] {
     return [...events].sort((a, b) => {
         const ta = a.startsAt ? new Date(a.startsAt).getTime() : null;
         const tb = b.startsAt ? new Date(b.startsAt).getTime() : null;
@@ -188,6 +192,23 @@ function deepCollectEvents(node: any, source: EventItem["source"], acc: EventIte
     return acc;
 }
 
+/** Parse le JSON public `public/agenda/json/...` (même schéma que l’export manuel). */
+export function eventsFromAgendaJsonArray(json: unknown): EventItem[] {
+    if (!Array.isArray(json) || json.length === 0) return [];
+    const normalized = (json as any[]).map((e) => ({
+        id: String(e.id || `${e.title}|${e.startsAt}`),
+        source: e.source === "shotgun" || e.source === "dice" ? e.source : "shotgun",
+        title: e.title || "",
+        description: e.description || undefined,
+        location: e.location || undefined,
+        url: e.url || undefined,
+        image: e.image || undefined,
+        startsAt: toIsoDate(e.startsAt),
+        endsAt: toIsoDate(e.endsAt),
+    })) as EventItem[];
+    return sortEventsNewestFirst(normalized);
+}
+
 export async function fetchShotgunEvents(): Promise<EventItem[]> {
     const mapShotgunEvent = (e: any, fallbackIdPrefix: string): EventItem => {
         const name = e?.name || e?.title || e?.event_name || "";
@@ -232,12 +253,14 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
         earliest.setFullYear(earliest.getFullYear() - 6);
 
         // 1) Endpoint officiel /organizers/{id}/events?key=...
-        if (SHOTGUN_ORGANIZER_ID && SHOTGUN_API_KEY) {
+        const orgId = getShotgunOrganizerId();
+        const apiKey = getShotgunApiKey();
+        if (orgId && apiKey) {
             const out: EventItem[] = [];
 
             // A venir
             {
-                const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${SHOTGUN_ORGANIZER_ID}/events?key=${encodeURIComponent(SHOTGUN_API_KEY)}`;
+                const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${orgId}/events?key=${encodeURIComponent(apiKey)}`;
                 const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
                 if (res.ok) {
                     const json = await res.json();
@@ -259,7 +282,7 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
                 const limit = 100;
                 let keep = true;
                 while (keep && page <= 200) {
-                    const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${SHOTGUN_ORGANIZER_ID}/events?key=${encodeURIComponent(SHOTGUN_API_KEY)}&past_events=true&page=${page}&limit=${limit}`;
+                    const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${orgId}/events?key=${encodeURIComponent(apiKey)}&past_events=true&page=${page}&limit=${limit}`;
                     const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
                     if (!res.ok) break;
                     const json = await res.json();
@@ -370,38 +393,9 @@ export async function fetchDiceEvents(): Promise<EventItem[]> {
 
 export async function getAllEvents(): Promise<EventItem[]> {
     try {
-        const shotgunConfigured =
-            Boolean((process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim()) &&
-            Boolean((process.env.SB_SHOTGUN_API_KEY || "").trim());
+        // Pas de fs ici : incompatible avec le bundle Worker OpenNext (même en import dynamique).
 
-        // 1) Local JSON uniquement si Shotgun n'est pas configuré (import dynamique : pas de fs dans le bundle Worker)
-        if (!shotgunConfigured) {
-            try {
-                const { readFile } = await import("fs/promises");
-                const path = await import("path");
-                const filePath = path.join(process.cwd(), "public", "agenda", "json", "savage_block_partys_events.json");
-                const raw = await readFile(filePath, "utf8");
-                const json = JSON.parse(raw);
-                if (Array.isArray(json) && json.length > 0) {
-                    const normalized = (json as any[]).map((e) => ({
-                        id: String(e.id || `${e.title}|${e.startsAt}`),
-                        source: e.source === "shotgun" || e.source === "dice" ? e.source : "shotgun",
-                        title: e.title || "",
-                        description: e.description || undefined,
-                        location: e.location || undefined,
-                        url: e.url || undefined,
-                        image: e.image || undefined,
-                        startsAt: toIsoDate(e.startsAt),
-                        endsAt: toIsoDate(e.endsAt),
-                    })) as EventItem[];
-                    return sortEventsNewestFirst(normalized);
-                }
-            } catch {
-                /* Edge / Workers : pas de fs ; ignorer */
-            }
-        }
-
-        // 2) Remote sources (Shotgun + DICE)
+        // Remote sources (Shotgun + DICE)
         const [sg, dc] = await Promise.all([fetchShotgunEvents(), fetchDiceEvents()]);
         const normalizeTitle = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         const byKey: Record<string, EventItem> = {};
