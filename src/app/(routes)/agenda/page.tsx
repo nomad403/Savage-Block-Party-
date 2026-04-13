@@ -3,6 +3,9 @@ import { getAllEvents, type EventItem } from "@/lib/api/events";
 import AgendaEventsList from "./agenda-events-list";
 import "./agenda.css";
 
+/** Rendu à la demande : évite le prérendu build sans secrets + compatible Worker OpenNext. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Agenda — Savage Block Party",
 };

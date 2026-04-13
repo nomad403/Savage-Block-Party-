@@ -17,10 +17,6 @@ const SHOTGUN_API_KEY = (process.env.SB_SHOTGUN_API_KEY || "").trim();
 const SHOTGUN_SLUG = (process.env.NEXT_PUBLIC_SB_SHOTGUN_SLUG || process.env.SB_SHOTGUN_SLUG || 'savage-block-partys').trim();
 const DICE_SLUG = (process.env.NEXT_PUBLIC_SB_DICE_SLUG || process.env.SB_DICE_SLUG || 'savage-block-partys-5kd8').trim();
 
-// Local JSON fallback reader (server-only)
-import { readFile } from 'fs/promises';
-import path from 'path';
-
 function toIsoDate(input: any): string | undefined {
     if (!input) return undefined;
     if (typeof input === 'string') {
@@ -373,45 +369,52 @@ export async function fetchDiceEvents(): Promise<EventItem[]> {
 }
 
 export async function getAllEvents(): Promise<EventItem[]> {
-    const shotgunConfigured =
-        Boolean((process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim()) &&
-        Boolean((process.env.SB_SHOTGUN_API_KEY || "").trim());
+    try {
+        const shotgunConfigured =
+            Boolean((process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim()) &&
+            Boolean((process.env.SB_SHOTGUN_API_KEY || "").trim());
 
-    // 1) Local JSON uniquement si Shotgun n'est pas configuré (sinon l'API est la source de vérité)
-    if (!shotgunConfigured) {
-        try {
-            const filePath = path.join(process.cwd(), "public", "agenda", "json", "savage_block_partys_events.json");
-            const raw = await readFile(filePath, "utf8");
-            const json = JSON.parse(raw);
-            if (Array.isArray(json) && json.length > 0) {
-                const normalized = (json as any[]).map((e) => ({
-                    id: String(e.id || `${e.title}|${e.startsAt}`),
-                    source: e.source === "shotgun" || e.source === "dice" ? e.source : "shotgun",
-                    title: e.title || "",
-                    description: e.description || undefined,
-                    location: e.location || undefined,
-                    url: e.url || undefined,
-                    image: e.image || undefined,
-                    startsAt: toIsoDate(e.startsAt),
-                    endsAt: toIsoDate(e.endsAt),
-                })) as EventItem[];
-                return sortEventsNewestFirst(normalized);
+        // 1) Local JSON uniquement si Shotgun n'est pas configuré (import dynamique : pas de fs dans le bundle Worker)
+        if (!shotgunConfigured) {
+            try {
+                const { readFile } = await import("fs/promises");
+                const path = await import("path");
+                const filePath = path.join(process.cwd(), "public", "agenda", "json", "savage_block_partys_events.json");
+                const raw = await readFile(filePath, "utf8");
+                const json = JSON.parse(raw);
+                if (Array.isArray(json) && json.length > 0) {
+                    const normalized = (json as any[]).map((e) => ({
+                        id: String(e.id || `${e.title}|${e.startsAt}`),
+                        source: e.source === "shotgun" || e.source === "dice" ? e.source : "shotgun",
+                        title: e.title || "",
+                        description: e.description || undefined,
+                        location: e.location || undefined,
+                        url: e.url || undefined,
+                        image: e.image || undefined,
+                        startsAt: toIsoDate(e.startsAt),
+                        endsAt: toIsoDate(e.endsAt),
+                    })) as EventItem[];
+                    return sortEventsNewestFirst(normalized);
+                }
+            } catch {
+                /* Edge / Workers : pas de fs ; ignorer */
             }
-        } catch {}
-    }
+        }
 
-    // 2) Remote sources (Shotgun + DICE)
-    const [sg, dc] = await Promise.all([fetchShotgunEvents(), fetchDiceEvents()]);
-    // Fusion: si deux events même jour avec titres proches, on privilégie Shotgun
-    const normalizeTitle = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-    const byKey: Record<string, EventItem> = {};
-    for (const e of [...dc, ...sg]) { // DICE puis Shotgun (Shotgun écrase)
-        const day = e.startsAt?.slice(0,10) || '';
-        const key = `${normalizeTitle(e.title)}|${day}`;
-        byKey[key] = e; // Shotgun passera en dernier et prendra la priorité
+        // 2) Remote sources (Shotgun + DICE)
+        const [sg, dc] = await Promise.all([fetchShotgunEvents(), fetchDiceEvents()]);
+        const normalizeTitle = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const byKey: Record<string, EventItem> = {};
+        for (const e of [...dc, ...sg]) {
+            const day = e.startsAt?.slice(0,10) || '';
+            const key = `${normalizeTitle(e.title)}|${day}`;
+            byKey[key] = e;
+        }
+        return sortEventsNewestFirst(Object.values(byKey));
+    } catch (err) {
+        console.error("getAllEvents:", err);
+        return [];
     }
-    const merged = Object.values(byKey);
-    return sortEventsNewestFirst(merged);
 }
 
 export function pickUpcoming(events: EventItem[], now = new Date()): EventItem | undefined {
