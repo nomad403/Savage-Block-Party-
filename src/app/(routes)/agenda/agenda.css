@@ -42,6 +42,11 @@ body:has(#agenda-root) header * {
 	transform: none !important;
 }
 
+/* Fade haut : plus court que le padding du container (128px) pour ne pas voiler le 1er item, tout en gardant un voile lisible sous le header au scroll */
+body:has(#agenda-root) {
+	--agenda-top-fade-height: 112px;
+}
+
 /* Page agenda - ajustement du padding-top pour mobile */
 /* Mobile : padding-top avec un petit espace après le header (96px = 80px header + 16px espace) */
 body:has(#agenda-root) .agenda-container {
@@ -61,33 +66,34 @@ body:has(#agenda-root) .agenda-scroll {
     position: relative;
 }
 
-/* Fade en haut - séparé */
-body:has(#agenda-root) .agenda-scroll::before {
+/*
+ * Voiles haut / bas : sur body (scrollable-page agenda) pour le même rendu desktop & mobile.
+ * Les pseudo-éléments sur .agenda-scroll peuvent être masqués / mal composités sur WebKit mobile.
+ */
+body.scrollable-page.agenda:has(#agenda-root)::before {
     content: "";
     display: block;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: 200px;
+    height: var(--agenda-top-fade-height, 112px);
     width: 100%;
     pointer-events: none;
     z-index: 40; /* En dessous de l'overlay hover (z-50) mais au-dessus du contenu */
     background-image: linear-gradient(
         to bottom,
         rgb(31, 31, 31) 0%,
-        rgba(31, 31, 31, 0.97) 40%,
-        rgba(31, 31, 31, 0.7) 70%,
-        rgba(31, 31, 31, 0.3) 90%,
+        rgba(31, 31, 31, 0.9) 18%,
+        rgba(31, 31, 31, 0.45) 52%,
+        rgba(31, 31, 31, 0.12) 78%,
         rgba(31, 31, 31, 0) 100%
     );
-    /* Optimisation GPU */
     will-change: opacity;
     transform: translateZ(0);
 }
 
-/* Fade en bas - séparé */
-body:has(#agenda-root) .agenda-scroll::after {
+body.scrollable-page.agenda:has(#agenda-root)::after {
     content: "";
     display: block;
     position: fixed;
@@ -97,25 +103,54 @@ body:has(#agenda-root) .agenda-scroll::after {
     height: 90px;
     width: 100%;
     pointer-events: none;
-    z-index: 40; /* En dessous de l'overlay hover (z-50) mais au-dessus du contenu */
+    z-index: 40;
     background-image: linear-gradient(
         to top,
         rgb(31, 31, 31) 0%,
         rgb(31, 31, 31) 12%,
         rgba(31, 31, 31, 0) 100%
     );
-    /* Optimisation GPU */
     will-change: opacity;
     transform: translateZ(0);
 }
 
-/* Désactiver le fade quand un item est étendu */
-body:has(#agenda-root) .agenda-scroll.has-expanded::before,
-body:has(#agenda-root) .agenda-scroll.has-expanded::after {
-    display: none;
+/* Page agenda - waveform gérée par la logique centralisée (useGlobalDynamicColors) */
+
+/* Soirées à venir : pulse de couleur sur les typo (couleur page = --dynamic-primary) */
+@keyframes agenda-event-upcoming-pulse {
+	0%,
+	100% {
+		color: rgba(255, 255, 255, 0.92);
+	}
+	50% {
+		color: var(--dynamic-primary, #0080ff);
+	}
 }
 
-/* Page agenda - waveform gérée par la logique centralisée (useGlobalDynamicColors) */
+body:has(#agenda-root) .agenda-event-upcoming-typo {
+	animation: agenda-event-upcoming-pulse 2.4s ease-in-out infinite;
+	will-change: color;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	body:has(#agenda-root) .agenda-event-upcoming-typo {
+		animation: none;
+		color: var(--dynamic-primary, #0080ff);
+	}
+}
+
+/* CTA du détail (join the family / get my ticket) : survol, focus clavier, clic */
+body:has(#agenda-root) .agenda-detail-cta:hover,
+body:has(#agenda-root) .agenda-detail-cta:focus-visible,
+body:has(#agenda-root) .agenda-detail-cta:active {
+	background-color: #ffffff;
+	color: var(--dynamic-primary, #0080ff);
+}
+
+body:has(#agenda-root) .agenda-detail-cta:focus-visible {
+	outline: 2px solid var(--dynamic-primary, #0080ff);
+	outline-offset: 3px;
+}
 
 /* ========================================
    MENU LINK - AGENDA SPECIFIC

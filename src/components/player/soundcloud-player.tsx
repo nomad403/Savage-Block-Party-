@@ -60,6 +60,8 @@ export default function SoundCloudPlayer() {
 	
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [isMuted, setIsMuted] = useState(false);
+	const isMutedRef = useRef(isMuted);
+	const mutedDueToDocumentRef = useRef(false);
 	const [trackTitle, setTrackTitle] = useState<string>("Savage Block Party");
 	const [artistName, setArtistName] = useState<string>("Latest tracks");
 	const [isApiLoaded, setIsApiLoaded] = useState(false);
@@ -79,6 +81,10 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 	// Mémoriser l'état désiré de lecture pour éviter un auto-play lors des réinits
 	const desiredIsPlayingRef = useRef(false);
 	const widgetRef = useRef<any>(null);
+
+	useEffect(() => {
+		isMutedRef.current = isMuted;
+	}, [isMuted]);
 	// Mémoriser la dernière waveform chargée pour éviter les rechargements inutiles
 	const lastWaveformUrlRef = useRef<string>("");
 	// Flag pour ignorer le premier READY (chargement initial) et faire la sélection aléatoire directement
@@ -1692,6 +1698,7 @@ useEffect(() => {
 	}, [getPlayerAPI]);
 
 	const handleMuteToggle = useCallback(async () => {
+		mutedDueToDocumentRef.current = false;
 		if (!isWidgetHealthy()) {
 			console.warn('⚠️ Widget SoundCloud non disponible pour mute');
 			return;
@@ -1719,6 +1726,49 @@ useEffect(() => {
 			console.error('❌ Échec du mute après retry');
 		}
 	}, [isWidgetHealthy, executeWithRetry, isMuted]);
+
+	/* Hors onglet : couper le son ; au retour : rétablir seulement si le mute venait de là (pas un mute manuel). */
+	useEffect(() => {
+		const silenceIfAudible = () => {
+			if (!widgetRef.current) return;
+			if (isMutedRef.current) return;
+			try {
+				widgetRef.current.setVolume(0);
+				setIsMuted(true);
+				mutedDueToDocumentRef.current = true;
+			} catch {
+				/* ignore */
+			}
+		};
+
+		const restoreIfNeeded = () => {
+			if (!mutedDueToDocumentRef.current) return;
+			mutedDueToDocumentRef.current = false;
+			if (!widgetRef.current) {
+				setIsMuted(false);
+				return;
+			}
+			try {
+				widgetRef.current.setVolume(100);
+				setIsMuted(false);
+			} catch {
+				setIsMuted(false);
+			}
+		};
+
+		const onVisibility = () => {
+			if (document.visibilityState === "hidden") {
+				silenceIfAudible();
+			} else {
+				restoreIfNeeded();
+			}
+		};
+
+		document.addEventListener("visibilitychange", onVisibility);
+		return () => {
+			document.removeEventListener("visibilitychange", onVisibility);
+		};
+	}, []);
 
 	// Exposer les fonctions globalement pour les tests
 	useEffect(() => {

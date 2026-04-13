@@ -10,7 +10,10 @@ export type EventItem = {
     endsAt?: string;   // ISO
 };
 
-// Configurable slugs via env; fallbacks are guesses
+// Nouvelle API officielle Shotgun: organizerId + key (variables serveur uniquement)
+const SHOTGUN_ORGANIZER_ID = (process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim();
+const SHOTGUN_API_KEY = (process.env.SB_SHOTGUN_API_KEY || "").trim();
+// Ancien endpoint conservé en fallback pour compatibilité
 const SHOTGUN_SLUG = (process.env.NEXT_PUBLIC_SB_SHOTGUN_SLUG || process.env.SB_SHOTGUN_SLUG || 'savage-block-partys').trim();
 const DICE_SLUG = (process.env.NEXT_PUBLIC_SB_DICE_SLUG || process.env.SB_DICE_SLUG || 'savage-block-partys-5kd8').trim();
 
@@ -41,6 +44,53 @@ function toIsoDate(input: any): string | undefined {
 
 function safeJsonParse<T>(input: string): T | null {
     try { return JSON.parse(input) as T; } catch { return null; }
+}
+
+function escapeHtml(s: string): string {
+    return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+/** Texte brut Shotgun → HTML sûr pour dangerouslySetInnerHTML (retours ligne). */
+function plainTextToHtml(text: string): string {
+    return escapeHtml(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").join("<br/>");
+}
+
+function normalizeEventDescription(raw: unknown): string | undefined {
+    if (typeof raw !== "string" || !raw.trim()) return undefined;
+    const t = raw.trim();
+    if (/<[a-z][\s\S]*>/i.test(t)) return t;
+    return plainTextToHtml(t);
+}
+
+function formatShotgunLocation(e: any): string | undefined {
+    const g = e?.geolocation;
+    if (g && typeof g === "object") {
+        const venue = typeof g.venue === "string" ? g.venue.trim() : "";
+        const street = typeof g.street === "string" ? g.street.trim() : "";
+        const city = typeof g.city === "string" ? g.city.trim() : "";
+        if (venue && street) return `${venue} — ${street}`;
+        if (venue && city) return `${venue}, ${city}`;
+        if (street) return street;
+        if (venue) return venue;
+    }
+    const v = e?.venue?.name || e?.venue_name || e?.location;
+    return typeof v === "string" && v.trim() ? v.trim() : undefined;
+}
+
+/** Plus récent en premier ; événements sans date en fin de liste. */
+function sortEventsNewestFirst(events: EventItem[]): EventItem[] {
+    return [...events].sort((a, b) => {
+        const ta = a.startsAt ? new Date(a.startsAt).getTime() : null;
+        const tb = b.startsAt ? new Date(b.startsAt).getTime() : null;
+        if (ta === null && tb === null) return 0;
+        if (ta === null) return 1;
+        if (tb === null) return -1;
+        return tb - ta;
+    });
 }
 
 function extractJsonLd(html: string): any[] {
@@ -143,42 +193,131 @@ function deepCollectEvents(node: any, source: EventItem["source"], acc: EventIte
 }
 
 export async function fetchShotgunEvents(): Promise<EventItem[]> {
+    const mapShotgunEvent = (e: any, fallbackIdPrefix: string): EventItem => {
+        const name = e?.name || e?.title || e?.event_name || "";
+        const slug = e?.slug || e?.event_slug;
+        const directUrl = typeof e?.url === "string" ? e.url.trim() : "";
+        return {
+            id: String(e?.id || e?.event_id || slug || `${fallbackIdPrefix}|${name}`),
+            source: "shotgun",
+            title: name,
+            description: normalizeEventDescription(e?.description),
+            location: formatShotgunLocation(e),
+            url: directUrl || (slug ? `https://shotgun.live/events/${slug}` : undefined),
+            image:
+                e?.coverUrl ||
+                e?.coverThumbnailUrl ||
+                e?.banner_url ||
+                e?.banner ||
+                e?.image ||
+                undefined,
+            startsAt: toIsoDate(e?.start_time || e?.startTime || e?.starts_at || e?.startsAt || e?.date),
+            endsAt: toIsoDate(e?.end_time || e?.endTime || e?.ends_at || e?.endsAt),
+        };
+    };
+
+    const dedupeEvents = (items: EventItem[]): EventItem[] => {
+        const seen = new Set<string>();
+        const out: EventItem[] = [];
+        for (const item of items) {
+            const key = item.id ? `id:${item.id}` : `${(item.title || "").toLowerCase()}|${item.startsAt?.slice(0, 10) || ""}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            out.push(item);
+        }
+        return out;
+    };
+
+    const sortByStartsAt = (items: EventItem[]): EventItem[] =>
+        items.sort((a, b) => new Date(a.startsAt ?? 0).getTime() - new Date(b.startsAt ?? 0).getTime());
+
     try {
-        const earliest = new Date(); earliest.setFullYear(earliest.getFullYear() - 6);
-        const statuses = ['upcoming', 'past'];
+        const earliest = new Date();
+        earliest.setFullYear(earliest.getFullYear() - 6);
+
+        // 1) Endpoint officiel /organizers/{id}/events?key=...
+        if (SHOTGUN_ORGANIZER_ID && SHOTGUN_API_KEY) {
+            const out: EventItem[] = [];
+
+            // A venir
+            {
+                const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${SHOTGUN_ORGANIZER_ID}/events?key=${encodeURIComponent(SHOTGUN_API_KEY)}`;
+                const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+                if (res.ok) {
+                    const json = await res.json();
+                    const events = Array.isArray(json) ? json : (json?.events || json?.data || []);
+                    if (Array.isArray(events)) {
+                        for (const e of events) {
+                            const mapped = mapShotgunEvent(e, "upcoming");
+                            const d = mapped.startsAt ? new Date(mapped.startsAt) : null;
+                            if (d && d < earliest) continue;
+                            out.push(mapped);
+                        }
+                    }
+                }
+            }
+
+            // Passés (pagination documentée)
+            {
+                let page = 0;
+                const limit = 100;
+                let keep = true;
+                while (keep && page <= 200) {
+                    const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${SHOTGUN_ORGANIZER_ID}/events?key=${encodeURIComponent(SHOTGUN_API_KEY)}&past_events=true&page=${page}&limit=${limit}`;
+                    const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+                    if (!res.ok) break;
+                    const json = await res.json();
+                    const events = Array.isArray(json) ? json : (json?.events || json?.data || []);
+                    if (!Array.isArray(events) || events.length === 0) break;
+
+                    let addedThisPage = 0;
+                    for (const e of events) {
+                        const mapped = mapShotgunEvent(e, `past-${page}`);
+                        const d = mapped.startsAt ? new Date(mapped.startsAt) : null;
+                        if (d && d < earliest) {
+                            keep = false;
+                            break;
+                        }
+                        out.push(mapped);
+                        addedThisPage += 1;
+                    }
+                    if (addedThisPage < limit) break;
+                    page += 1;
+                }
+            }
+
+            return sortByStartsAt(dedupeEvents(out));
+        }
+
+        // 2) Fallback historique basé sur slug
+        const statuses = ["upcoming", "past"];
         const out: EventItem[] = [];
         for (const status of statuses) {
-            let page = 1; let keep = true; const seen = new Set<string>();
+            let page = 1;
+            let keep = true;
             while (keep && page <= 200) {
                 const url = `https://api.shotgun.live/v1/organizers/${SHOTGUN_SLUG}/events?status=${status}&page=${page}&per_page=100`;
-                const res = await fetch(url, { headers: { accept: 'application/json' }, cache: 'no-store' });
+                const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
                 if (!res.ok) break;
                 const json = await res.json();
                 const events = (json?.events || json?.data || []);
                 if (!Array.isArray(events) || events.length === 0) break;
                 for (const e of events) {
-                    const startsAt = toIsoDate(e.start_time || e.startTime || e.starts_at);
-                    const d = startsAt ? new Date(startsAt) : null;
-                    if (d && d < earliest) { keep = false; break; }
-                    const key = `${(e.name||'').toLowerCase()}|${startsAt?.slice(0,10)}`;
-                    if (seen.has(key)) continue; seen.add(key);
-                    out.push({
-                        id: String(e.id || e.slug || key),
-                        source: 'shotgun',
-                        title: e.name || e.title || '',
-                        description: e.description || undefined,
-                        url: e.slug ? `https://shotgun.live/events/${e.slug}` : (e.url || undefined),
-                        image: e.banner_url || e.image || undefined,
-                        startsAt,
-                        endsAt: toIsoDate(e.end_time || e.endTime || e.ends_at),
-                    });
+                    const mapped = mapShotgunEvent(e, `${status}-${page}`);
+                    const d = mapped.startsAt ? new Date(mapped.startsAt) : null;
+                    if (d && d < earliest) {
+                        keep = false;
+                        break;
+                    }
+                    out.push(mapped);
                 }
                 page += 1;
             }
         }
-        return out;
+
+        return sortByStartsAt(dedupeEvents(out));
     } catch (err) {
-        console.error('Shotgun error:', err);
+        console.error("Shotgun error:", err);
         return [];
     }
 }
@@ -234,30 +373,34 @@ export async function fetchDiceEvents(): Promise<EventItem[]> {
 }
 
 export async function getAllEvents(): Promise<EventItem[]> {
-    // 1) Local JSON fallback if present (PRIORITY)
-    try {
-        const filePath = path.join(process.cwd(), 'public', 'agenda', 'json', 'savage_block_partys_events.json');
-        const raw = await readFile(filePath, 'utf8');
-        const json = JSON.parse(raw);
-        if (Array.isArray(json) && json.length > 0) {
-            const normalized = (json as any[]).map((e) => ({
-                id: String(e.id || `${e.title}|${e.startsAt}`),
-                source: (e.source === 'shotgun' || e.source === 'dice') ? e.source : 'shotgun',
-                title: e.title || '',
-                description: e.description || undefined,
-                location: e.location || undefined,
-                url: e.url || undefined,
-                image: e.image || undefined,
-                startsAt: toIsoDate(e.startsAt),
-                endsAt: toIsoDate(e.endsAt),
-            })) as EventItem[];
-            // Tri pour cohérence
-            normalized.sort((a,b) => new Date(a.startsAt ?? 0).getTime() - new Date(b.startsAt ?? 0).getTime());
-            return normalized;
-        }
-    } catch {}
+    const shotgunConfigured =
+        Boolean((process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim()) &&
+        Boolean((process.env.SB_SHOTGUN_API_KEY || "").trim());
 
-    // 2) Remote sources (fallback if no local JSON)
+    // 1) Local JSON uniquement si Shotgun n'est pas configuré (sinon l'API est la source de vérité)
+    if (!shotgunConfigured) {
+        try {
+            const filePath = path.join(process.cwd(), "public", "agenda", "json", "savage_block_partys_events.json");
+            const raw = await readFile(filePath, "utf8");
+            const json = JSON.parse(raw);
+            if (Array.isArray(json) && json.length > 0) {
+                const normalized = (json as any[]).map((e) => ({
+                    id: String(e.id || `${e.title}|${e.startsAt}`),
+                    source: e.source === "shotgun" || e.source === "dice" ? e.source : "shotgun",
+                    title: e.title || "",
+                    description: e.description || undefined,
+                    location: e.location || undefined,
+                    url: e.url || undefined,
+                    image: e.image || undefined,
+                    startsAt: toIsoDate(e.startsAt),
+                    endsAt: toIsoDate(e.endsAt),
+                })) as EventItem[];
+                return sortEventsNewestFirst(normalized);
+            }
+        } catch {}
+    }
+
+    // 2) Remote sources (Shotgun + DICE)
     const [sg, dc] = await Promise.all([fetchShotgunEvents(), fetchDiceEvents()]);
     // Fusion: si deux events même jour avec titres proches, on privilégie Shotgun
     const normalizeTitle = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -268,9 +411,7 @@ export async function getAllEvents(): Promise<EventItem[]> {
         byKey[key] = e; // Shotgun passera en dernier et prendra la priorité
     }
     const merged = Object.values(byKey);
-    // Sort by start date when available
-    merged.sort((a,b) => new Date(a.startsAt ?? 0).getTime() - new Date(b.startsAt ?? 0).getTime());
-    return merged;
+    return sortEventsNewestFirst(merged);
 }
 
 export function pickUpcoming(events: EventItem[], now = new Date()): EventItem | undefined {

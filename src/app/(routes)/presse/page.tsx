@@ -14,6 +14,10 @@ import KonbiniLogo from "../../../../public/presse/images/Konbini.svg";
 import ParcVilletteLogo from "../../../../public/presse/images/la-villette.svg";
 import RedBullLogo from "../../../../public/presse/images/redbullcom-1.svg";
 import VilleParisLogo from "../../../../public/presse/images/ville-de-paris-horizontale.svg";
+import HavanaLogo from "../../../../public/presse/images/Havana.svg";
+import LeBonbonLogo from "../../../../public/presse/images/le_bonbon.svg";
+import TimeOutLogo from "../../../../public/presse/images/time_out_noir.svg";
+import HeetchLogo from "../../../../public/presse/images/heetch.svg";
 
 // Style pour l'effet text reveal line
 const textRevealStyle = `
@@ -185,6 +189,10 @@ export default function PressePage() {
                 <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={340} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HavanaLogo} ariaLabel="Havana" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={LeBonbonLogo} ariaLabel="Le Bonbon" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={TimeOutLogo} ariaLabel="Time Out" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HeetchLogo} ariaLabel="Heetch" targetSize={320} className="flex-shrink-0" />
               </div>
               {/* Deuxième copie pour la boucle infinie */}
               <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
@@ -195,6 +203,10 @@ export default function PressePage() {
                 <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={364} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HavanaLogo} ariaLabel="Havana" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={LeBonbonLogo} ariaLabel="Le Bonbon" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={TimeOutLogo} ariaLabel="Time Out" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HeetchLogo} ariaLabel="Heetch" targetSize={320} className="flex-shrink-0" />
               </div>
               {/* Troisième copie pour une meilleure continuité sur large écran */}
               <div className="flex items-center gap-8 md:gap-12 lg:gap-16 presse-logos-set mr-8 md:mr-12 lg:mr-16" style={{ minWidth: 'fit-content' }} aria-hidden="true">
@@ -205,6 +217,10 @@ export default function PressePage() {
                 <NormalizedLogo LogoComponent={ParcVilletteLogo} ariaLabel="Parc de la Villette" targetSize={380} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={RedBullLogo} ariaLabel="Red Bull" targetSize={340} className="flex-shrink-0" />
                 <NormalizedLogo LogoComponent={VilleParisLogo} ariaLabel="Ville de Paris" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HavanaLogo} ariaLabel="Havana" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={LeBonbonLogo} ariaLabel="Le Bonbon" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={TimeOutLogo} ariaLabel="Time Out" targetSize={320} className="flex-shrink-0" />
+                <NormalizedLogo LogoComponent={HeetchLogo} ariaLabel="Heetch" targetSize={320} className="flex-shrink-0" />
               </div>
             </div>
           </div>
