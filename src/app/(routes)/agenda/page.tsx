@@ -3,6 +3,9 @@ import { getAllEvents, type EventItem } from "@/lib/api/events";
 import AgendaEventsList from "./agenda-events-list";
 import "./agenda.css";
 
+/** Données live (Shotgun) : rendu dynamique, compatible Edge / Cloudflare Workers */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Agenda — Savage Block Party",
 };
