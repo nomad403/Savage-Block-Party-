@@ -21,17 +21,19 @@ function ItemWithHover({ item, index, onSelect, startInset }: { item: string; in
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div 
+    <button
+      type="button"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onSelect}
-      className="cursor-pointer relative"
+      className="cursor-pointer relative inline-block text-left"
       style={{ 
         margin: 0,
         padding: 0,
+        border: 'none',
+        background: 'transparent',
         overflow: 'visible',
         flexShrink: 0,
-        width: '100%'
       }}
     >
       <TextRevealLines
@@ -47,7 +49,7 @@ function ItemWithHover({ item, index, onSelect, startInset }: { item: string; in
         itemIndex={index}
         itemDelay={0.05}
       />
-    </div>
+    </button>
   );
 }
 

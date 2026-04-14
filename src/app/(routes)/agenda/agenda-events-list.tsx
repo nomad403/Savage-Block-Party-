@@ -380,43 +380,43 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                 {isExpanded && (
                   <motion.div
                     layout
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{
-                      layout: AGENDA_LAYOUT_SPRING,
-                      height: { duration: 0.42, ease: [0.33, 1, 0.68, 1] },
-                      opacity: { duration: 0.32, ease: "easeOut" },
-                    }}
-                  className="overflow-hidden"
-                >
-                  {event.description && (
-                    <div 
-                      className="font-text text-sm md:text-base leading-relaxed pt-4"
-                      dangerouslySetInnerHTML={{ __html: event.description }}
-                    />
-                  )}
-                  
-                  {/* Boutons d'action */}
-                  <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                    {/* Bouton "Join the family" - toujours présent */}
-                    <a
-                      href="/family"
-                      className="agenda-detail-cta inline-flex items-center justify-center px-6 py-3 bg-[#0080FF] text-black font-title uppercase text-sm md:text-base transition-colors duration-300"
+                    transition={{ layout: AGENDA_LAYOUT_SPRING }}
+                    className="overflow-hidden"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.26, ease: "easeOut" }}
                     >
-                      join the family
-                    </a>
-                    {eventDate && eventDate > new Date() && event.url && (
-                      <a
-                        href={event.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="agenda-detail-cta inline-flex items-center justify-center px-6 py-3 bg-[#0080FF] text-black font-title uppercase text-sm md:text-base transition-colors duration-300"
-                      >
-                        get my ticket
-                      </a>
-                    )}
-                    </div>
+                      {event.description && (
+                        <div 
+                          className="font-text text-sm md:text-base leading-relaxed pt-4"
+                          dangerouslySetInnerHTML={{ __html: event.description }}
+                        />
+                      )}
+                      
+                      {/* Boutons d'action */}
+                      <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                        {/* Bouton "Join the family" - toujours présent */}
+                        <a
+                          href="/family"
+                          className="agenda-detail-cta inline-flex items-center justify-center px-6 py-3 bg-[#0080FF] text-black font-title uppercase text-sm md:text-base transition-colors duration-300"
+                        >
+                          join the family
+                        </a>
+                        {eventDate && eventDate > new Date() && event.url && (
+                          <a
+                            href={event.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="agenda-detail-cta inline-flex items-center justify-center px-6 py-3 bg-[#0080FF] text-black font-title uppercase text-sm md:text-base transition-colors duration-300"
+                          >
+                            get my ticket
+                          </a>
+                        )}
+                      </div>
+                    </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>
