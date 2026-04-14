@@ -23,6 +23,7 @@
 	--z-dropdowns: 10003; /* Dropdowns Family (base) */
 	--z-dropdowns-open: 10004; /* Dropdowns Family (ouvert) */
 	--z-header: 20000; /* Header fixe */
+	--z-cursor-blend: 20005; /* Curseur mix-blend (au-dessus du header, sous menu-bg) */
 	--z-header-menu-bg: 20010; /* Fonds colorés menu (au-dessus de tout) */
 	--z-overlay-global: 10000; /* Overlay global menu hover */
 }
@@ -99,6 +100,50 @@ body {
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Curseur desktop avec fusion visuelle */
+@media (hover: hover) and (pointer: fine) {
+	body.has-mix-blend-cursor,
+	body.has-mix-blend-cursor * {
+		cursor: none !important;
+	}
+
+	.mix-blend-cursor {
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 20px;
+		height: 20px;
+		border-radius: 999px;
+		pointer-events: none;
+		z-index: var(--z-cursor-blend);
+		mix-blend-mode: difference;
+		opacity: 0;
+		transform: translate3d(-100px, -100px, 0);
+		translate: -50% -50%;
+		transition: opacity 160ms ease, width 220ms ease, height 220ms ease;
+		will-change: transform, width, height, opacity;
+	}
+
+	.mix-blend-cursor.is-visible {
+		opacity: 1;
+	}
+
+	.mix-blend-cursor.is-interactive {
+		width: 34px;
+		height: 34px;
+	}
+
+	.mix-blend-cursor.is-idle:not(.is-interactive) {
+		width: 24px;
+		height: 24px;
+	}
+
+	.mix-blend-cursor.is-idle.is-interactive {
+		width: 42px;
+		height: 42px;
+	}
 }
 
 /* Désactiver le scroll sur la home */

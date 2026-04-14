@@ -10,7 +10,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Header, Footer } from "@/components/layout";
 import { BgVideoHome } from "@/components/features";
 import { SoundCloudPlayer } from "@/components/player";
-import { CustomScrollbar } from "@/components/ui";
+import { CustomScrollbar, MixBlendCursor } from "@/components/ui";
 import { DynamicColorProvider } from "@/components/providers";
 import { MenuOverlay } from "@/components/menu";
 
@@ -61,6 +61,7 @@ export default function RootLayout({
 				<BgVideoHome />
 			{/* Overlay global au plus haut niveau pour être au-dessus de tous les stacking contexts */}
 			<MenuOverlay />
+				<MixBlendCursor />
 					<Header />
 					{children}
 					<SoundCloudPlayer />
