@@ -9,6 +9,21 @@ interface AgendaEventsListProps {
   events: EventItem[];
 }
 
+function parseEventTimestamp(value?: string): number | null {
+  if (!value) return null;
+  const ts = Date.parse(value);
+  return Number.isFinite(ts) ? ts : null;
+}
+
+function dayKeyInParis(ts: number): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(ts));
+}
+
 /** Ressort partagé pour les animations layout (déplacements fluides à l’ouverture / fermeture du détail). */
 const AGENDA_LAYOUT_SPRING = {
   type: "spring" as const,
@@ -20,6 +35,7 @@ const AGENDA_LAYOUT_SPRING = {
 export default function AgendaEventsList({ events }: AgendaEventsListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isVideoMode, setIsVideoMode] = useState(false);
+  const [isDebugEnabled, setIsDebugEnabled] = useState(false);
   const { isMenuOpen } = useMenu();
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -51,6 +67,46 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
       videoRef.current.pause();
     }
   }, [isVideoMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const byEnv = process.env.NEXT_PUBLIC_AGENDA_DEBUG === "1";
+    const byQuery = new URLSearchParams(window.location.search).has("agendaDebug");
+    setIsDebugEnabled(byEnv || byQuery);
+  }, []);
+
+  useEffect(() => {
+    if (!isDebugEnabled) return;
+    const nowTs = Date.now();
+    const rows = events.map((event) => {
+      const startTs = event.startsAt ? new Date(event.startsAt).getTime() : null;
+      const endTs = event.endsAt ? new Date(event.endsAt).getTime() : null;
+      const isOngoing =
+        startTs !== null && startTs <= nowTs && endTs !== null && endTs >= nowTs;
+      const isUpcoming = startTs !== null && startTs > nowTs;
+      const shouldPulse = isUpcoming || isOngoing;
+      return {
+        id: event.id,
+        title: event.title,
+        startsAt: event.startsAt ?? null,
+        endsAt: event.endsAt ?? null,
+        isUpcoming,
+        isOngoing,
+        shouldPulse,
+      };
+    });
+
+    console.groupCollapsed("[AgendaDebug] statut des events");
+    console.log("[AgendaDebug] now", new Date(nowTs).toISOString());
+    console.table(rows);
+    console.log(
+      "[AgendaDebug] count shouldPulse =",
+      rows.filter((r) => r.shouldPulse).length,
+      "/",
+      rows.length,
+    );
+    console.groupEnd();
+  }, [events, isDebugEnabled]);
 
   return (
     <div className={`agenda-scroll relative transition-opacity duration-300 ${isMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
@@ -108,10 +164,14 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
             : "";
 
         const nowTs = Date.now();
-        const startTs = eventDate ? eventDate.getTime() : null;
-        const endTs = event.endsAt ? new Date(event.endsAt).getTime() : null;
+        const startTs = parseEventTimestamp(event.startsAt);
+        const endTs = parseEventTimestamp(event.endsAt);
+        const sameParisDayAsNow =
+          startTs !== null && dayKeyInParis(startTs) === dayKeyInParis(nowTs);
         const isOngoing =
-          startTs !== null && startTs <= nowTs && endTs !== null && endTs >= nowTs;
+          startTs !== null &&
+          startTs <= nowTs &&
+          (endTs !== null ? endTs >= nowTs : sameParisDayAsNow);
         const isUpcoming = startTs !== null && startTs > nowTs;
         const isUpcomingOrOngoing = isUpcoming || isOngoing;
         const eventStatusLabel = isOngoing ? "now" : "soon";
