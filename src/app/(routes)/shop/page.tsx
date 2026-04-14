@@ -73,16 +73,23 @@ export default function ShopPage() {
     shopEvents.itemSelected(selectedProductId !== null);
   }, [selectedProductId]);
 
-  // Notifier quand un item est survolé (mobile uniquement) pour changer les couleurs du header
-  // Les classes CSS sont maintenant gérées par DynamicColorProvider
+  // Notifier le hover uniquement en desktop (mobile n'a pas de vrai hover).
+  // Cela évite les conflits entre "focus tactile" et sélection au tap.
   useEffect(() => {
-    if (isMobile) {
+    if (!isMobile) {
       shopEvents.itemHovered(hoveredProductId !== null, hoveredProductId);
     } else {
-      // Sur desktop, ne pas notifier le hover
       shopEvents.itemHovered(false, null);
     }
   }, [hoveredProductId, isMobile]);
+
+  // Cleanup global à la sortie de la page shop (navigation pendant hover/click).
+  useEffect(() => {
+    return () => {
+      shopEvents.itemSelected(false);
+      shopEvents.itemHovered(false, null);
+    };
+  }, []);
 
   // NOTE: Les couleurs du header sont maintenant gérées par DynamicColorProvider
   // qui applique les classes CSS conditionnelles (shop-item-selected, shop-item-hovered)
@@ -760,28 +767,11 @@ export default function ShopPage() {
                     className={`product-item ${isSelected ? 'selected' : ''} ${hoveredProductId === product.id ? 'hovered' : ''}`}
                     data-product-id={product.id}
                     onClick={() => setSelectedProductId(isSelected ? null : product.id)}
-                    onMouseEnter={() => setHoveredProductId(product.id)}
-                    onMouseLeave={() => setHoveredProductId(null)}
-                    onTouchStart={() => {
-                      // Sur mobile (iOS notamment), activer le hover au touch
-                      if (isMobile) {
-                        setHoveredProductId(product.id);
-                      }
+                    onMouseEnter={() => {
+                      if (!isMobile) setHoveredProductId(product.id);
                     }}
-                    onTouchEnd={() => {
-                      // Sur mobile, désactiver le hover après le touch
-                      // Délai pour permettre la transition visuelle et éviter les désactivations trop rapides
-                      if (isMobile) {
-                        setTimeout(() => {
-                          setHoveredProductId(null);
-                        }, 300);
-                      }
-                    }}
-                    onTouchCancel={() => {
-                      // Sur mobile, désactiver le hover si le touch est annulé
-                      if (isMobile) {
-                        setHoveredProductId(null);
-                      }
+                    onMouseLeave={() => {
+                      if (!isMobile) setHoveredProductId(null);
                     }}
                     style={{ 
                       display: 'flex',

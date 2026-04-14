@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppEvent } from './useAppEvents';
 import { useIsMobile } from './useMediaQuery';
 import { usePageContext } from './usePageContext';
@@ -42,6 +42,15 @@ export function useShopItemState() {
       setHoveredProductId(null);
     }
   });
+
+  // Reset robuste quand on quitte la page shop pour éviter la fuite de couleur globale.
+  useEffect(() => {
+    if (isShop) return;
+    setIsShopItemSelected(false);
+    setSelectedProductId(null);
+    setIsShopItemHovered(false);
+    setHoveredProductId(null);
+  }, [isShop]);
 
   return {
     // États booléens (pour compatibilité avec le code existant)
