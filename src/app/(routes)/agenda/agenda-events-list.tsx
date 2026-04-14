@@ -38,6 +38,7 @@ function getAgendaEventTiming(event: EventItem, nowTs: number) {
       isOngoing: false,
       shouldPulse: false,
       label: null as null | "soon" | "now",
+      reason: "startTs-invalid-or-missing",
     };
   }
 
@@ -59,6 +60,14 @@ function getAgendaEventTiming(event: EventItem, nowTs: number) {
     isOngoing,
     shouldPulse: isUpcoming || isOngoing,
     label: isOngoing ? ("now" as const) : isUpcoming ? ("soon" as const) : null,
+    reason:
+      status === "ongoing"
+        ? endTs !== null
+          ? "start<=now<=end"
+          : "same-paris-day-fallback-no-end"
+        : status === "upcoming"
+          ? "start>now"
+          : "start<now-and-not-ongoing",
   };
 }
 
@@ -116,6 +125,13 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
   useEffect(() => {
     if (!isDebugEnabled) return;
     const nowTs = Date.now();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const nowParis = new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      dateStyle: "full",
+      timeStyle: "long",
+    }).format(new Date(nowTs));
+
     const rows = events.map((event) => {
       const timing = getAgendaEventTiming(event, nowTs);
       return {
@@ -123,16 +139,22 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
         title: event.title,
         startsAt: event.startsAt ?? null,
         endsAt: event.endsAt ?? null,
+        startTs: timing.startTs,
+        endTs: timing.endTs,
         status: timing.status,
         isUpcoming: timing.isUpcoming,
         isOngoing: timing.isOngoing,
         shouldPulse: timing.shouldPulse,
         label: timing.label,
+        reason: timing.reason,
       };
     });
 
     console.groupCollapsed("[AgendaDebug] statut des events");
     console.log("[AgendaDebug] now", new Date(nowTs).toISOString());
+    console.log("[AgendaDebug] now@Europe/Paris", nowParis);
+    console.log("[AgendaDebug] reduced-motion", reducedMotion);
+    console.log("[AgendaDebug] timezone navigateur", Intl.DateTimeFormat().resolvedOptions().timeZone);
     console.table(rows);
     console.log(
       "[AgendaDebug] count shouldPulse =",
@@ -141,6 +163,24 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
       rows.length,
     );
     console.groupEnd();
+
+    requestAnimationFrame(() => {
+      const pulseNodes = Array.from(
+        document.querySelectorAll<HTMLElement>("#agenda-root .agenda-event-upcoming-typo"),
+      );
+      console.groupCollapsed("[AgendaDebug] état DOM/CSS pulse");
+      console.log("[AgendaDebug] nodes avec classe pulse", pulseNodes.length);
+      if (pulseNodes.length > 0) {
+        const sample = pulseNodes[0];
+        const styles = window.getComputedStyle(sample);
+        console.log("[AgendaDebug] sample text", sample.textContent?.trim() ?? "");
+        console.log("[AgendaDebug] animationName", styles.animationName);
+        console.log("[AgendaDebug] animationDuration", styles.animationDuration);
+        console.log("[AgendaDebug] animationPlayState", styles.animationPlayState);
+        console.log("[AgendaDebug] computedColor", styles.color);
+      }
+      console.groupEnd();
+    });
   }, [events, isDebugEnabled]);
 
   return (
