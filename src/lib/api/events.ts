@@ -11,11 +11,11 @@ export type EventItem = {
 };
 
 // Secrets lus à l’exécution (obligatoire sur Cloudflare Workers : pas d’inlining vide au build)
-function getShotgunOrganizerId(): string {
-    return (process.env.SB_SHOTGUN_ORGANIZER_ID || "").trim();
+function getShotgunOrganizerId(env: any): string {
+    return (env.SB_SHOTGUN_ORGANIZER_ID || "").trim();
 }
-function getShotgunApiKey(): string {
-    return (process.env.SB_SHOTGUN_API_KEY || "").trim();
+function getShotgunApiKey(env: any): string {
+    return (env.SB_SHOTGUN_API_KEY || "").trim();
 }
 // Ancien endpoint conservé en fallback pour compatibilité
 const SHOTGUN_SLUG = (process.env.NEXT_PUBLIC_SB_SHOTGUN_SLUG || process.env.SB_SHOTGUN_SLUG || 'savage-block-partys').trim();
@@ -264,15 +264,15 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
         const earliest = new Date();
         earliest.setFullYear(earliest.getFullYear() - 6);
         agendaHttpLog("shotgun:init", {
-            hasOrganizerId: Boolean(getShotgunOrganizerId()),
-            hasApiKey: Boolean(getShotgunApiKey()),
+            hasOrganizerId: Boolean(getShotgunOrganizerId(process.env)),
+            hasApiKey: Boolean(getShotgunApiKey(process.env)),
             slug: SHOTGUN_SLUG,
             earliest: earliest.toISOString(),
         });
 
         // 1) Endpoint officiel /organizers/{id}/events?key=...
-        const orgId = getShotgunOrganizerId();
-        const apiKey = getShotgunApiKey();
+        const orgId = getShotgunOrganizerId(process.env);
+        const apiKey = getShotgunApiKey(process.env);
         if (orgId && apiKey) {
             const out: EventItem[] = [];
 
