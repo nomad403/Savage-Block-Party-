@@ -21,6 +21,18 @@ function getShotgunApiKey(): string {
 const SHOTGUN_SLUG = (process.env.NEXT_PUBLIC_SB_SHOTGUN_SLUG || process.env.SB_SHOTGUN_SLUG || 'savage-block-partys').trim();
 const DICE_SLUG = (process.env.NEXT_PUBLIC_SB_DICE_SLUG || process.env.SB_DICE_SLUG || 'savage-block-partys-5kd8').trim();
 
+function isAgendaHttpDebugEnabled(): boolean {
+    return (
+        process.env.SB_AGENDA_HTTP_DEBUG === "1" ||
+        process.env.NEXT_PUBLIC_AGENDA_DEBUG === "1"
+    );
+}
+
+function agendaHttpLog(scope: string, data: Record<string, unknown>): void {
+    if (!isAgendaHttpDebugEnabled()) return;
+    console.info(`[AgendaHTTP] ${scope}`, data);
+}
+
 function toIsoDate(input: any): string | undefined {
     if (!input) return undefined;
     if (typeof input === 'string') {
@@ -251,6 +263,12 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
     try {
         const earliest = new Date();
         earliest.setFullYear(earliest.getFullYear() - 6);
+        agendaHttpLog("shotgun:init", {
+            hasOrganizerId: Boolean(getShotgunOrganizerId()),
+            hasApiKey: Boolean(getShotgunApiKey()),
+            slug: SHOTGUN_SLUG,
+            earliest: earliest.toISOString(),
+        });
 
         // 1) Endpoint officiel /organizers/{id}/events?key=...
         const orgId = getShotgunOrganizerId();
@@ -262,9 +280,16 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
             {
                 const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${orgId}/events?key=${encodeURIComponent(apiKey)}`;
                 const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+                agendaHttpLog("shotgun:official:upcoming:response", {
+                    status: res.status,
+                    ok: res.ok,
+                });
                 if (res.ok) {
                     const json = await res.json();
                     const events = Array.isArray(json) ? json : (json?.events || json?.data || []);
+                    agendaHttpLog("shotgun:official:upcoming:payload", {
+                        count: Array.isArray(events) ? events.length : 0,
+                    });
                     if (Array.isArray(events)) {
                         for (const e of events) {
                             const mapped = mapShotgunEvent(e, "upcoming");
@@ -284,9 +309,19 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
                 while (keep && page <= 200) {
                     const url = `https://smartboard-api.shotgun.live/api/shotgun/organizers/${orgId}/events?key=${encodeURIComponent(apiKey)}&past_events=true&page=${page}&limit=${limit}`;
                     const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+                    agendaHttpLog("shotgun:official:past:response", {
+                        page,
+                        limit,
+                        status: res.status,
+                        ok: res.ok,
+                    });
                     if (!res.ok) break;
                     const json = await res.json();
                     const events = Array.isArray(json) ? json : (json?.events || json?.data || []);
+                    agendaHttpLog("shotgun:official:past:payload", {
+                        page,
+                        count: Array.isArray(events) ? events.length : 0,
+                    });
                     if (!Array.isArray(events) || events.length === 0) break;
 
                     let addedThisPage = 0;
@@ -305,10 +340,16 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
                 }
             }
 
+            agendaHttpLog("shotgun:official:final", { count: out.length });
             return sortByStartsAt(dedupeEvents(out));
         }
 
         // 2) Fallback historique basé sur slug
+        agendaHttpLog("shotgun:official:skipped", {
+            reason: "missing-org-id-or-api-key",
+            hasOrganizerId: Boolean(orgId),
+            hasApiKey: Boolean(apiKey),
+        });
         const statuses = ["upcoming", "past"];
         const out: EventItem[] = [];
         for (const status of statuses) {
@@ -317,9 +358,20 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
             while (keep && page <= 200) {
                 const url = `https://api.shotgun.live/v1/organizers/${SHOTGUN_SLUG}/events?status=${status}&page=${page}&per_page=100`;
                 const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+                agendaHttpLog("shotgun:legacy:response", {
+                    statusType: status,
+                    page,
+                    status: res.status,
+                    ok: res.ok,
+                });
                 if (!res.ok) break;
                 const json = await res.json();
                 const events = (json?.events || json?.data || []);
+                agendaHttpLog("shotgun:legacy:payload", {
+                    statusType: status,
+                    page,
+                    count: Array.isArray(events) ? events.length : 0,
+                });
                 if (!Array.isArray(events) || events.length === 0) break;
                 for (const e of events) {
                     const mapped = mapShotgunEvent(e, `${status}-${page}`);
@@ -334,6 +386,7 @@ export async function fetchShotgunEvents(): Promise<EventItem[]> {
             }
         }
 
+        agendaHttpLog("shotgun:legacy:final", { count: out.length });
         return sortByStartsAt(dedupeEvents(out));
     } catch (err) {
         console.error("Shotgun error:", err);
@@ -346,6 +399,10 @@ export async function fetchDiceEvents(): Promise<EventItem[]> {
         const earliest = new Date(); earliest.setFullYear(earliest.getFullYear() - 6);
         const out: EventItem[] = [];
         let after: string | null = null;
+        agendaHttpLog("dice:init", {
+            slug: DICE_SLUG,
+            earliest: earliest.toISOString(),
+        });
         for (let i = 0; i < 20; i++) { // up to ~2000 events if page size=100
             const query = `
             query PromoterEvents($slug: String!, $first: Int!, $after: String) {
@@ -361,10 +418,21 @@ export async function fetchDiceEvents(): Promise<EventItem[]> {
                 headers: { 'Content-Type': 'application/json', 'Origin': 'https://dice.fm', 'Accept': 'application/json' },
                 body: JSON.stringify({ query, variables: { slug: DICE_SLUG, first: 100, after } }),
             });
+            agendaHttpLog("dice:response", {
+                page: i,
+                after,
+                status: res.status,
+                ok: res.ok,
+            });
             if (!res.ok) break;
             const json: any = await res.json();
             const data: any = json?.data?.promoter?.events;
             const edges = data?.edges || [];
+            agendaHttpLog("dice:payload", {
+                page: i,
+                edges: Array.isArray(edges) ? edges.length : 0,
+                hasNextPage: Boolean(data?.pageInfo?.hasNextPage),
+            });
             for (const edge of edges) {
                 const n = edge?.node;
                 if (!n) continue;
@@ -384,6 +452,7 @@ export async function fetchDiceEvents(): Promise<EventItem[]> {
             if (!data?.pageInfo?.hasNextPage) break;
             after = data?.pageInfo?.endCursor || null;
         }
+        agendaHttpLog("dice:final", { count: out.length });
         return out;
     } catch (err) {
         console.error('DICE error:', err);
@@ -404,7 +473,13 @@ export async function getAllEvents(): Promise<EventItem[]> {
             const key = `${normalizeTitle(e.title)}|${day}`;
             byKey[key] = e;
         }
-        return sortEventsNewestFirst(Object.values(byKey));
+        const merged = sortEventsNewestFirst(Object.values(byKey));
+        agendaHttpLog("all-events:merge", {
+            shotgunCount: sg.length,
+            diceCount: dc.length,
+            mergedCount: merged.length,
+        });
+        return merged;
     } catch (err) {
         console.error("getAllEvents:", err);
         return [];
