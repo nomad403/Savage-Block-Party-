@@ -127,13 +127,13 @@ body.scrollable-page.agenda:has(#agenda-root)::after {
 	}
 }
 
-body:has(#agenda-root) .agenda-event-upcoming-typo {
+#agenda-root .agenda-event-upcoming-typo {
 	animation: agenda-event-upcoming-pulse 2.4s ease-in-out infinite;
 	will-change: color;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	body:has(#agenda-root) .agenda-event-upcoming-typo {
+	#agenda-root .agenda-event-upcoming-typo {
 		animation: none;
 		color: var(--dynamic-primary, #0080ff);
 	}

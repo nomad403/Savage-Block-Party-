@@ -24,6 +24,44 @@ function dayKeyInParis(ts: number): string {
   }).format(new Date(ts));
 }
 
+type AgendaEventStatus = "upcoming" | "ongoing" | "past" | "invalid";
+
+function getAgendaEventTiming(event: EventItem, nowTs: number) {
+  const startTs = parseEventTimestamp(event.startsAt);
+  const endTs = parseEventTimestamp(event.endsAt);
+  if (startTs === null) {
+    return {
+      status: "invalid" as AgendaEventStatus,
+      startTs,
+      endTs,
+      isUpcoming: false,
+      isOngoing: false,
+      shouldPulse: false,
+      label: null as null | "soon" | "now",
+    };
+  }
+
+  const sameParisDayAsNow = dayKeyInParis(startTs) === dayKeyInParis(nowTs);
+  const isOngoing =
+    startTs <= nowTs && (endTs !== null ? endTs >= nowTs : sameParisDayAsNow);
+  const isUpcoming = startTs > nowTs;
+  const status: AgendaEventStatus = isOngoing
+    ? "ongoing"
+    : isUpcoming
+      ? "upcoming"
+      : "past";
+
+  return {
+    status,
+    startTs,
+    endTs,
+    isUpcoming,
+    isOngoing,
+    shouldPulse: isUpcoming || isOngoing,
+    label: isOngoing ? ("now" as const) : isUpcoming ? ("soon" as const) : null,
+  };
+}
+
 /** Ressort partagé pour les animations layout (déplacements fluides à l’ouverture / fermeture du détail). */
 const AGENDA_LAYOUT_SPRING = {
   type: "spring" as const,
@@ -79,20 +117,17 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
     if (!isDebugEnabled) return;
     const nowTs = Date.now();
     const rows = events.map((event) => {
-      const startTs = event.startsAt ? new Date(event.startsAt).getTime() : null;
-      const endTs = event.endsAt ? new Date(event.endsAt).getTime() : null;
-      const isOngoing =
-        startTs !== null && startTs <= nowTs && endTs !== null && endTs >= nowTs;
-      const isUpcoming = startTs !== null && startTs > nowTs;
-      const shouldPulse = isUpcoming || isOngoing;
+      const timing = getAgendaEventTiming(event, nowTs);
       return {
         id: event.id,
         title: event.title,
         startsAt: event.startsAt ?? null,
         endsAt: event.endsAt ?? null,
-        isUpcoming,
-        isOngoing,
-        shouldPulse,
+        status: timing.status,
+        isUpcoming: timing.isUpcoming,
+        isOngoing: timing.isOngoing,
+        shouldPulse: timing.shouldPulse,
+        label: timing.label,
       };
     });
 
@@ -163,18 +198,9 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
               })()
             : "";
 
-        const nowTs = Date.now();
-        const startTs = parseEventTimestamp(event.startsAt);
-        const endTs = parseEventTimestamp(event.endsAt);
-        const sameParisDayAsNow =
-          startTs !== null && dayKeyInParis(startTs) === dayKeyInParis(nowTs);
-        const isOngoing =
-          startTs !== null &&
-          startTs <= nowTs &&
-          (endTs !== null ? endTs >= nowTs : sameParisDayAsNow);
-        const isUpcoming = startTs !== null && startTs > nowTs;
-        const isUpcomingOrOngoing = isUpcoming || isOngoing;
-        const eventStatusLabel = isOngoing ? "now" : "soon";
+        const timing = getAgendaEventTiming(event, Date.now());
+        const isUpcomingOrOngoing = timing.shouldPulse;
+        const eventStatusLabel = timing.label;
         const upcomingTypoClass = isUpcomingOrOngoing ? "agenda-event-upcoming-typo" : "";
 
         return (
@@ -218,7 +244,7 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                 {event.location ? (
                   <div className="font-text text-base md:text-lg mb-3 opacity-80">
                     <span className={upcomingTypoClass}>{event.location}</span>
-                    {isUpcomingOrOngoing && (
+                    {isUpcomingOrOngoing && eventStatusLabel && (
                       <span
                         className={`font-title text-[10px] md:text-[11px] uppercase tracking-[0.28em] whitespace-nowrap ${upcomingTypoClass}`}
                       >
@@ -228,7 +254,7 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                     )}
                   </div>
                 ) : (
-                  isUpcomingOrOngoing && (
+                  isUpcomingOrOngoing && eventStatusLabel && (
                     <div className="font-text text-base md:text-lg mb-3 opacity-80">
                       <span
                         className={`font-title text-[10px] md:text-[11px] uppercase tracking-[0.28em] ${upcomingTypoClass}`}
