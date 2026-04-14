@@ -107,9 +107,15 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
               })()
             : "";
 
-        const isUpcoming =
-          Boolean(eventDate) && eventDate!.getTime() > Date.now();
-        const upcomingTypoClass = isUpcoming ? "agenda-event-upcoming-typo" : "";
+        const nowTs = Date.now();
+        const startTs = eventDate ? eventDate.getTime() : null;
+        const endTs = event.endsAt ? new Date(event.endsAt).getTime() : null;
+        const isOngoing =
+          startTs !== null && startTs <= nowTs && endTs !== null && endTs >= nowTs;
+        const isUpcoming = startTs !== null && startTs > nowTs;
+        const isUpcomingOrOngoing = isUpcoming || isOngoing;
+        const eventStatusLabel = isOngoing ? "now" : "soon";
+        const upcomingTypoClass = isUpcomingOrOngoing ? "agenda-event-upcoming-typo" : "";
 
         return (
           <AnimatePresence key={event.id}>
@@ -152,22 +158,22 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                 {event.location ? (
                   <div className="font-text text-base md:text-lg mb-3 opacity-80">
                     <span className={upcomingTypoClass}>{event.location}</span>
-                    {isUpcoming && (
+                    {isUpcomingOrOngoing && (
                       <span
                         className={`font-title text-[10px] md:text-[11px] uppercase tracking-[0.28em] whitespace-nowrap ${upcomingTypoClass}`}
                       >
                         {" "}
-                        · soon
+                        · {eventStatusLabel}
                       </span>
                     )}
                   </div>
                 ) : (
-                  isUpcoming && (
+                  isUpcomingOrOngoing && (
                     <div className="font-text text-base md:text-lg mb-3 opacity-80">
                       <span
                         className={`font-title text-[10px] md:text-[11px] uppercase tracking-[0.28em] ${upcomingTypoClass}`}
                       >
-                        · soon
+                        · {eventStatusLabel}
                       </span>
                     </div>
                   )
