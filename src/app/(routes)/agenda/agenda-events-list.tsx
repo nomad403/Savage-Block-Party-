@@ -118,9 +118,14 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const byEnv = process.env.NEXT_PUBLIC_AGENDA_DEBUG === "1";
-    const byQuery = new URLSearchParams(window.location.search).has("agendaDebug");
+    const searchParams = new URLSearchParams(window.location.search);
+    const byQuery = Array.from(searchParams.keys()).some(
+      (key) => key.toLowerCase() === "agendadebug",
+    );
     const byHash = window.location.hash.toLowerCase().includes("agendadebug");
-    const byStorage = window.localStorage.getItem("agendaDebug") === "1";
+    const byStorage =
+      window.localStorage.getItem("agendaDebug") === "1" ||
+      window.localStorage.getItem("AgendaDebug") === "1";
     const enabled = byEnv || byQuery || byHash || byStorage;
     setIsDebugEnabled(enabled);
 
