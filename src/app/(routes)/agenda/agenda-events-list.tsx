@@ -119,7 +119,19 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
     if (typeof window === "undefined") return;
     const byEnv = process.env.NEXT_PUBLIC_AGENDA_DEBUG === "1";
     const byQuery = new URLSearchParams(window.location.search).has("agendaDebug");
-    setIsDebugEnabled(byEnv || byQuery);
+    const byHash = window.location.hash.toLowerCase().includes("agendadebug");
+    const byStorage = window.localStorage.getItem("agendaDebug") === "1";
+    const enabled = byEnv || byQuery || byHash || byStorage;
+    setIsDebugEnabled(enabled);
+
+    console.info("[AgendaDebug] boot", {
+      enabled,
+      byEnv,
+      byQuery,
+      byHash,
+      byStorage,
+      url: window.location.href,
+    });
   }, []);
 
   useEffect(() => {
