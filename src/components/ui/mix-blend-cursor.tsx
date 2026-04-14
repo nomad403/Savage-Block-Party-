@@ -54,7 +54,7 @@ export default function MixBlendCursor() {
 			const dy = targetRef.current.y - posRef.current.y;
 			posRef.current.x += dx * 0.18;
 			posRef.current.y += dy * 0.18;
-			node.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`;
+			node.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0) translate(-50%, -50%)`;
 			rafRef.current = window.requestAnimationFrame(update);
 		};
 

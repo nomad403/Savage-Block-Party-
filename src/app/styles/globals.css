@@ -121,7 +121,6 @@ body {
 		mix-blend-mode: difference;
 		opacity: 0;
 		transform: translate3d(-100px, -100px, 0);
-		translate: -50% -50%;
 		transition: opacity 160ms ease, width 220ms ease, height 220ms ease;
 		will-change: transform, width, height, opacity;
 	}
