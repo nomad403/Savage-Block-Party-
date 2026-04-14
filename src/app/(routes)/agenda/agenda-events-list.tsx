@@ -400,7 +400,7 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                       <div className="flex flex-col sm:flex-row gap-4 mt-6">
                         {/* Bouton "Join the family" - toujours présent */}
                         <a
-                          href="/family"
+                          href="/presse#presse-contact-form"
                           className="agenda-detail-cta inline-flex items-center justify-center px-6 py-3 bg-[#0080FF] text-black font-title uppercase text-sm md:text-base transition-colors duration-300"
                         >
                           join the family

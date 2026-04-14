@@ -94,6 +94,26 @@ export default function PressePage() {
     return () => clearTimeout(timeoutId);
   }, []);
 
+  // Navigation robuste vers le formulaire (évite les retours en haut de page après hydration)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const shouldFocusForm =
+      window.location.hash === "#presse-contact-form" ||
+      new URLSearchParams(window.location.search).get("focus") === "form";
+    if (!shouldFocusForm) return;
+
+    const scrollToForm = () => {
+      const form = document.getElementById("presse-contact-form");
+      if (!form) return;
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+
+    // Laisse le layout finaliser avant de scroller.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToForm);
+    });
+  }, []);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -256,7 +276,7 @@ export default function PressePage() {
 
             {/* Formulaire à droite (sur mobile il est en bas) */}
             <div className="w-full md:w-1/2 md:order-2">
-              <form onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-3 items-stretch w-full" suppressHydrationWarning={true}>
+              <form id="presse-contact-form" onSubmit={handleSubmit} className="min-w-0 flex flex-col gap-3 items-stretch w-full" suppressHydrationWarning={true}>
                 {/* Nom de l'organisme */}
                 <div suppressHydrationWarning>
                   <label htmlFor="organisme" className="block font-text font-extrabold leading-none mb-0 relative z-[2]">
@@ -416,6 +436,16 @@ export default function PressePage() {
                 </div>
               )}
             </form>
+            <div className="mt-4 md:mt-5 text-center md:text-right">
+              <a
+                href="https://nomad403.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block font-title text-[11px] md:text-xs uppercase tracking-[0.22em] text-black/80 hover:text-[#A855F7] transition-colors"
+              >
+                made by nomad403
+              </a>
+            </div>
             </div>
             </div>
         </div>
