@@ -226,7 +226,8 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
     "Mabrada",
     "Bengala",
     "Emkay",
-    "Kythmos"
+    "Kythmos",
+    "Boutcha bwa"
   ];
 
   const danseurs = [
@@ -238,8 +239,11 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
     "Daniela Barbieiri",
     "Dikilla",
     "Wizlex",
-    "Deyvrom",
-    "Deezee"
+    "Deyvron",
+    "Deezee",
+    "Malewa",
+    "Flipside",
+    "Larysha"
   ];
 
   const artistes = [
@@ -247,7 +251,12 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
     "Shinobihana",
     "Scratchy",
     "Aeacus",
-    "Furlax"
+    "Furlax",
+    "26 keuss",
+    "Dor",
+    "Bryte",
+    "T9",
+    "Anta Diop"
   ];
 
   // Fonction helper pour rendre le contenu d'un dropdown
