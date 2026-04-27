@@ -57,6 +57,7 @@ export default function ShopPage() {
   const isMobile = useIsMobile();
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [hoveredProductId, setHoveredProductId] = useState<number | null>(null);
+  const isShopComingSoon = true;
 
   // Utiliser useLayoutEffect pour garantir que le DOM est mis à jour avant le paint
   useLayoutEffect(() => {
@@ -722,6 +723,35 @@ export default function ShopPage() {
         }}
       >
         <div className="flex h-full" style={{ position: 'relative', zIndex: 'var(--z-content)', overflow: 'visible' }}>
+          {isShopComingSoon && (
+            <div
+              className="absolute left-0 right-0 flex items-center justify-center px-6"
+              style={{
+                top: isMobile ? "80px" : "116px",
+                bottom: isMobile ? "var(--footer-total-height-mobile)" : "0px",
+                zIndex: 5,
+                pointerEvents: "none",
+              }}
+            >
+              <div className={`text-center transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
+                <h1 className="font-title uppercase text-black leading-[0.95] tracking-tight text-[clamp(48px,11vw,160px)]">
+                  coming soon
+                </h1>
+                <p className="mt-4 font-title uppercase tracking-[0.18em] text-black/80 text-[clamp(12px,1.2vw,16px)]">
+                  merch & shop release
+                </p>
+                <div className="mt-8 flex justify-center">
+                  <a
+                    href="/presse?focus=form#presse-contact-form"
+                    className="inline-flex items-center justify-center rounded-full bg-black text-white font-title uppercase tracking-[0.16em] px-6 py-3 text-sm md:text-base transition-colors duration-200 hover:bg-[#FF1744] hover:text-black"
+                    style={{ pointerEvents: "auto" }}
+                  >
+                    collaborate
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Section produits - grille 3 colonnes desktop, scroll horizontal mobile */}
           <div 
             ref={productColumnRef}
@@ -730,7 +760,8 @@ export default function ShopPage() {
             // Tous les styles sont gérés par CSS via media queries
             // Aucun style inline pour éviter les conflits
           >
-            {products.map((product, index) => {
+            {isShopComingSoon ? null : (
+              products.map((product, index) => {
               const isSelected = selectedProductId === product.id;
               const selectedIndex = selectedProductId ? products.findIndex(p => p.id === selectedProductId) : -1;
               let translateX = 0;
@@ -844,7 +875,7 @@ export default function ShopPage() {
                 </div>
               </div>
               );
-            })}
+            }))}
           </div>
         </div>
     </main>

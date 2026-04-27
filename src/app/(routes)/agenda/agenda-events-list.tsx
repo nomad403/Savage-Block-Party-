@@ -412,7 +412,7 @@ export default function AgendaEventsList({ events }: AgendaEventsListProps) {
                             rel="noopener noreferrer"
                             className="agenda-detail-cta inline-flex items-center justify-center px-6 py-3 bg-[#0080FF] text-black font-title uppercase text-sm md:text-base transition-colors duration-300"
                           >
-                            get my ticket
+                            get my tickets
                           </a>
                         )}
                       </div>
