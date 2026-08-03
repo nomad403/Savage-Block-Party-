@@ -7,6 +7,7 @@ import { useGlobalDynamicColors } from "@/hooks/useGlobalDynamicColors";
 import { useMenuHover } from "@/hooks/useMenuHover";
 import { useScrollZIndex } from "@/hooks/useScrollZIndex";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { soundCloudEvents } from "@/lib/events/app-events";
 import WaveformLoadingAnimation from "./waveform-loading-animation";
 
 /// <reference path="@/types/soundcloud" />
@@ -136,6 +137,9 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 	const isInitialLoadRef = useRef<boolean>(true);
 	// Ref pour la fonction de sélection aléatoire initiale (évite les problèmes de dépendances)
 	const performInitialRandomSelectionRef = useRef<(() => Promise<void>) | null>(null);
+	const initStartedRef = useRef(false);
+	const setupWidgetEventsRef = useRef<() => void>(() => {});
+	const lastEmittedPlayingRef = useRef<boolean | null>(null);
 	const [soundcloudUrl, setSoundcloudUrl] = useState<string>("");
 	// États de robustesse renforcés
 	const [widgetHealth, setWidgetHealth] = useState<'healthy' | 'degraded' | 'failed'>('healthy');
@@ -233,41 +237,40 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 		});
 	}, [executeWithTimeout, maxRetries, retryCount]);
 
+	const syncPlayingToHeader = useCallback((playing: boolean) => {
+		setIsPlaying(playing);
+		desiredIsPlayingRef.current = playing;
+		if (lastEmittedPlayingRef.current === playing) return;
+		lastEmittedPlayingRef.current = playing;
+		if (playing) soundCloudEvents.play();
+		else soundCloudEvents.pause();
+	}, []);
+
 	const isWidgetHealthy = useCallback(() => {
-		const timeSinceLastSuccess = Date.now() - lastSuccessfulOperation;
-		const isHealthy = widgetRef.current && 
-			window.SC && 
-			widgetHealth !== 'failed' && 
-			timeSinceLastSuccess < healthCheckInterval * 2 &&
-			consecutiveFailures < maxConsecutiveFailures &&
-			!isRecovering;
-		
+		// Gate minimal : widget + API présents (ne plus bloquer sur lastSuccessfulOperation)
+		const isHealthy = Boolean(
+			widgetRef.current &&
+			window.SC &&
+			typeof window.SC.Widget === 'function' &&
+			widgetHealth !== 'failed' &&
+			!isRecovering
+		);
+
 		if (!isHealthy) {
-			// Détecter les erreurs réseau spécifiques
-			const isNetworkError = !window.SC || (window.SC && typeof window.SC.Widget !== 'function');
-			const errorType = isNetworkError ? 'NETWORK_ERROR' : 'WIDGET_ERROR';
-			
-			console.warn(`⚠️ Widget SoundCloud non disponible (${errorType}):`, {
+			const isNetworkError = !window.SC || typeof window.SC?.Widget !== 'function';
+			console.warn('⚠️ Widget SoundCloud non disponible:', {
 				hasRef: !!widgetRef.current,
 				hasSC: !!window.SC,
-				hasWidgetAPI: !!(window.SC && typeof window.SC.Widget === 'function'),
 				health: widgetHealth,
-				timeSinceLastSuccess,
-				consecutiveFailures,
 				isRecovering,
-				recoveryAttempts,
-				errorType
 			});
-			
-			// Si c'est une erreur réseau, déclencher une réinitialisation
-			if (isNetworkError && timeSinceLastSuccess > 5000) {
-				console.log('🔄 Erreur réseau détectée - déclenchement de la réinitialisation...');
+			if (isNetworkError) {
 				window.dispatchEvent(new CustomEvent('soundcloud-network-error'));
 			}
 		}
-		
+
 		return isHealthy;
-	}, [widgetHealth, lastSuccessfulOperation, healthCheckInterval, consecutiveFailures, maxConsecutiveFailures, isRecovering, recoveryAttempts]);
+	}, [widgetHealth, isRecovering]);
 
 	// Système de monitoring de santé du widget
 useEffect(() => {
@@ -372,8 +375,8 @@ useEffect(() => {
 				if (iframe && window.SC) {
 					console.log('🎵 Réinitialisation du widget SoundCloud...');
 					widgetRef.current = window.SC.Widget(iframe);
+					setupWidgetEventsRef.current();
 					
-					// Vérifier que le widget est bien initialisé
 					setTimeout(() => {
 						if (widgetRef.current) {
 							console.log('✅ Widget SoundCloud réinitialisé avec succès');
@@ -403,6 +406,11 @@ useEffect(() => {
 	
 	// Initialisation séquentielle et robuste
 	const initializeSoundCloudSequentially = useCallback(async () => {
+		if (initStartedRef.current) {
+			console.log('ℹ️ Init SoundCloud déjà en cours / faite — skip');
+			return;
+		}
+		initStartedRef.current = true;
 		console.log('🎵 Début de l\'initialisation séquentielle SoundCloud...');
 		setInitState('loading-api');
 		setInitError(null);
@@ -428,6 +436,7 @@ useEffect(() => {
 			console.error('❌ Erreur lors de l\'initialisation:', error);
 			setInitError(error instanceof Error ? error.message : 'Erreur inconnue');
 			setInitState('failed');
+			initStartedRef.current = false; // permettre un retry
 		}
 	}, []);
 	
@@ -510,7 +519,7 @@ useEffect(() => {
 			return true;
 		}
 		
-			const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
+		const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
 		if (iframe && window.SC && typeof window.SC.Widget === 'function') {
 			try {
 				widgetRef.current = window.SC.Widget(iframe);
@@ -524,6 +533,112 @@ useEffect(() => {
 		return false;
 	}, []);
 	
+	// Étape 4: Configurer les événements (source unique — toujours sync header + progress)
+	const setupWidgetEvents = useCallback(() => {
+		if (!widgetRef.current && !ensureWidgetRef()) {
+			console.warn('⚠️ Impossible de configurer les événements: widget non disponible');
+			return;
+		}
+		
+		console.log('🎛️ Configuration des événements du widget...');
+		
+		try {
+			try {
+				widgetRef.current.unbind(window.SC.Widget.Events.READY);
+				widgetRef.current.unbind(window.SC.Widget.Events.PLAY);
+				widgetRef.current.unbind(window.SC.Widget.Events.PAUSE);
+				widgetRef.current.unbind(window.SC.Widget.Events.PLAY_PROGRESS);
+				widgetRef.current.unbind(window.SC.Widget.Events.SEEK);
+				widgetRef.current.unbind(window.SC.Widget.Events.FINISH);
+				widgetRef.current.unbind(window.SC.Widget.Events.ERROR);
+			} catch {
+				// normal à la première init
+			}
+
+			const runInitialSelectionIfNeeded = async () => {
+				if (!isInitialLoadRef.current || !performInitialRandomSelectionRef.current) return;
+				isInitialLoadRef.current = false;
+				console.log('🎲 Premier chargement - sélection aléatoire immédiate...');
+				setIsLoadingRandomTrack(true);
+				try {
+					await performInitialRandomSelectionRef.current();
+				} catch (error) {
+					console.error('❌ Erreur lors de la sélection aléatoire initiale:', error);
+					setIsLoadingRandomTrack(false);
+				}
+			};
+			
+			widgetRef.current.bind(window.SC.Widget.Events.READY, async () => {
+				console.log('🎵 Widget SoundCloud prêt !');
+				setLastSuccessfulOperation(Date.now());
+				setWidgetHealth('healthy');
+				try {
+					widgetRef.current.isPaused((paused: boolean) => {
+						syncPlayingToHeader(!paused);
+					});
+					widgetRef.current.getDuration((ms: number) => {
+						if (typeof ms === 'number' && ms > 0) setDurationMs(ms);
+					});
+				} catch {}
+				await runInitialSelectionIfNeeded();
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
+				syncPlayingToHeader(true);
+				setLastSuccessfulOperation(Date.now());
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
+				syncPlayingToHeader(false);
+				setLastSuccessfulOperation(Date.now());
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
+				if (typeof data?.relativePosition === 'number') {
+					setProgress(data.relativePosition);
+					setLastSuccessfulOperation(Date.now());
+				}
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
+				if (typeof data?.relativePosition === 'number') {
+					setProgress(data.relativePosition);
+				}
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
+				console.log('🎵 Track terminé');
+				syncPlayingToHeader(false);
+				setProgress(0);
+			});
+			
+			widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
+				console.error('❌ Erreur widget SoundCloud:', error);
+			});
+
+			// Si READY a déjà eu lieu avant le bind, rattraper via getDuration / sélection
+			try {
+				widgetRef.current.getDuration((ms: number) => {
+					if (typeof ms === 'number' && ms > 0) {
+						setDurationMs(ms);
+						setLastSuccessfulOperation(Date.now());
+						setWidgetHealth('healthy');
+						void runInitialSelectionIfNeeded();
+					}
+				});
+				widgetRef.current.isPaused((paused: boolean) => {
+					syncPlayingToHeader(!paused);
+				});
+			} catch {}
+		} catch (error) {
+			console.error('❌ Erreur lors de la configuration des événements:', error);
+		}
+	}, [ensureWidgetRef, syncPlayingToHeader]);
+
+	useEffect(() => {
+		setupWidgetEventsRef.current = setupWidgetEvents;
+	}, [setupWidgetEvents]);
+
 	// Étape 3: Initialiser le widget
 	const initializeWidget = useCallback((): Promise<void> => {
 		return new Promise((resolve, reject) => {
@@ -568,83 +683,6 @@ useEffect(() => {
 				}, 1000);
 			});
 		});
-	}, []);
-	
-	// Étape 4: Configurer les événements (une seule fois, pas de double bind)
-	const setupWidgetEvents = useCallback(() => {
-		if (!widgetRef.current && !ensureWidgetRef()) {
-			console.warn('⚠️ Impossible de configurer les événements: widget non disponible');
-			return;
-		}
-		
-		console.log('🎛️ Configuration des événements du widget...');
-		
-		try {
-			// Nettoyer d'abord les anciens listeners pour éviter les doublons
-			try {
-				widgetRef.current.unbind(window.SC.Widget.Events.READY);
-				widgetRef.current.unbind(window.SC.Widget.Events.PLAY);
-				widgetRef.current.unbind(window.SC.Widget.Events.PAUSE);
-				widgetRef.current.unbind(window.SC.Widget.Events.PLAY_PROGRESS);
-				widgetRef.current.unbind(window.SC.Widget.Events.SEEK);
-				widgetRef.current.unbind(window.SC.Widget.Events.FINISH);
-				widgetRef.current.unbind(window.SC.Widget.Events.ERROR);
-			} catch (unbindError) {
-				console.log('ℹ️ Aucun listener à nettoyer (normal à la première initialisation)');
-			}
-			
-		widgetRef.current.bind(window.SC.Widget.Events.READY, async () => {
-			console.log('🎵 Widget SoundCloud prêt !');
-			
-			// Si c'est le premier chargement, faire immédiatement la sélection aléatoire
-			// pour éviter d'afficher le son par défaut (ROB'ZOO)
-			if (isInitialLoadRef.current && performInitialRandomSelectionRef.current) {
-				isInitialLoadRef.current = false;
-				console.log('🎲 Premier chargement - sélection aléatoire immédiate...');
-				setIsLoadingRandomTrack(true);
-				try {
-					await performInitialRandomSelectionRef.current();
-				} catch (error) {
-					console.error('❌ Erreur lors de la sélection aléatoire initiale:', error);
-					setIsLoadingRandomTrack(false);
-				}
-			}
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
-			setIsPlaying(true);
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
-			setIsPlaying(false);
-		});
-		
-		// Événement PLAY_PROGRESS pour mettre à jour le progress
-		widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
-			if (typeof data?.relativePosition === 'number') {
-				setProgress(data.relativePosition);
-			}
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
-			if (typeof data?.relativePosition === 'number') {
-				setProgress(data.relativePosition);
-			}
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
-			console.log('🎵 Track terminé');
-			setIsPlaying(false);
-			setProgress(0);
-		});
-		
-		widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
-			console.error('❌ Erreur widget SoundCloud:', error);
-		});
-		} catch (error) {
-			console.error('❌ Erreur lors de la configuration des événements:', error);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	
 	// Fonction pour charger la waveform avec retry
@@ -850,9 +888,11 @@ useEffect(() => {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			if (!widgetRef.current && window.SC && typeof window.SC.Widget === 'function') {
-				ensureWidgetRef();
+				if (ensureWidgetRef()) {
+					setupWidgetEventsRef.current();
+				}
 			}
-		}, 2000); // Vérifier toutes les 2 secondes
+		}, 2000);
 		
 		return () => clearInterval(interval);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -993,15 +1033,14 @@ useEffect(() => {
 			if (window.SC && widgetRef.current) {
 				try {
 					widgetRef.current.isPaused((paused: boolean) => {
-						setIsPlaying(!paused);
+						syncPlayingToHeader(!paused);
 					});
 				} catch (error) {
 					console.log('Widget SoundCloud perdu, réinitialisation...');
-					// Réinitialiser le widget seulement si nécessaire
 					const iframe = document.getElementById('soundcloud-widget') as HTMLIFrameElement;
 					if (iframe) {
 						widgetRef.current = window.SC.Widget(iframe);
-						// Les événements seront réinitialisés automatiquement
+						setupWidgetEventsRef.current();
 					}
 				}
 			}
@@ -1137,8 +1176,17 @@ useEffect(() => {
 			}, 'polling-play-state', 1);
 
 			if (playState !== null) {
-				setIsPlaying(playState);
-				desiredIsPlayingRef.current = playState; // mémoriser l'état voulu
+				syncPlayingToHeader(playState);
+				// Fallback progress si PLAY_PROGRESS est muet
+				try {
+					widgetRef.current?.getPosition((pos: number) => {
+						widgetRef.current?.getDuration((dur: number) => {
+							if (dur > 0 && typeof pos === 'number') {
+								setProgress(Math.max(0, Math.min(1, pos / dur)));
+							}
+						});
+					});
+				} catch {}
 			}
 			
 			// Vérifier périodiquement les infos du track avec retry
@@ -1203,7 +1251,7 @@ useEffect(() => {
 		}, 3000); // Vérifier toutes les 3 secondes
 
 		return () => clearInterval(interval);
-	}, [isWidgetHealthy, executeWithRetry, trackTitle, waveformImageUrl, loadWaveform, forceRandomSelection]);
+	}, [isWidgetHealthy, executeWithRetry, trackTitle, waveformImageUrl, loadWaveform, forceRandomSelection, syncPlayingToHeader]);
 
 	// Charger l'API SoundCloud et initialiser le widget
 	useEffect(() => {
@@ -1300,79 +1348,8 @@ useEffect(() => {
 		};
 
 	const setupFallbackWidgetEvents = () => {
-		if (!widgetRef.current) return;
-
-		try {
-			// Nettoyer d'abord les anciens listeners pour éviter les doublons
-			try {
-				widgetRef.current.unbind(window.SC.Widget.Events.READY);
-				widgetRef.current.unbind(window.SC.Widget.Events.PLAY);
-				widgetRef.current.unbind(window.SC.Widget.Events.PAUSE);
-				widgetRef.current.unbind(window.SC.Widget.Events.PLAY_PROGRESS);
-				widgetRef.current.unbind(window.SC.Widget.Events.SEEK);
-				widgetRef.current.unbind(window.SC.Widget.Events.FINISH);
-				widgetRef.current.unbind(window.SC.Widget.Events.ERROR);
-			} catch (unbindError) {
-				console.log('ℹ️ Aucun listener à nettoyer (normal à la première initialisation)');
-			}
-
-			widgetRef.current.bind(window.SC.Widget.Events.READY, () => {
-				console.log('🎵 Widget SoundCloud prêt !');
-				
-				// Initialiser les états de base seulement
-				widgetRef.current.isPaused((paused: boolean) => {
-					setIsPlaying(!paused);
-					desiredIsPlayingRef.current = !paused;
-				});
-					try { widgetRef.current.getDuration((ms: number) => setDurationMs(ms || 0)); } catch {}
-				
-				// Empêcher tout auto-play après réinit si l'utilisateur était en pause
-				try {
-					if (!desiredIsPlayingRef.current) {
-						widgetRef.current.pause();
-					}
-				} catch {}
-				
-				// NOTE: Ne pas appeler forceRandomSelection ni updateFromCurrentSound ici
-				// car cela relance le player. Le player conserve son état et sa track actuelle.
-			});
-			
-					widgetRef.current.bind(window.SC.Widget.Events.PLAY, () => {
-						setIsPlaying(true);
-						updateFromCurrentSound();
-						// Émettre l'événement pour le header player
-						window.dispatchEvent(new CustomEvent('soundcloud-play'));
-					});
-			
-					widgetRef.current.bind(window.SC.Widget.Events.PAUSE, () => {
-						setIsPlaying(false);
-						// Émettre l'événement pour le header player
-						window.dispatchEvent(new CustomEvent('soundcloud-pause'));
-					});
-			
-			widgetRef.current.bind(window.SC.Widget.Events.PLAY_PROGRESS, (data: any) => {
-				if (typeof data?.relativePosition === 'number') {
-					setProgress(data.relativePosition);
-				}
-					});
-			
-			widgetRef.current.bind(window.SC.Widget.Events.SEEK, (data: any) => {
-				if (typeof data?.relativePosition === 'number') {
-					setProgress(data.relativePosition);
-				}
-					});
-			
-					widgetRef.current.bind(window.SC.Widget.Events.FINISH, () => {
-						setIsPlaying(false);
-						setProgress(0);
-					});
-			
-			widgetRef.current.bind(window.SC.Widget.Events.ERROR, (error: any) => {
-				console.error('❌ Erreur widget SoundCloud:', error);
-			});
-		} catch (error) {
-			console.error('❌ Erreur lors de la configuration des événements:', error);
-		}
+		// Unifier avec le bind principal (évite un 2e jeu d'handlers divergents)
+		setupWidgetEventsRef.current();
 	};
 
 		const loadSoundCloudAPI = async () => {
@@ -1484,9 +1461,8 @@ useEffect(() => {
 			}
 		};
 
-		// Attendre que le composant soit monté avant d'initialiser
-		// ET ne réinitialiser que si le widget n'est pas déjà actif
-		if (isMounted && !widgetRef.current) {
+		// Path A (séquentiel) est la source unique — ne pas relancer un 2e init concurrent
+		if (isMounted && !widgetRef.current && !initStartedRef.current) {
 		loadSoundCloudAPI();
 		}
 	}, [isMounted]); // Charger l'API SoundCloud après le montage du composant
@@ -1514,12 +1490,14 @@ useEffect(() => {
 }, []);
 
 	const handlePlayPause = useCallback(async () => {
-		if (!isWidgetHealthy()) {
+		if (!widgetRef.current && !ensureWidgetRef()) {
 			console.warn('⚠️ Widget SoundCloud non disponible pour play/pause');
 			return;
 		}
+		if (!isWidgetHealthy() && !widgetRef.current) {
+			return;
+		}
 
-		// Éviter les appels multiples simultanés
 		if (playPauseLockRef.current) {
 			console.log('⏳ Play/pause déjà en cours, ignore...');
 			return;
@@ -1540,18 +1518,19 @@ useEffect(() => {
 							try {
 								if (paused) {
 									console.log('▶️ Lecture du track...');
+									// Optimistic UI pour le header
+									syncPlayingToHeader(true);
 									widgetRef.current.play();
 								} else {
 									console.log('⏸️ Pause du track...');
+									syncPlayingToHeader(false);
 									widgetRef.current.pause();
 								}
-								// Petit délai avant de résoudre pour laisser le widget traiter
 								setTimeout(() => resolve(true), 100);
 							} catch (error: any) {
-								// Ignorer les AbortError du widget SoundCloud (requêtes annulées)
 								if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
 									console.log('ℹ️ Requête annulée par le widget SoundCloud (normal)');
-									resolve(true); // Considérer comme succès car c'est juste une annulation
+									resolve(true);
 								} else {
 									console.error('Erreur play/pause:', error);
 									resolve(false);
@@ -1559,7 +1538,6 @@ useEffect(() => {
 							}
 						});
 					} catch (error: any) {
-						// Ignorer les AbortError du widget SoundCloud
 						if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
 							console.log('ℹ️ Requête isPaused annulée (normal)');
 							resolve(true);
@@ -1573,21 +1551,21 @@ useEffect(() => {
 
 			if (!result) {
 				console.error('❌ Échec du play/pause après retry');
+			} else {
+				setLastSuccessfulOperation(Date.now());
 			}
 		} catch (error: any) {
-			// Ignorer les AbortError du widget SoundCloud
 			if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
 				console.log('ℹ️ Requête play/pause annulée (normal)');
 			} else {
 				console.error('❌ Erreur dans handlePlayPause:', error);
 			}
 		} finally {
-			// Libérer le lock après un court délai
 			setTimeout(() => {
 				playPauseLockRef.current = false;
 			}, 300);
 		}
-	}, [isWidgetHealthy, executeWithRetry]);
+	}, [isWidgetHealthy, executeWithRetry, ensureWidgetRef, syncPlayingToHeader]);
 
 	// Écouter les événements du header player
 	useEffect(() => {

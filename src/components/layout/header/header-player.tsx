@@ -56,8 +56,8 @@ export default function HeaderPlayer() {
     // Plus besoin de manipulation DOM directe avec setProperty
 
     const handlePlayPause = () => {
-        // Envoyer l'événement au player SoundCloud
-        // L'état sera mis à jour via les événements soundcloud-play/pause
+        // Optimistic UI — confirmé ensuite par soundcloud-play/pause
+        setIsPlaying((prev) => !prev);
         soundCloudEvents.playPause();
     };
 
