@@ -229,13 +229,9 @@ export default function ShopPage() {
          * - Les classes CSS conditionnelles (shop-item-selected, shop-item-hovered, menu-hovered)
          *   sont appliquées par DynamicColorProvider pour les cas spéciaux
          * Plus besoin de règles CSS avec !important qui créent des conflits
+         *
+         * Waveform : couleurs via useGlobalDynamicColors (base pleine opacité + progression N/B)
          */
-
-        /* Waveform en noir quand un item est sélectionné */
-        body:has(.product-item.selected) #sbp-footer-waveform div[style*="backgroundColor"],
-        body:has(.product-item.selected) #sbp-footer-waveform div[style*="background-color"] {
-          background-color: #000000 !important;
-        }
 
         /* Animation pour les images de produits au hover */
         .product-image-container {

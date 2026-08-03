@@ -11,6 +11,24 @@ import { soundCloudEvents } from '@/lib/events/app-events';
 
 type ColorTheme = 'yellow' | 'cyan' | 'red';
 
+/** Luminance relative sRGB (0–1) pour choisir noir ou blanc le plus contrasté. */
+function getRelativeLuminance(hexColor: string): number {
+  const hex = hexColor.replace('#', '');
+  const full = hex.length === 3
+    ? hex.split('').map((c) => c + c).join('')
+    : hex;
+  const channel = (start: number) => {
+    const value = parseInt(full.slice(start, start + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+}
+
+/** Blanc ou noir selon le meilleur contraste avec la couleur de base. */
+function getMostVisibleMono(againstHex: string): '#FFFFFF' | '#000000' {
+  return getRelativeLuminance(againstHex) > 0.4 ? '#000000' : '#FFFFFF';
+}
+
 interface GlobalColors {
   // Couleurs principales
   primary: string;
@@ -31,8 +49,8 @@ interface GlobalColors {
   playerColor: string; // Classe CSS (text-white ou text-black)
   playerBgColor: string; // Couleur hex du fond
   playerTextColor: string; // Couleur hex du texte (centralisée et robuste)
-  waveformColor: string; // Valeur hex pour style inline
-  waveformColorFaded: string; // Valeur hex avec opacité pour style inline
+  waveformColor: string; // Progression (jouée) : noir ou blanc le plus visible
+  waveformColorFaded: string; // Base (non jouée) : couleur primaire pleine opacité
   
   // Couleurs pour les effets
   noiseOverlay: string;
@@ -150,33 +168,12 @@ export function useGlobalDynamicColors() {
         || (isShop && isMobile && (isMenuHovered || isShopItemHovered || isShopItemSelected));
     const playerTextColorValue = shouldTextBeWhite ? '#FFFFFF' : '#000000';
     
-    // Pour waveform, retourner les valeurs hex pour styles inline
-    let waveformColorHex: string;
-    let waveformColorFadedHex: string;
-    if (shouldBeBlack) {
-      waveformColorHex = "#000000";
-      waveformColorFadedHex = "rgba(0, 0, 0, 0.3)";
-    } else if (isHome) {
-      waveformColorHex = "#FF6A00";
-      waveformColorFadedHex = "rgba(255, 106, 0, 0.3)";
-    } else {
-      waveformColorHex = pagePrimaryColor;
-      // Convertir hex en rgba avec opacité
-      const hex = pagePrimaryColor.replace('#', '');
-      let r: number, g: number, b: number;
-      if (hex.length === 3) {
-        // Format court #RGB
-        r = parseInt(hex[0] + hex[0], 16);
-        g = parseInt(hex[1] + hex[1], 16);
-        b = parseInt(hex[2] + hex[2], 16);
-      } else {
-        // Format long #RRGGBB
-        r = parseInt(hex.substr(0, 2), 16);
-        g = parseInt(hex.substr(2, 2), 16);
-        b = parseInt(hex.substr(4, 2), 16);
-      }
-      waveformColorFadedHex = `rgba(${r}, ${g}, ${b}, 0.3)`;
-    }
+    // Waveform : pleine opacité partout.
+    // - Base (non jouée) = couleur primaire / noir selon le contexte
+    // - Progression (jouée) = blanc ou noir, celui qui contraste le mieux avec la base
+    const waveformBaseHex = shouldBeBlack ? "#000000" : (isHome ? "#FF6A00" : pagePrimaryColor);
+    const waveformColorHex = getMostVisibleMono(waveformBaseHex);
+    const waveformColorFadedHex = waveformBaseHex;
     
     if (!isHome) {
       // Couleurs statiques pour les autres pages

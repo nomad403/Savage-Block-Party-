@@ -17,6 +17,7 @@ export default function HeaderPlayer() {
     const [artistName, setArtistName] = useState<string>("Latest tracks");
     // Utiliser le hook centralisé pour la détection de page
     const { isAgenda, isShop } = usePageContext();
+    const isMobile = useIsMobile();
     
     // Utiliser les hooks centralisés
     const { colors } = useGlobalDynamicColors();
@@ -77,8 +78,16 @@ export default function HeaderPlayer() {
                 backgroundColor: backgroundColor,
                 opacity: 0.9
             }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={() => {
+                if (isMobile) return;
+                setIsHovered(true);
+                soundCloudEvents.playerHover(true);
+            }}
+            onMouseLeave={() => {
+                if (isMobile) return;
+                setIsHovered(false);
+                soundCloudEvents.playerHover(false);
+            }}
         >
             {/* Contrôles */}
                 <div className="flex items-center gap-1 md:gap-2">

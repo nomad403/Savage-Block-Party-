@@ -13,6 +13,7 @@ import { SoundCloudPlayer } from "@/components/player";
 import { CustomScrollbar, MixBlendCursor } from "@/components/ui";
 import { DynamicColorProvider } from "@/components/providers";
 import { MenuOverlay } from "@/components/menu";
+import { PortfolioDemoDirector } from "@/components/demo";
 
 const isVercelHost = Boolean(process.env.VERCEL);
 
@@ -67,6 +68,7 @@ export default function RootLayout({
 					<SoundCloudPlayer />
 				<CustomScrollbar />
 					<Footer />
+				<PortfolioDemoDirector />
 				{isVercelHost ? (
 					<>
 						<Analytics />

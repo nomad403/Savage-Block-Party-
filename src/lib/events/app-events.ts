@@ -100,6 +100,13 @@ export interface SoundCloudHealthChangedEvent {
   detail: string;
 }
 
+export interface SoundCloudPlayerHoverEvent {
+  type: 'soundcloud-player-hover';
+  detail: {
+    isHovered: boolean;
+  };
+}
+
 export interface AudioFeaturesEvent {
   type: 'audioFeatures';
   detail: {
@@ -134,6 +141,7 @@ export type AppEvent =
   | SoundCloudNetworkErrorEvent
   | SoundCloudReinitializeEvent
   | SoundCloudHealthChangedEvent
+  | SoundCloudPlayerHoverEvent
   | AudioFeaturesEvent
   | FamilyDropdownOpenEvent;
 
@@ -282,6 +290,12 @@ export const soundCloudEvents = {
     dispatchAppEvent<SoundCloudHealthChangedEvent>({
       type: 'soundcloud-health-changed',
       detail: health,
+    });
+  },
+  playerHover: (isHovered: boolean) => {
+    dispatchAppEvent<SoundCloudPlayerHoverEvent>({
+      type: 'soundcloud-player-hover',
+      detail: { isHovered },
     });
   },
 };

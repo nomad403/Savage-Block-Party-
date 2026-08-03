@@ -5,6 +5,7 @@ import FamilyDropdowns from "./family-dropdowns";
 import { ScrollHint } from "@/components/ui";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { familyEvents } from "@/lib/events/app-events";
 import "./family.css"; // Styles scopés pour Family
 
 /**
@@ -40,9 +41,13 @@ function FamilyDropdownsWrapper({
   const sentinelVisibleRef = useRef(false);
   const isMobile = useIsMobile(); // Détection mobile : sur mobile, seul IntersectionObserver contrôle isVisible
 
-  // Notifier le parent quand la visibilité change
+  // Notifier le parent + masquer la waveform quand les boutons apparaissent
   useEffect(() => {
     onVisibilityChange?.(isVisible);
+    familyEvents.dropdownOpen(isVisible);
+    return () => {
+      familyEvents.dropdownOpen(false);
+    };
   }, [isVisible, onVisibilityChange]);
 
   // Détection via IntersectionObserver (sentinel)

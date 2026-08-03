@@ -6,11 +6,14 @@ import { usePageContext } from "@/hooks/usePageContext";
 import { useGlobalDynamicColors } from "@/hooks/useGlobalDynamicColors";
 import { useMenuHover } from "@/hooks/useMenuHover";
 import { useScrollZIndex } from "@/hooks/useScrollZIndex";
+import { useIsMobile } from "@/hooks/useMediaQuery";
+import WaveformLoadingAnimation from "./waveform-loading-animation";
 
 /// <reference path="@/types/soundcloud" />
 export default function SoundCloudPlayer() {
 	// Utiliser le hook centralisé pour la détection de page
 	const { isHome, isAgenda, isShop, isFamily, isPresse } = usePageContext();
+	const isMobile = useIsMobile();
 	
 	// Utiliser useGlobalDynamicColors pour synchroniser avec le logo et les autres éléments
 	const { colors: globalColors } = useGlobalDynamicColors();
@@ -78,6 +81,14 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 	const [isMounted, setIsMounted] = useState(false);
 	const [isPlayerExpanded, setIsPlayerExpanded] = useState(isHome);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isPlayerHovered, setIsPlayerHovered] = useState(false);
+	const [isWaveformHovered, setIsWaveformHovered] = useState(false);
+	// Expand timeline au hover : desktop uniquement
+	const isTimelineExpanded = !isMobile && (isPlayerHovered || isWaveformHovered);
+	const [revealRealWaveform, setRevealRealWaveform] = useState(false);
+	const hasWaveformData = Boolean(
+		(waveformSamples && waveformSamples.length > 0) || Boolean(waveformImageUrl)
+	);
 	// Mémoriser l'état désiré de lecture pour éviter un auto-play lors des réinits
 	const desiredIsPlayingRef = useRef(false);
 	const widgetRef = useRef<any>(null);
@@ -85,6 +96,40 @@ const waveformRef = useRef<HTMLDivElement | null>(null);
 	useEffect(() => {
 		isMutedRef.current = isMuted;
 	}, [isMuted]);
+
+	// Écouter le hover du header player pour agrandir la waveform (timeline) — desktop only
+	useEffect(() => {
+		if (isMobile) {
+			setIsPlayerHovered(false);
+			setIsWaveformHovered(false);
+			return;
+		}
+		const handlePlayerHover = (event: Event) => {
+			const customEvent = event as CustomEvent<{ isHovered: boolean }>;
+			setIsPlayerHovered(Boolean(customEvent.detail?.isHovered));
+		};
+		window.addEventListener('soundcloud-player-hover', handlePlayerHover);
+		return () => window.removeEventListener('soundcloud-player-hover', handlePlayerHover);
+	}, [isMobile]);
+
+	// Appliquer la classe body pour animer la hauteur CSS de la waveform
+	useEffect(() => {
+		document.body.classList.toggle('player-timeline-expanded', isTimelineExpanded);
+		return () => {
+			document.body.classList.remove('player-timeline-expanded');
+		};
+	}, [isTimelineExpanded]);
+
+	// Revenir à l'animation de chargement si la waveform est vidée (changement de track)
+	useEffect(() => {
+		if (!hasWaveformData) {
+			setRevealRealWaveform(false);
+		}
+	}, [hasWaveformData]);
+
+	const handleWaveformOutroComplete = useCallback(() => {
+		setRevealRealWaveform(true);
+	}, []);
 	// Mémoriser la dernière waveform chargée pour éviter les rechargements inutiles
 	const lastWaveformUrlRef = useRef<string>("");
 	// Flag pour ignorer le premier READY (chargement initial) et faire la sélection aléatoire directement
@@ -648,12 +693,8 @@ useEffect(() => {
 						continue;
 					}
 					
-					// Dernière tentative échouée, utiliser des samples simulés
-					console.log(`🔄 ${context}Utilisation de samples simulés comme fallback`);
-					const fallbackSamples = Array.from({ length: 100 }, () => Math.random() * 0.5 + 0.25);
-					setWaveformSamples(fallbackSamples);
-					setWaveformImageUrl("");
-					// Ne pas mettre à jour lastWaveformUrlRef pour les samples simulés
+					// Échec définitif : garder l'animation de chargement (pas de samples aléatoires)
+					console.log(`⚠️ ${context}Waveform JSON inaccessible, animation maintenue`);
 					return;
 				}
 			}
@@ -1844,8 +1885,14 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 			{isMounted && createPortal(
 					<div
 						ref={waveformRef}
-						className="w-full h-[72px] select-none cursor-pointer bg-transparent relative"
+						className="w-full h-full select-none cursor-pointer bg-transparent relative flex items-end"
 						style={{ zIndex: waveformZIndex }}
+						onMouseEnter={() => {
+							if (!isMobile) setIsWaveformHovered(true);
+						}}
+						onMouseLeave={() => {
+							if (!isMobile) setIsWaveformHovered(false);
+						}}
 						onClick={(e) => {
 						console.log('🎯 Clic sur waveform (compact):', {
 							hasRef: !!waveformRef.current,
@@ -1870,39 +1917,56 @@ function AutoScrollText({ text, className }: { text: string; className?: string 
 							}
 						}}
 					>
-						{waveformSamples && waveformSamples.length > 0 ? (
-							<div
-								className="h-full w-full items-end"
-								style={{ display: "grid", gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))`, columnGap: 1 }}
-							>
+						<div
+							className="w-full"
+							style={{
+								height: 100,
+								transform: isTimelineExpanded ? 'scaleY(1.48)' : 'scaleY(1)',
+								transformOrigin: 'bottom center',
+								transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+								willChange: 'transform',
+							}}
+						>
+						{!revealRealWaveform ? (
+							<WaveformLoadingAnimation
+								color={waveformColorFaded}
+								maxHeight={88}
+								barCount={barCount}
+								isDataReady={hasWaveformData}
+								onOutroComplete={handleWaveformOutroComplete}
+							/>
+						) : waveformSamples && waveformSamples.length > 0 ? (
+							<div className="h-full w-full overflow-hidden">
+								<div
+									className="waveform-reveal h-full w-full items-end"
+									style={{ display: "grid", gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))`, columnGap: 1.5 }}
+								>
 								{Array.from({ length: barCount }).map((_, i) => {
 									const sampleIndex = Math.floor(((barCount - 1 - i) / Math.max(1, barCount - 1)) * (waveformSamples!.length - 1));
 									const v = waveformSamples![sampleIndex] ?? 0;
 									// Normaliser les valeurs: SoundCloud retourne des valeurs 0-1, mais certaines APIs retournent 0-255
 									const normalizedV = v > 1 ? v / 255 : v;
-									const h = Math.max(1, Math.round(normalizedV * 60)); // Réduit de 80 à 60 pour cohérence avec header minimaliste
+									const h = Math.max(2, Math.round(normalizedV * 88));
 									const played = i / Math.max(1, barCount) <= progress;
 									return (
-										<div key={i} style={{ height: h, width: '2px', backgroundColor: played ? waveformColor : waveformColorFaded }} />
+										<div key={i} style={{ height: h, width: '3px', backgroundColor: played ? waveformColor : waveformColorFaded }} />
 									);
 								})}
-							</div>
-						) : waveformImageUrl ? (
-							<div className="relative h-full w-full overflow-hidden" style={{ transform: 'scaleY(-1)' }}>
-							<img src={waveformImageUrl} alt="waveform" className="w-full h-full object-cover opacity-20" />
-								<div className="absolute inset-0 overflow-hidden" style={{ width: `${Math.max(0, Math.min(100, progress * 100))}%` }}>
-								<img src={waveformImageUrl} alt="waveform-progress" className="w-full h-full object-cover opacity-80" />
 								</div>
 							</div>
-						) : (
-						<div className="flex items-end gap-[0.5px] h-full w-full">
-								{Array.from({ length: barCount }).map((_, i) => {
-									const sin = Math.sin((i / Math.max(1, barCount)) * Math.PI);
-								const h = Math.max(1, Math.round(sin * 60)); // Réduit de 80 à 60 pour cohérence avec header minimaliste
-								return <div key={i} style={{ height: h, width: '1px', backgroundColor: waveformColorFaded }} />;
-								})}
+						) : waveformImageUrl ? (
+							<div className="relative h-full w-full overflow-hidden">
+								<div className="waveform-reveal h-full w-full">
+									<div className="relative h-full w-full overflow-hidden" style={{ transform: 'scaleY(-1)' }}>
+										<img src={waveformImageUrl} alt="waveform" className="w-full h-full object-cover opacity-35" />
+										<div className="absolute inset-0 overflow-hidden" style={{ width: `${Math.max(0, Math.min(100, progress * 100))}%` }}>
+											<img src={waveformImageUrl} alt="waveform-progress" className="w-full h-full object-cover opacity-100" />
+										</div>
+									</div>
+								</div>
 							</div>
-						)}
+						) : null}
+						</div>
 					</div>,
 					document.getElementById('sbp-footer-waveform') as HTMLElement
 				)}

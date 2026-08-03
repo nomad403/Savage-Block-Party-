@@ -8,7 +8,8 @@
 	/* Hauteurs fixes - Player & Waveform */
 	--player-height-mobile: 100px; /* Player audio sur mobile (~60px + padding) */
 	--player-height-desktop: 0px; /* Pas de player sur desktop (dans header) */
-	--waveform-height: 72px; /* Hauteur de la waveform */
+	--waveform-height: 100px; /* Hauteur de la waveform */
+	--waveform-height-expanded: 148px; /* Hauteur waveform au hover (timeline) */
 	
 	/* Calculs dérivés */
 	--footer-total-height-mobile: calc(var(--player-height-mobile) + var(--waveform-height)); /* 172px */
@@ -26,6 +27,34 @@
 	--z-cursor-blend: 20005; /* Curseur mix-blend (au-dessus du header, sous menu-bg) */
 	--z-header-menu-bg: 20010; /* Fonds colorés menu (au-dessus de tout) */
 	--z-overlay-global: 10000; /* Overlay global menu hover */
+}
+
+/* Waveform timeline expand on player / waveform hover */
+body.player-timeline-expanded {
+	--waveform-height: var(--waveform-height-expanded);
+}
+
+#sbp-footer-waveform {
+	transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.footer-mobile-player {
+	transition: bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes waveformReveal {
+	from {
+		transform: translateY(110%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+.waveform-reveal {
+	animation: waveformReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+	transform-origin: bottom center;
+	will-change: transform;
 }
 
 /* ========================================

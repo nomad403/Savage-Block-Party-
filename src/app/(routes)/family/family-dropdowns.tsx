@@ -8,7 +8,6 @@ import { useMenuHover } from "@/hooks/useMenuHover";
 import { useDropdown } from "@/hooks/useDropdown";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 import { TextRevealLines } from "@/components/ui";
-import { familyEvents } from "@/lib/events/app-events";
 
 // Détecter iOS pour appliquer des corrections spécifiques
 const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
@@ -149,8 +148,6 @@ export default function FamilyDropdowns({ onItemSelect, selectedItem, isVisible 
   // Notifier le parent quand l'état d'ouverture change
   useEffect(() => {
     onDropdownStateChange?.(!!activeDropdown);
-    // Émettre un événement pour masquer le player sur mobile
-    familyEvents.dropdownOpen(!!activeDropdown);
   }, [activeDropdown, onDropdownStateChange]);
 
   // Fermer les listes ouvertes quand les dropdowns sont masqués par le scroll
